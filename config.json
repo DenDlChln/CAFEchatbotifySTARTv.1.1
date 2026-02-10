@@ -1,0 +1,38 @@
+{
+  "cafes": [
+    {
+      "id": "cafe_roma",
+      "name": "Кафе Рома",
+      "phone": "+7 900 000-00-01",
+      "admin_chat_id": 1471275603,
+      "work_start": 9,
+      "work_end": 21,
+      "menu": {
+        "☕ Капучино": 250,
+        "🥛 Латте": 270
+      }
+    },
+    {
+      "id": "cafe_milk",
+      "name": "Milk & Coffee",
+      "phone": "+7 900 000-00-02",
+      "admin_chat_id": 222222222,
+      "work_start": 8,
+      "work_end": 22,
+      "menu": {
+        "🍵 Матча": 320
+      }
+    },
+    {
+      "id": "cafe_burger",
+      "name": "Burger & Beer",
+      "phone": "+7 900 000-00-03",
+      "admin_chat_id": 333333333,
+      "work_start": 12,
+      "work_end": 23,
+      "menu": {
+        "⚡ Эспрессо": 200
+      }
+    }
+  ]
+}
