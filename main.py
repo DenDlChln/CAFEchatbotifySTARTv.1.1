@@ -91,6 +91,7 @@ DEFAULT_CAFE = {
     "id": "default_cafe",
     "name": "Кофейня (дефолт)",
     "phone": "+7 900 000-00-00",
+    "address": "Адрес не указан",
     "admin_chat_id": 0,
     "work_start": 9,
     "work_end": 21,
@@ -109,6 +110,7 @@ for cafe in CAFES:
     c["id"] = str(c.get("id", DEFAULT_CAFE["id"])).strip()
     c["name"] = str(c.get("name", DEFAULT_CAFE["name"]))
     c["phone"] = str(c.get("phone", DEFAULT_CAFE["phone"]))
+    c["address"] = str(c.get("address", DEFAULT_CAFE["address"]))
     c["admin_chat_id"] = int(c.get("admin_chat_id", 0))
     c["work_start"] = int(c.get("work_start", DEFAULT_CAFE["work_start"]))
     c["work_end"] = int(c.get("work_end", DEFAULT_CAFE["work_end"]))
@@ -354,6 +356,7 @@ def get_closed_message(cafe: Dict[str, Any]) -> str:
         f"🔒 <b>{cafe['name']} сейчас закрыто</b>\n\n"
         f"{get_work_status(cafe)}\n\n"
         f"☕️ <b>Меню на паузе, но можно присмотреться:</b>\n{menu_text}\n\n"
+        f"📍 <b>Адрес:</b> {cafe.get('address', 'адрес не указан')}\n"
         f"📞 Связаться:\n<code>{cafe['phone']}</code>\n\n"
         f"<i>Напиши /start или воспользуйся кнопками ниже, когда захочешь заглянуть ещё.</i>"
     )
@@ -775,23 +778,19 @@ async def call_phone(message: Message):
     cafe = await get_cafe_for_user(message.from_user.id)
     name = get_user_name(message)
 
-    base = (
-        f"{name}, если удобнее поговорить голосом — вот наш номер:\n\n"
-        f"📞 <b>{cafe['name']}</b>\n"
-        f"<code>{cafe['phone']}</code>\n\n"
+    phone = cafe.get("phone", "номер не указан")
+    cafe_name = cafe.get("name", "наше кафе")
+
+    text = (
+        f"📞 <b>Связаться с кафе</b>\n\n"
+        f"{name}, вот контакт для связи:\n\n"
+        f"🏠 <b>{cafe_name}</b>\n"
+        f"☎️ <code>{phone}</code>\n\n"
+        f"Если хочешь, можешь сразу коротко написать сюда, по какому вопросу будем на связи "
+        f"(бронь, заказ навынос, уточнение по меню и т.п.) — я передам сообщение администратору."
     )
 
-    if is_cafe_open(cafe):
-        tail = "Сейчас мы работаем: можно позвонить или оформить заказ прямо здесь, в боте ☕️"
-        kb = create_menu_keyboard(cafe)
-    else:
-        tail = (
-            f"Сейчас кафе закрыто.\n{get_work_status(cafe)}\n\n"
-            f"Ты можешь оставить заказ или бронь в боте — мы увидим это, как только выйдем на смену."
-        )
-        kb = create_info_keyboard()
-
-    await message.answer(base + tail, reply_markup=kb)
+    await message.answer(text, reply_markup=create_menu_keyboard(cafe))
 
 
 @router.message(F.text == "⏰ Режим работы")
@@ -801,11 +800,20 @@ async def show_hours(message: Message):
     msk_time = get_moscow_time().strftime("%H:%M")
 
     status = get_work_status(cafe)
-    await message.answer(
+    cafe_name = cafe.get("name", "наше кафе")
+    address = cafe.get("address", "адрес уточняется")
+
+    text = (
         f"⏰ <b>Режим работы кафе</b>\n\n"
         f"{name}, сейчас {msk_time} (МСК).\n"
         f"{status}\n\n"
-        f"Можешь сразу выбрать напиток или оставить бронь на удобное время.",
+        f"🏠 <b>{cafe_name}</b>\n"
+        f"📍 <b>Адрес:</b> {address}\n\n"
+        f"Можешь сразу выбрать напиток или оставить бронь столика на удобное время."
+    )
+
+    await message.answer(
+        text,
         reply_markup=create_menu_keyboard(cafe) if is_cafe_open(cafe) else create_info_keyboard(),
     )
 
@@ -877,7 +885,7 @@ async def set_bot_commands(bot: Bot) -> None:
 
 
 async def on_startup(bot: Bot) -> None:
-    logger.info("=== BUILD MARK: MULTI-CAFE MAIN v5 (booking + rich texts) ===")
+    logger.info("=== BUILD MARK: MULTI-CAFE MAIN v6 (booking + rich texts + address) ===")
     logger.info(f"Cafes loaded: {len(CAFES)}")
     for c in CAFES:
         logger.info(f"CFG cafe={c['id']} admin={c['admin_chat_id']}")
