@@ -4,6 +4,7 @@
       "id": "cafe_roma",
       "name": "Кафе Рома",
       "phone": "+7 900 000-00-01",
+      "address": "г. Краснодар, ул. Примерная, 10",
       "admin_chat_id": 1471275603,
       "work_start": 9,
       "work_end": 21,
@@ -16,6 +17,7 @@
       "id": "cafe_milk",
       "name": "Milk & Coffee",
       "phone": "+7 900 000-00-02",
+      "address": "г. Краснодар, ул. Примерная, 10",
       "admin_chat_id": 222222222,
       "work_start": 8,
       "work_end": 22,
@@ -27,6 +29,7 @@
       "id": "cafe_burger",
       "name": "Burger & Beer",
       "phone": "+7 900 000-00-03",
+      "address": "г. Краснодар, ул. Примерная, 10",
       "admin_chat_id": 333333333,
       "work_start": 12,
       "work_end": 23,
@@ -36,3 +39,4 @@
     }
   ]
 }
+
