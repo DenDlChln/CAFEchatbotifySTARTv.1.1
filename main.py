@@ -27,7 +27,6 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
 from aiogram.utils.deep_linking import create_start_link, create_startgroup_link
-
 from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter
 from aiogram.filters import IS_NOT_MEMBER, IS_MEMBER
 
@@ -250,8 +249,8 @@ def get_work_status(cafe: Dict[str, Any]) -> str:
     h = get_moscow_time().hour
     if ws <= h < we:
         remaining = max(0, we - h)
-        return f"Открыто (ещё {remaining} ч.)"
-    return f"Закрыто\nОткрываемся: {ws}:00 (МСК)"
+        return f"🟢 Открыто (ещё {remaining} ч.)"
+    return f"🔴 Закрыто\n🕐 Открываемся: {ws}:00 (МСК)"
 
 
 # -------------------------
@@ -260,16 +259,21 @@ def get_work_status(cafe: Dict[str, Any]) -> str:
 
 def create_menu_keyboard(cafe: Dict[str, Any]) -> ReplyKeyboardMarkup:
     keyboard = [[KeyboardButton(text=drink)] for drink in cafe["menu"].keys()]
-    keyboard.append([KeyboardButton(text="Позвонить"), KeyboardButton(text="Часы работы")])
-    keyboard.append([KeyboardButton(text="Бронирование / столики")])
+    keyboard.append([
+        KeyboardButton(text="📞 Связаться с кафе"),
+        KeyboardButton(text="⏰ Режим работы"),
+    ])
+    keyboard.append([
+        KeyboardButton(text="📋 Бронирование / столики"),
+    ])
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 def create_info_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="Позвонить"), KeyboardButton(text="Часы работы")],
-            [KeyboardButton(text="Бронирование / столики")],
+            [KeyboardButton(text="📞 Связаться с кафе"), KeyboardButton(text="⏰ Режим работы")],
+            [KeyboardButton(text="📋 Бронирование / столики")],
         ],
         resize_keyboard=True,
     )
@@ -311,30 +315,30 @@ def create_confirm_keyboard() -> ReplyKeyboardMarkup:
 # -------------------------
 
 WELCOME_VARIANTS = [
-    "Рад тебя видеть, {name}! Сегодня что-то классическое или попробуем новинку?",
-    "{name}, добро пожаловать! Я уже грею молоко - выбирай, что приготовить.",
-    "Заходи, {name}! Сейчас самое время для вкусного перерыва.",
-    "{name}, привет! Устроим небольшой кофейный ритуал?",
-    "Отлично, что заглянул, {name}! Давай подберём идеальный напиток под настроение.",
+    "Привет, {name}! Заходи по‑домашнему — подберём кофе под настроение.",
+    "{name}, рад тебя видеть в нашей кофейне. Устроим вкусную паузу?",
+    "{name}, добро пожаловать! Уже слышу шипение кофемашины — выбирай, что приготовить ☕️",
+    "Заходи, {name}! Сейчас самое время сделать день чуть приятнее.",
+    "{name}, привет! Давай придумаем идеальный напиток именно для тебя.",
 ]
 
 CHOICE_VARIANTS = [
-    "Отличный выбор! Такое сейчас особенно популярно.",
+    "Отличный выбор — гости часто берут именно это 👍",
     "Классика, которая никогда не подводит.",
-    "Мне тоже нравится этот вариант - не прогадаешь.",
-    "Прекрасный вкус, {name}! Это один из хитов нашего меню.",
-    "Вот это да, {name}! Любители хорошего кофе тебя поймут.",
-    "Смело! Такой выбор обычно делают настоящие ценители.",
-    "{name}, ты знаешь толк в напитках.",
-    "Звучит вкусно - уже представляю аромат.",
+    "Тот самый вариант, который бариста выбирают для себя 😉",
+    "Супер! Это один из хитов нашего меню.",
+    "Вот это вкус! Любители хорошего кофе тебя поймут.",
+    "Смело и по‑делу — такой выбор обычно делают ценители.",
+    "{name}, видно, что ты разбираешься в напитках.",
+    "Звучит очень вкусно, уже представляю аромат ☕️",
 ]
 
 FINISH_VARIANTS = [
-    "Спасибо за заказ! Буду рад увидеть тебя снова.",
-    "Рад был помочь с выбором. Заглядывай ещё - всегда ждём.",
-    "Отличный заказ! Надеюсь, это сделает день чуточку лучше.",
-    "Спасибо, что выбрал именно нас. До следующей кофейной паузы!",
-    "Заказ готовим с заботой. Возвращайся, когда захочется повторить.",
+    "Спасибо за заказ, {name}! Готовим с заботой — приходи за настроением ещё.",
+    "Заказ принят, {name}. Пусть этот кофе сделает день чуточку лучше.",
+    "Готовим твой напиток, {name}. Будем рады видеть тебя снова.",
+    "{name}, спасибо, что выбираешь нас. Всегда ждём на кофе‑паузу.",
+    "Заказ в работе. Если захочется повторить — я всегда на связи ☕️",
 ]
 
 
@@ -347,11 +351,11 @@ def get_user_name(message: Message) -> str:
 def get_closed_message(cafe: Dict[str, Any]) -> str:
     menu_text = " • ".join([f"<b>{drink}</b> {price}р" for drink, price in cafe["menu"].items()])
     return (
-        f"<b>{cafe['name']} сейчас закрыто!</b>\n\n"
+        f"🔒 <b>{cafe['name']} сейчас закрыто</b>\n\n"
         f"{get_work_status(cafe)}\n\n"
-        f"<b>Наше меню:</b>\n{menu_text}\n\n"
-        f"<b>Связаться:</b>\n<code>{cafe['phone']}</code>\n\n"
-        f"<i>До скорой встречи!</i>"
+        f"☕️ <b>Меню на паузе, но можно присмотреться:</b>\n{menu_text}\n\n"
+        f"📞 Связаться:\n<code>{cafe['phone']}</code>\n\n"
+        f"<i>Напиши /start или воспользуйся кнопками ниже, когда захочешь заглянуть ещё.</i>"
     )
 
 
@@ -378,10 +382,10 @@ async def bot_added_to_group(event: ChatMemberUpdated, bot: Bot):
         return
     await bot.send_message(
         event.chat.id,
-        "Я добавлен в группу.\n\n"
-        "Чтобы привязать группу к кафе, напишите:\n"
+        "✅ Бот добавлен в группу персонала.\n\n"
+        "Чтобы привязать её к конкретному кафе, напишите здесь:\n"
         "<code>/bind cafe_roma</code>\n\n"
-        "Эту команду должен выполнить администратор кафе.",
+        "Команду должен выполнить администратор кафе.",
     )
 
 
@@ -393,11 +397,11 @@ async def bind_group(message: Message, command: CommandObject):
 
     cafe_id = (command.args or "").strip()
     if not cafe_id:
-        await message.answer("Формат: /bind cafe_roma")
+        await message.answer("Формат: <code>/bind cafe_roma</code>")
         return
 
     if cafe_id not in CAFES_BY_ID:
-        await message.answer("Неизвестный cafe_id. Пример: /bind cafe_roma")
+        await message.answer("Неизвестный cafe_id. Пример: <code>/bind cafe_roma</code>")
         return
 
     cafe = CAFES_BY_ID[cafe_id]
@@ -418,11 +422,11 @@ async def send_admin_start_screen(message: Message, cafe: Dict[str, Any]):
     staff_link = await create_startgroup_link(message.bot, payload=cafe["id"], encode=False)
 
     text = (
-        f"<b>Режим администратора</b>\n"
+        f"🛠 <b>Режим администратора</b>\n"
         f"Кафе: <b>{cafe['name']}</b> (id=<code>{cafe['id']}</code>)\n\n"
-        f"1) Гостевая ссылка (QR на столы):\n{guest_link}\n\n"
-        f"2) Ссылка для группы персонала:\n{staff_link}\n\n"
-        f"3) После добавления бота в группу напишите там:\n"
+        f"1️⃣ Гостевая ссылка (QR на столы):\n{guest_link}\n\n"
+        f"2️⃣ Ссылка для группы персонала:\n{staff_link}\n\n"
+        f"3️⃣ После добавления бота в группу напишите там:\n"
         f"<code>/bind {cafe['id']}</code>\n\n"
         f"Нажмите «Открыть меню», чтобы посмотреть сценарий гостя."
     )
@@ -462,9 +466,9 @@ async def _start_common(message: Message, state: FSMContext, incoming_cafe_id: O
         await message.answer(
             f"{welcome}\n\n"
             f"<b>{cafe['name']}</b>\n"
-            f"<i>Московское время: {msk_time}</i>\n"
+            f"🕐 <i>Московское время: {msk_time}</i>\n"
             f"{get_work_status(cafe)}\n\n"
-            f"<b>Выберите напиток:</b>",
+            f"☕️ <b>Выберите напиток:</b>",
             reply_markup=create_menu_keyboard(cafe),
         )
     else:
@@ -499,9 +503,9 @@ async def open_menu_as_guest(message: Message, state: FSMContext):
         await message.answer(
             f"{welcome}\n\n"
             f"<b>{cafe['name']}</b>\n"
-            f"<i>Московское время: {msk_time}</i>\n"
+            f"🕐 <i>Московское время: {msk_time}</i>\n"
             f"{get_work_status(cafe)}\n\n"
-            f"<b>Выберите напиток:</b>",
+            f"☕️ <b>Выберите напиток:</b>",
             reply_markup=create_menu_keyboard(cafe),
         )
     else:
@@ -526,8 +530,8 @@ async def group_help_button(message: Message):
 
     staff_link = await create_startgroup_link(message.bot, payload=cafe["id"], encode=False)
     text = (
-        "<b>Подключение группы персонала</b>\n\n"
-        "1) Создайте группу (например Кафе персонал).\n"
+        "👥 <b>Подключение группы персонала</b>\n\n"
+        "1) Создайте группу (например «Кафе — персонал»).\n"
         "2) Добавьте туда бота по ссылке:\n"
         f"{staff_link}\n\n"
         f"3) В группе напишите:\n<code>/bind {cafe['id']}</code>\n"
@@ -560,7 +564,7 @@ async def process_quantity(message: Message, state: FSMContext):
     if message.text == "Отмена":
         await state.clear()
         await message.answer(
-            "Заказ отменён",
+            "❌ Заказ отменён. Если захочешь, всегда можно начать заново — я рядом.",
             reply_markup=create_menu_keyboard(cafe) if is_cafe_open(cafe) else create_info_keyboard(),
         )
         return
@@ -575,11 +579,15 @@ async def process_quantity(message: Message, state: FSMContext):
         await state.update_data(quantity=quantity, total=total)
 
         await message.answer(
-            f"<b>{drink}</b> × {quantity}\nИтого: <b>{total} р</b>\n\nПравильно?",
+            f"✨ Проверим заказ:\n\n"
+            f"• Напиток: <b>{drink}</b>\n"
+            f"• Количество: <b>{quantity}</b>\n"
+            f"• Итого: <b>{total} р</b>\n\n"
+            f"Если всё верно — нажимай «Подтвердить».",
             reply_markup=create_confirm_keyboard(),
         )
     else:
-        await message.answer("Нажмите на кнопку", reply_markup=create_quantity_keyboard())
+        await message.answer("Пожалуйста, выбери количество кнопкой ниже ☟", reply_markup=create_quantity_keyboard())
 
 
 @router.message(StateFilter(OrderStates.waiting_for_confirmation))
@@ -593,7 +601,8 @@ async def process_confirmation(message: Message, state: FSMContext):
             last_order = await r_client.get(_rate_limit_key(user_id))
             if last_order and time.time() - float(last_order) < RATE_LIMIT_SECONDS:
                 await message.answer(
-                    f"Дай мне минутку: новый заказ можно оформить через {RATE_LIMIT_SECONDS} секунд после предыдущего.",
+                    f"⏳ Уже оформляли заказ совсем недавно.\n"
+                    f"Новый можно оформить через {RATE_LIMIT_SECONDS} секунд — так бариста успеют всё приготовить без спешки.",
                     reply_markup=create_menu_keyboard(cafe),
                 )
                 await r_client.aclose()
@@ -636,22 +645,23 @@ async def process_confirmation(message: Message, state: FSMContext):
 
         user_link = f'<a href="tg://user?id={user_id}">{user_name}</a>'
         admin_message = (
-            f"<b>НОВЫЙ ЗАКАЗ #{order_num}</b> | {cafe['name']}\n\n"
-            f"{user_link}\n"
-            f"<code>{user_id}</code>\n\n"
-            f"{drink}\n"
-            f"{quantity} порций\n"
-            f"<b>{total} р</b>\n\n"
-            f"Нажми на имя, чтобы открыть чат и ответить клиенту."
+            f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_num}</b>\n"
+            f"🏠 Кафе: <b>{cafe['name']}</b> (id={cafe['id']})\n\n"
+            f"👤 Гость: {user_link}\n"
+            f"🆔 ID: <code>{user_id}</code>\n\n"
+            f"☕️ {drink}\n"
+            f"🔢 Количество: {quantity}\n"
+            f"💰 Сумма: <b>{total} р</b>\n\n"
+            f"Нажми на имя, чтобы открыть чат и ответить гостю."
         )
 
         await message.bot.send_message(int(cafe["admin_chat_id"]), admin_message, disable_web_page_preview=True)
 
-        finish_text = random.choice(FINISH_VARIANTS)
+        finish_text = random.choice(FINISH_VARIANTS).format(name=get_user_name(message))
         await message.answer(
-            f"<b>Заказ #{order_num} принят!</b>\n\n"
-            f"{drink} × {quantity}\n"
-            f"{total}р\n\n"
+            f"✅ <b>Заказ #{order_num} принят!</b>\n\n"
+            f"• {drink} × {quantity}\n"
+            f"• К оплате: <b>{total}р</b>\n\n"
             f"{finish_text}",
             reply_markup=create_menu_keyboard(cafe),
         )
@@ -660,10 +670,10 @@ async def process_confirmation(message: Message, state: FSMContext):
 
     if message.text == "Меню":
         await state.clear()
-        await message.answer("Меню:", reply_markup=create_menu_keyboard(cafe))
+        await message.answer("☕️ Открываю меню:", reply_markup=create_menu_keyboard(cafe))
         return
 
-    await message.answer("Нажмите кнопку", reply_markup=create_confirm_keyboard())
+    await message.answer("Чтобы продолжить, нажми кнопку «Подтвердить» или «Меню».", reply_markup=create_confirm_keyboard())
 
 
 # -------------------------
@@ -676,12 +686,12 @@ async def start_booking(message: Message, state: FSMContext, cafe: Dict[str, Any
     msk_time = get_moscow_time().strftime("%H:%M")
 
     text = (
-        f"{name}, давай забронируем столик.\n\n"
-        f"Сейчас {msk_time} (МСК).\n\n"
+        f"📋 <b>Бронирование столика</b>\n\n"
+        f"{name}, сейчас {msk_time} (МСК).\n\n"
         "Напиши одним сообщением:\n"
-        "• дату и время\n"
-        "• на сколько человек\n\n"
-        "Пример: <i>Сегодня в 19:30, на 3 человека</i>"
+        "• дату и время (например: <i>сегодня в 19:30</i>)\n"
+        "• количество гостей (например: <i>на 3 человека</i>)\n\n"
+        "Я передам заявку администратору и он свяжется с тобой в Telegram, чтобы подтвердить бронь."
     )
     await message.answer(text, reply_markup=create_info_keyboard())
 
@@ -696,17 +706,19 @@ async def process_booking(message: Message, state: FSMContext):
     booking_text = message.text.strip()
 
     admin_msg = (
-        f"<b>НОВАЯ ЗАЯВКА НА БРОНЬ</b> | {cafe['name']}\n\n"
-        f"{user_link}\n"
-        f"<code>{user_id}</code>\n\n"
-        f"<b>Пожелание гостя:</b>\n{booking_text}\n\n"
-        f"Ответь гостю в личных сообщениях и подтверди бронь."
+        f"📋 <b>НОВАЯ ЗАЯВКА НА БРОНЬ</b>\n"
+        f"🏠 Кафе: <b>{cafe['name']}</b> (id={cafe['id']})\n\n"
+        f"👤 Гость: {user_link}\n"
+        f"🆔 ID: <code>{user_id}</code>\n\n"
+        f"📝 <b>Пожелание гостя:</b>\n{booking_text}\n\n"
+        f"Ответь гостю в личных сообщениях и подтверди бронь.\n"
+        f"При необходимости уточни время и посадку."
     )
     await message.bot.send_message(int(cafe["admin_chat_id"]), admin_msg, disable_web_page_preview=True)
 
     await message.answer(
-        "Спасибо! Я передал заявку администратору.\n"
-        "Он свяжется с тобой в Telegram и подтвердит бронь.",
+        "👌 Заявка отправлена администратору.\n"
+        "Он свяжется с тобой в Telegram, подтвердит бронь и подскажет по посадке.",
         reply_markup=create_menu_keyboard(cafe),
     )
     await state.clear()
@@ -718,7 +730,6 @@ async def process_booking(message: Message, state: FSMContext):
 
 @router.message(StateFilter(None), F.text)
 async def drink_selected(message: Message, state: FSMContext):
-    # если пользователь уже в состоянии — не перехватываем
     if await state.get_state() is not None:
         return
 
@@ -728,7 +739,7 @@ async def drink_selected(message: Message, state: FSMContext):
     cafe = await get_cafe_for_user(message.from_user.id)
     menu = cafe["menu"]
 
-    if message.text == "Бронирование / столики":
+    if message.text == "📋 Бронирование / столики":
         await start_booking(message, state, cafe)
         return
 
@@ -748,7 +759,9 @@ async def drink_selected(message: Message, state: FSMContext):
     choice_text = random.choice(CHOICE_VARIANTS).format(name=get_user_name(message))
     await message.answer(
         f"{choice_text}\n\n"
-        f"<b>{drink}</b>\n<b>{price} р</b>\n\n<b>Сколько порций?</b>",
+        f"☕️ <b>{drink}</b>\n"
+        f"💰 <b>{price} р</b>\n\n"
+        f"<b>Сколько порций нужно?</b>",
         reply_markup=create_quantity_keyboard(),
     )
 
@@ -757,37 +770,42 @@ async def drink_selected(message: Message, state: FSMContext):
 # Info buttons
 # -------------------------
 
-@router.message(F.text == "Позвонить")
+@router.message(F.text == "📞 Связаться с кафе")
 async def call_phone(message: Message):
     cafe = await get_cafe_for_user(message.from_user.id)
     name = get_user_name(message)
 
+    base = (
+        f"{name}, если удобнее поговорить голосом — вот наш номер:\n\n"
+        f"📞 <b>{cafe['name']}</b>\n"
+        f"<code>{cafe['phone']}</code>\n\n"
+    )
+
     if is_cafe_open(cafe):
-        await message.answer(
-            f"{name}, буду рад помочь!\n\n"
-            f"<b>Телефон {cafe['name']}:</b>\n<code>{cafe['phone']}</code>\n",
-            reply_markup=create_menu_keyboard(cafe),
-        )
+        tail = "Сейчас мы работаем: можно позвонить или оформить заказ прямо здесь, в боте ☕️"
+        kb = create_menu_keyboard(cafe)
     else:
-        await message.answer(
-            f"{name}, сейчас мы закрыты.\n\n"
-            f"<b>Телефон {cafe['name']}:</b>\n<code>{cafe['phone']}</code>\n\n"
-            f"{get_work_status(cafe)}\n",
-            reply_markup=create_info_keyboard(),
+        tail = (
+            f"Сейчас кафе закрыто.\n{get_work_status(cafe)}\n\n"
+            f"Ты можешь оставить заказ или бронь в боте — мы увидим это, как только выйдем на смену."
         )
+        kb = create_info_keyboard()
+
+    await message.answer(base + tail, reply_markup=kb)
 
 
-@router.message(F.text == "Часы работы")
+@router.message(F.text == "⏰ Режим работы")
 async def show_hours(message: Message):
     cafe = await get_cafe_for_user(message.from_user.id)
     name = get_user_name(message)
     msk_time = get_moscow_time().strftime("%H:%M")
 
+    status = get_work_status(cafe)
     await message.answer(
-        f"{name}, вот режим работы:\n\n"
-        f"<b>Сейчас:</b> {msk_time} (МСК)\n"
-        f"{get_work_status(cafe)}\n\n"
-        f"Телефон: <code>{cafe['phone']}</code>\n",
+        f"⏰ <b>Режим работы кафе</b>\n\n"
+        f"{name}, сейчас {msk_time} (МСК).\n"
+        f"{status}\n\n"
+        f"Можешь сразу выбрать напиток или оставить бронь на удобное время.",
         reply_markup=create_menu_keyboard(cafe) if is_cafe_open(cafe) else create_info_keyboard(),
     )
 
@@ -806,7 +824,7 @@ async def stats_command(message: Message):
         r_client = await get_redis_client()
         total_orders = int(await r_client.get(f"stats:{cafe['id']}:total_orders") or 0)
         stats_text = (
-            f"<b>Статистика заказов</b>\n"
+            f"📊 <b>Статистика заказов</b>\n"
             f"Кафе: <b>{cafe['name']}</b> (id={cafe['id']})\n\n"
             f"Всего заказов: <b>{total_orders}</b>\n\n"
         )
@@ -825,14 +843,14 @@ async def links_command(message: Message):
     if not SUPERADMIN_ID or message.from_user.id != SUPERADMIN_ID:
         return
 
-    parts = ["<b>Ссылки всех кафе</b>\n"]
+    parts = ["🔗 <b>Ссылки всех кафе</b>\n"]
     for cafe in CAFES:
         guest_link = await create_start_link(message.bot, payload=cafe["id"], encode=False)
         staff_link = await create_startgroup_link(message.bot, payload=cafe["id"], encode=False)
         parts.append(
             f"<b>{cafe['name']}</b> (id={cafe['id']}):\n"
-            f"Гости: {guest_link}\n"
-            f"Персонал: {staff_link}\n"
+            f"• Гости: {guest_link}\n"
+            f"• Персонал: {staff_link}\n"
         )
     await message.answer("\n".join(parts), disable_web_page_preview=True)
 
@@ -859,7 +877,7 @@ async def set_bot_commands(bot: Bot) -> None:
 
 
 async def on_startup(bot: Bot) -> None:
-    logger.info("=== BUILD MARK: MULTI-CAFE MAIN v4 (booking) ===")
+    logger.info("=== BUILD MARK: MULTI-CAFE MAIN v5 (booking + rich texts) ===")
     logger.info(f"Cafes loaded: {len(CAFES)}")
     for c in CAFES:
         logger.info(f"CFG cafe={c['id']} admin={c['admin_chat_id']}")
