@@ -160,6 +160,7 @@ async def on_error(event: ErrorEvent):
 class OrderStates(StatesGroup):
     waiting_for_quantity = State()
     waiting_for_confirmation = State()
+    waiting_for_booking_info = State()  # бронирование
 
 
 # -------------------------
@@ -260,6 +261,7 @@ def get_work_status(cafe: Dict[str, Any]) -> str:
 def create_menu_keyboard(cafe: Dict[str, Any]) -> ReplyKeyboardMarkup:
     keyboard = [[KeyboardButton(text=drink)] for drink in cafe["menu"].keys()]
     keyboard.append([KeyboardButton(text="Позвонить"), KeyboardButton(text="Часы работы")])
+    keyboard.append([KeyboardButton(text="Бронирование / столики")])
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
@@ -267,6 +269,7 @@ def create_info_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="Позвонить"), KeyboardButton(text="Часы работы")],
+            [KeyboardButton(text="Бронирование / столики")],
         ],
         resize_keyboard=True,
     )
@@ -550,35 +553,6 @@ QUANTITY_MAP = {
 }
 
 
-@router.message(F.text)
-async def drink_selected(message: Message, state: FSMContext):
-    if not message.text:
-        return
-
-    cafe = await get_cafe_for_user(message.from_user.id)
-    menu = cafe["menu"]
-
-    if message.text not in menu:
-        return
-
-    if not is_cafe_open(cafe):
-        await message.answer(get_closed_message(cafe), reply_markup=create_info_keyboard())
-        return
-
-    drink = message.text
-    price = int(menu[drink])
-
-    await state.set_state(OrderStates.waiting_for_quantity)
-    await state.set_data({"drink": drink, "price": price, "cafe_id": cafe["id"]})
-
-    choice_text = random.choice(CHOICE_VARIANTS).format(name=get_user_name(message))
-    await message.answer(
-        f"{choice_text}\n\n"
-        f"<b>{drink}</b>\n<b>{price} р</b>\n\n<b>Сколько порций?</b>",
-        reply_markup=create_quantity_keyboard(),
-    )
-
-
 @router.message(StateFilter(OrderStates.waiting_for_quantity))
 async def process_quantity(message: Message, state: FSMContext):
     cafe = await get_cafe_for_user(message.from_user.id)
@@ -693,6 +667,93 @@ async def process_confirmation(message: Message, state: FSMContext):
 
 
 # -------------------------
+# Booking
+# -------------------------
+
+async def start_booking(message: Message, state: FSMContext, cafe: Dict[str, Any]):
+    await state.set_state(OrderStates.waiting_for_booking_info)
+    name = get_user_name(message)
+    msk_time = get_moscow_time().strftime("%H:%M")
+
+    text = (
+        f"{name}, давай забронируем столик.\n\n"
+        f"Сейчас {msk_time} (МСК).\n\n"
+        "Напиши одним сообщением:\n"
+        "• дату и время\n"
+        "• на сколько человек\n\n"
+        "Пример: <i>Сегодня в 19:30, на 3 человека</i>"
+    )
+    await message.answer(text, reply_markup=create_info_keyboard())
+
+
+@router.message(StateFilter(OrderStates.waiting_for_booking_info), F.text)
+async def process_booking(message: Message, state: FSMContext):
+    cafe = await get_cafe_for_user(message.from_user.id)
+    user_id = message.from_user.id
+    user_name = message.from_user.username or message.from_user.first_name or "Гость"
+    user_link = f'<a href="tg://user?id={user_id}">{user_name}</a>'
+
+    booking_text = message.text.strip()
+
+    admin_msg = (
+        f"<b>НОВАЯ ЗАЯВКА НА БРОНЬ</b> | {cafe['name']}\n\n"
+        f"{user_link}\n"
+        f"<code>{user_id}</code>\n\n"
+        f"<b>Пожелание гостя:</b>\n{booking_text}\n\n"
+        f"Ответь гостю в личных сообщениях и подтверди бронь."
+    )
+    await message.bot.send_message(int(cafe["admin_chat_id"]), admin_msg, disable_web_page_preview=True)
+
+    await message.answer(
+        "Спасибо! Я передал заявку администратору.\n"
+        "Он свяжется с тобой в Telegram и подтвердит бронь.",
+        reply_markup=create_menu_keyboard(cafe),
+    )
+    await state.clear()
+
+
+# -------------------------
+# General text handler (drinks + booking entry)
+# -------------------------
+
+@router.message(StateFilter(None), F.text)
+async def drink_selected(message: Message, state: FSMContext):
+    # если пользователь уже в состоянии — не перехватываем
+    if await state.get_state() is not None:
+        return
+
+    if not message.text:
+        return
+
+    cafe = await get_cafe_for_user(message.from_user.id)
+    menu = cafe["menu"]
+
+    if message.text == "Бронирование / столики":
+        await start_booking(message, state, cafe)
+        return
+
+    if message.text not in menu:
+        return
+
+    if not is_cafe_open(cafe):
+        await message.answer(get_closed_message(cafe), reply_markup=create_info_keyboard())
+        return
+
+    drink = message.text
+    price = int(menu[drink])
+
+    await state.set_state(OrderStates.waiting_for_quantity)
+    await state.set_data({"drink": drink, "price": price, "cafe_id": cafe["id"]})
+
+    choice_text = random.choice(CHOICE_VARIANTS).format(name=get_user_name(message))
+    await message.answer(
+        f"{choice_text}\n\n"
+        f"<b>{drink}</b>\n<b>{price} р</b>\n\n<b>Сколько порций?</b>",
+        reply_markup=create_quantity_keyboard(),
+    )
+
+
+# -------------------------
 # Info buttons
 # -------------------------
 
@@ -798,7 +859,7 @@ async def set_bot_commands(bot: Bot) -> None:
 
 
 async def on_startup(bot: Bot) -> None:
-    logger.info("=== BUILD MARK: MULTI-CAFE MAIN v4 (no em-dash) ===")
+    logger.info("=== BUILD MARK: MULTI-CAFE MAIN v4 (booking) ===")
     logger.info(f"Cafes loaded: {len(CAFES)}")
     for c in CAFES:
         logger.info(f"CFG cafe={c['id']} admin={c['admin_chat_id']}")
