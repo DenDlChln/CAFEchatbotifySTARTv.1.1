@@ -683,6 +683,20 @@ async def process_confirmation(message: Message, state: FSMContext):
 # Booking
 # -------------------------
 
+# тексты-кнопки, которые не должны считаться заявкой
+IGNORED_BOOKING_TEXTS = {
+    "📞 Связаться с кафе",
+    "⏰ Режим работы",
+    "📋 Бронирование / столики",
+    "Открыть меню",
+    "Мои ссылки",
+    "Подключить группу",
+    "Статистика",
+    "Меню",
+    "Отмена",
+}
+
+
 async def start_booking(message: Message, state: FSMContext, cafe: Dict[str, Any]):
     await state.set_state(OrderStates.waiting_for_booking_info)
     name = get_user_name(message)
@@ -701,6 +715,17 @@ async def start_booking(message: Message, state: FSMContext, cafe: Dict[str, Any
 
 @router.message(StateFilter(OrderStates.waiting_for_booking_info), F.text)
 async def process_booking(message: Message, state: FSMContext):
+    # защита от случайных нажатий кнопок
+    if message.text in IGNORED_BOOKING_TEXTS:
+        await message.answer(
+            "Напиши, пожалуйста, одним сообщением:\n"
+            "• дату и время\n"
+            "• на сколько человек нужен столик\n\n"
+            "Пример: <i>завтра в 19:30, на 4 человека</i>",
+            reply_markup=create_info_keyboard(),
+        )
+        return
+
     cafe = await get_cafe_for_user(message.from_user.id)
     user_id = message.from_user.id
     user_name = message.from_user.username or message.from_user.first_name or "Гость"
@@ -725,6 +750,55 @@ async def process_booking(message: Message, state: FSMContext):
         reply_markup=create_menu_keyboard(cafe),
     )
     await state.clear()
+
+
+# -------------------------
+# Info buttons
+# -------------------------
+
+@router.message(StateFilter(None), F.text == "📞 Связаться с кафе")
+async def call_phone(message: Message):
+    cafe = await get_cafe_for_user(message.from_user.id)
+    name = get_user_name(message)
+
+    phone = cafe.get("phone", "номер не указан")
+    cafe_name = cafe.get("name", "наше кафе")
+
+    text = (
+        f"📞 <b>Связаться с кафе</b>\n\n"
+        f"{name}, вот контакт для связи:\n\n"
+        f"🏠 <b>{cafe_name}</b>\n"
+        f"☎️ <code>{phone}</code>\n\n"
+        f"Если хочешь, можешь сразу коротко написать сюда, по какому вопросу будем на связи "
+        f"(бронь, заказ навынос, уточнение по меню и т.п.) — я передам сообщение администратору."
+    )
+
+    await message.answer(text, reply_markup=create_menu_keyboard(cafe))
+
+
+@router.message(StateFilter(None), F.text == "⏰ Режим работы")
+async def show_hours(message: Message):
+    cafe = await get_cafe_for_user(message.from_user.id)
+    name = get_user_name(message)
+    msk_time = get_moscow_time().strftime("%H:%M")
+
+    status = get_work_status(cafe)
+    cafe_name = cafe.get("name", "наше кафе")
+    address = cafe.get("address", "адрес уточняется")
+
+    text = (
+        f"⏰ <b>Режим работы кафе</b>\n\n"
+        f"{name}, сейчас {msk_time} (МСК).\n"
+        f"{status}\n\n"
+        f"🏠 <b>{cafe_name}</b>\n"
+        f"📍 <b>Адрес:</b> {address}\n\n"
+        f"Можешь сразу выбрать напиток или оставить бронь столика на удобное время."
+    )
+
+    await message.answer(
+        text,
+        reply_markup=create_menu_keyboard(cafe) if is_cafe_open(cafe) else create_info_keyboard(),
+    )
 
 
 # -------------------------
@@ -766,55 +840,6 @@ async def drink_selected(message: Message, state: FSMContext):
         f"💰 <b>{price} р</b>\n\n"
         f"<b>Сколько порций нужно?</b>",
         reply_markup=create_quantity_keyboard(),
-    )
-
-
-# -------------------------
-# Info buttons
-# -------------------------
-
-@router.message(F.text == "📞 Связаться с кафе")
-async def call_phone(message: Message):
-    cafe = await get_cafe_for_user(message.from_user.id)
-    name = get_user_name(message)
-
-    phone = cafe.get("phone", "номер не указан")
-    cafe_name = cafe.get("name", "наше кафе")
-
-    text = (
-        f"📞 <b>Связаться с кафе</b>\n\n"
-        f"{name}, вот контакт для связи:\n\n"
-        f"🏠 <b>{cafe_name}</b>\n"
-        f"☎️ <code>{phone}</code>\n\n"
-        f"Если хочешь, можешь сразу коротко написать сюда, по какому вопросу будем на связи "
-        f"(бронь, заказ навынос, уточнение по меню и т.п.) — я передам сообщение администратору."
-    )
-
-    await message.answer(text, reply_markup=create_menu_keyboard(cafe))
-
-
-@router.message(F.text == "⏰ Режим работы")
-async def show_hours(message: Message):
-    cafe = await get_cafe_for_user(message.from_user.id)
-    name = get_user_name(message)
-    msk_time = get_moscow_time().strftime("%H:%M")
-
-    status = get_work_status(cafe)
-    cafe_name = cafe.get("name", "наше кафе")
-    address = cafe.get("address", "адрес уточняется")
-
-    text = (
-        f"⏰ <b>Режим работы кафе</b>\n\n"
-        f"{name}, сейчас {msk_time} (МСК).\n"
-        f"{status}\n\n"
-        f"🏠 <b>{cafe_name}</b>\n"
-        f"📍 <b>Адрес:</b> {address}\n\n"
-        f"Можешь сразу выбрать напиток или оставить бронь столика на удобное время."
-    )
-
-    await message.answer(
-        text,
-        reply_markup=create_menu_keyboard(cafe) if is_cafe_open(cafe) else create_info_keyboard(),
     )
 
 
@@ -885,7 +910,7 @@ async def set_bot_commands(bot: Bot) -> None:
 
 
 async def on_startup(bot: Bot) -> None:
-    logger.info("=== BUILD MARK: MULTI-CAFE MAIN v6 (booking + rich texts + address) ===")
+    logger.info("=== BUILD MARK: MULTI-CAFE MAIN v7 (booking fix + hours) ===")
     logger.info(f"Cafes loaded: {len(CAFES)}")
     for c in CAFES:
         logger.info(f"CFG cafe={c['id']} admin={c['admin_chat_id']}")
