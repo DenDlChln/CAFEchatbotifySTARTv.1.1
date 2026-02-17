@@ -4,11 +4,11 @@
   "default_cafe_id": "cafe_001",
   "cafes": {
     "cafe_001": {
-      "title": "Кафе "КАПУЧИНО"",
-      "city": "Краснодар",
+      "title": "Кафе #1",
+      "city": "",
       "timezone": "Europe/Moscow",
-      "address": "г. Краснодар, ул. Красная, 123",
-      "phone": "+7 900 000-00-00",
+      "address": "",
+      "phone": "",
       "admin_id": 0,
       "features": {
         "orders_enabled": true,
@@ -20,9 +20,7 @@
       },
       "menu": {
         "Капучино": 250,
-        "Латте": 270,
-        "Чай": 180,
-        "Эспрессо": 200
+        "Латте": 270
       }
     },
     "cafe_002": {
