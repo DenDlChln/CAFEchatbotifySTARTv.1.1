@@ -4,6 +4,7 @@ import time
 import asyncio
 import random
 import logging
+from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Optional, Tuple
 
@@ -27,8 +28,8 @@ from aiogram.types import (
 )
 from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter
 from aiogram.filters import IS_NOT_MEMBER, IS_MEMBER
-from aiogram.utils.deep_linking import create_start_link, create_startgroup_link  # deep links [web:24]
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application  # webhook aiohttp [web:1]
+from aiogram.utils.deep_linking import create_start_link, create_startgroup_link  # [web:24]
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application  # [web:1]
 
 
 # -------------------------
@@ -38,7 +39,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
-logger = logging.getLogger("cafebot")
+logger = logging.getLogger("cafebotify")
 
 
 # -------------------------
@@ -53,17 +54,77 @@ DEFAULT_RATE_LIMIT_SECONDS = 60
 
 
 # -------------------------
-# Config
+# Env
+# -------------------------
+BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
+REDIS_URL = (os.getenv("REDIS_URL") or "").strip()
+
+WEBHOOK_SECRET = (os.getenv("WEBHOOK_SECRET") or "cafebot123").strip()
+PUBLIC_HOST = (os.getenv("PUBLIC_HOST") or "cafebotify-start-denvyd.amvera.io").strip()
+
+PORT = int(os.getenv("PORT", "10000"))
+WEBHOOK_PATH = f"/{WEBHOOK_SECRET}/webhook"
+WEBHOOK_URL = f"https://{PUBLIC_HOST}{WEBHOOK_PATH}"
+
+
+# -------------------------
+# Config loader (robust)
 # -------------------------
 def load_config() -> Dict[str, Any]:
-    path = os.getenv("CONFIG_PATH", "config.json")
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    if not isinstance(data, dict):
-        raise ValueError("config root must be an object")
-    if "cafes" not in data or not isinstance(data["cafes"], dict):
-        raise ValueError("config.cafes must be an object: {cafe_id: {...}}")
-    return data
+    """
+    Приоритет:
+      1) CONFIG_PATH (если задан)
+      2) config_330_template.json
+      3) config.json
+    Ищем рядом с main.py (/app).
+    """
+    env_path = (os.getenv("CONFIG_PATH") or "").strip()
+    candidates = [env_path] if env_path else []
+    candidates += ["config_330_template.json", "config.json"]
+
+    base_dir = Path(__file__).resolve().parent  # /app
+    tried: list[str] = []
+
+    for name in candidates:
+        if not name:
+            continue
+        p = Path(name)
+        if not p.is_absolute():
+            p = base_dir / p
+        tried.append(str(p))
+
+        if not p.exists() or not p.is_file():
+            continue
+
+        raw = p.read_text(encoding="utf-8", errors="replace")
+        if not raw.strip():
+            raise ValueError(f"Config file is empty: {p}")
+
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as e:
+            preview = raw.strip()[:160]
+            raise ValueError(f"Config is not valid JSON: {p}. Preview: {preview}") from e
+
+        if not isinstance(data, dict):
+            raise ValueError(f"config root must be an object: {p}")
+        if "cafes" not in data or not isinstance(data["cafes"], dict):
+            raise ValueError(f"config.cafes must be an object: {p}")
+
+        logger.info("CONFIG loaded: %s (cafes=%d)", p, len(data["cafes"]))
+        return data
+
+    try:
+        files = sorted([x.name for x in base_dir.iterdir()])
+    except Exception:
+        files = []
+
+    raise FileNotFoundError(
+        "Config file not found. Tried: "
+        + ", ".join(tried)
+        + f". Files in {base_dir}: {files}. "
+        + "Set CONFIG_PATH (recommended: config_330_template.json)."
+    )
 
 
 CONFIG = load_config()
@@ -79,20 +140,6 @@ def cafe_or_default(cafe_id: Optional[str]) -> Dict[str, Any]:
 
 def is_superadmin(user_id: int) -> bool:
     return bool(SUPERADMIN_ID) and user_id == SUPERADMIN_ID
-
-
-# -------------------------
-# Env / webhook
-# -------------------------
-BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
-REDIS_URL = os.getenv("REDIS_URL", "").strip()
-
-WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "cafebot123").strip()
-HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
-PORT = int(os.getenv("PORT", "10000"))
-
-WEBHOOK_PATH = f"/{WEBHOOK_SECRET}/webhook"
-WEBHOOK_URL = f"https://{HOSTNAME}{WEBHOOK_PATH}" if HOSTNAME else ""
 
 
 # -------------------------
@@ -133,28 +180,10 @@ def stats_drink_key(cafe_id: str, drink: str) -> str:
     return f"stats:{cafe_id}:drink:{drink}"
 
 def cafe_profile_key(cafe_id: str) -> str:
-    return f"cafe:{cafe_id}:profile"   # hash
+    return f"cafe:{cafe_id}:profile"
 
 def cafe_menu_key(cafe_id: str) -> str:
-    return f"cafe:{cafe_id}:menu"      # hash
-
-
-# -------------------------
-# Redis helpers
-# -------------------------
-async def get_user_cafe_id(r: redis.Redis, user_id: int) -> Optional[str]:
-    v = await r.get(user_cafe_key(user_id))
-    return str(v) if v else None
-
-async def set_user_cafe_id(r: redis.Redis, user_id: int, cafe_id: str) -> None:
-    await r.set(user_cafe_key(user_id), cafe_id)
-
-async def set_group_cafe_id(r: redis.Redis, chat_id: int, cafe_id: str) -> None:
-    await r.set(group_cafe_key(chat_id), cafe_id)
-
-async def get_group_cafe_id(r: redis.Redis, chat_id: int) -> Optional[str]:
-    v = await r.get(group_cafe_key(chat_id))
-    return str(v) if v else None
+    return f"cafe:{cafe_id}:menu"
 
 
 # -------------------------
@@ -216,15 +245,15 @@ def is_admin_of_cafe(user_id: int, cafe: Dict[str, Any]) -> bool:
 
 
 # -------------------------
-# Redis overrides (profile + menu)
+# Redis overrides
 # -------------------------
 async def apply_overrides(r: redis.Redis, cafe_id: str, base: Dict[str, Any]) -> Dict[str, Any]:
     cafe = dict(base)
 
     prof = await r.hgetall(cafe_profile_key(cafe_id))
-    if isinstance(prof, dict) and prof:
+    if prof:
         for k in ("title", "phone", "address", "city", "timezone"):
-            if prof.get(k) is not None and prof.get(k) != "":
+            if prof.get(k):
                 cafe[k] = str(prof[k])
         if prof.get("admin_id"):
             try:
@@ -242,7 +271,7 @@ async def apply_overrides(r: redis.Redis, cafe_id: str, base: Dict[str, Any]) ->
         cafe["features"] = feat
 
     menu = await r.hgetall(cafe_menu_key(cafe_id))
-    if isinstance(menu, dict) and menu:
+    if menu:
         new_menu: Dict[str, int] = {}
         for k, v in menu.items():
             try:
@@ -263,8 +292,8 @@ async def get_cafe_by_id_effective(r: redis.Redis, cafe_id: str) -> Dict[str, An
 # -------------------------
 async def get_cafe_for_message(message: Message, r: redis.Redis) -> Tuple[str, Dict[str, Any]]:
     if message.chat.type in ("group", "supergroup"):
-        gid = await get_group_cafe_id(r, message.chat.id)
-        cafe_id = gid or DEFAULT_CAFE_ID
+        gid = await r.get(group_cafe_key(message.chat.id))
+        cafe_id = str(gid) if gid else DEFAULT_CAFE_ID
         return cafe_id, await get_cafe_by_id_effective(r, cafe_id)
 
     mapped = CHATS_TO_CAFE.get(str(message.chat.id))
@@ -272,8 +301,8 @@ async def get_cafe_for_message(message: Message, r: redis.Redis) -> Tuple[str, D
         return mapped, await get_cafe_by_id_effective(r, mapped)
 
     uid = message.from_user.id if message.from_user else 0
-    cid = await get_user_cafe_id(r, uid)
-    cafe_id = cid or DEFAULT_CAFE_ID
+    cid = await r.get(user_cafe_key(uid))
+    cafe_id = str(cid) if cid else DEFAULT_CAFE_ID
     return cafe_id, await get_cafe_by_id_effective(r, cafe_id)
 
 
@@ -376,7 +405,7 @@ async def send_admin_screen(message: Message, cafe_id: str, cafe: Dict[str, Any]
 
 
 # -------------------------
-# Command list
+# Commands
 # -------------------------
 async def set_commands(bot: Bot) -> None:
     commands = [
@@ -398,9 +427,6 @@ async def set_commands(bot: Bot) -> None:
     await bot.set_my_commands(commands)
 
 
-# -------------------------
-# Basic commands
-# -------------------------
 @router.message(Command("ping"))
 async def ping(message: Message):
     await message.answer("pong")
@@ -411,16 +437,10 @@ async def myid(message: Message):
 
 
 # -------------------------
-# JSON arg helpers (safe parsing)
+# JSON helper commands
 # -------------------------
 def _parse_cafe_json_args(args: str) -> Tuple[str, Dict[str, Any]]:
-    """
-    <cafe_id> <json>
-    /cmd cafe_001 {"title":"..","admin_id":123,"menu":{"Американо":190}}
-    """
     args = (args or "").strip()
-    if not args:
-        raise ValueError("no args")
     cafe_id, rest = args.split(maxsplit=1)
     payload = json.loads(rest)
     if not isinstance(payload, dict):
@@ -450,7 +470,7 @@ def _normalize_menu_payload(p: Any) -> Dict[str, str]:
 
 
 # -------------------------
-# Superadmin: init / profile / menu / export
+# Superadmin / init / export
 # -------------------------
 async def _ensure_default_menu(r: redis.Redis, cafe_id: str) -> None:
     if await r.hlen(cafe_menu_key(cafe_id)):
@@ -465,17 +485,11 @@ async def init_cafe_cmd(message: Message, command: CommandObject):
     if not is_superadmin(message.from_user.id):
         return
     cafe_id = (command.args or "").strip()
-    if not cafe_id:
+    if not cafe_id or cafe_id not in CAFES:
         await message.answer("Формат: <code>/init_cafe cafe_001</code>")
         return
-    if cafe_id not in CAFES:
-        await message.answer("Неизвестный cafe_id.")
-        return
-
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
+    r: redis.Redis = message.bot._dispatcher["redis"]
     await _ensure_default_menu(r, cafe_id)
-
     cafe = await get_cafe_by_id_effective(r, cafe_id)
     await send_admin_screen(message, cafe_id, cafe)
 
@@ -493,11 +507,8 @@ async def init_cafe_json_cmd(message: Message, command: CommandObject):
     if cafe_id not in CAFES:
         await message.answer("Неизвестный cafe_id.")
         return
+    r: redis.Redis = message.bot._dispatcher["redis"]
 
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
-
-    prof_map = {}
     try:
         prof_map = _normalize_profile_payload(payload)
     except Exception:
@@ -532,8 +543,6 @@ async def set_profile_json_cmd(message: Message, command: CommandObject):
     if cafe_id not in CAFES:
         await message.answer("Неизвестный cafe_id.")
         return
-
-    prof_map = {}
     try:
         prof_map = _normalize_profile_payload(payload)
     except Exception:
@@ -542,11 +551,8 @@ async def set_profile_json_cmd(message: Message, command: CommandObject):
     if not prof_map:
         await message.answer("JSON пустой или без поддерживаемых полей.")
         return
-
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
+    r: redis.Redis = message.bot._dispatcher["redis"]
     await r.hset(cafe_profile_key(cafe_id), mapping=prof_map)
-
     cafe = await get_cafe_by_id_effective(r, cafe_id)
     await message.answer(f"✅ Профиль обновлён: <code>{html.quote(cafe_id)}</code> → <b>{html.quote(str(cafe.get('title','Кафе')))}</b>")
 
@@ -567,9 +573,7 @@ async def set_admin_cmd(message: Message, command: CommandObject):
     except Exception:
         await message.answer("admin_id должен быть числом.")
         return
-
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
+    r: redis.Redis = message.bot._dispatcher["redis"]
     await r.hset(cafe_profile_key(cafe_id), mapping={"admin_id": str(admin_id)})
     await message.answer(f"✅ admin_id установлен: <code>{html.quote(cafe_id)}</code> → <code>{admin_id}</code>")
 
@@ -581,31 +585,25 @@ async def set_menu_set_cmd(message: Message, command: CommandObject):
     if not raw:
         await message.answer('Формат: <code>/set_menu_set cafe_001 "Капучино" 250</code>')
         return
-
     tokens = raw.split()
     if len(tokens) < 3:
         await message.answer('Формат: <code>/set_menu_set cafe_001 "Капучино" 250</code>')
         return
-
     cafe_id = tokens[0]
     if cafe_id not in CAFES:
         await message.answer("Неизвестный cafe_id.")
         return
-
     try:
         price = int(tokens[-1])
     except Exception:
         await message.answer("Цена должна быть числом.")
         return
-
     drink = raw[len(cafe_id):].strip()
     drink = drink.rsplit(" ", 1)[0].strip().strip('"').strip("'")
     if not drink:
         await message.answer("Название напитка пустое.")
         return
-
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
+    r: redis.Redis = message.bot._dispatcher["redis"]
     await r.hset(cafe_menu_key(cafe_id), mapping={drink: str(price)})
     await message.answer(f"✅ Меню: <code>{html.quote(cafe_id)}</code> → {html.quote(drink)} = <b>{price}</b> р")
 
@@ -617,24 +615,38 @@ async def set_menu_del_cmd(message: Message, command: CommandObject):
     if not raw:
         await message.answer('Формат: <code>/set_menu_del cafe_001 "Латте"</code>')
         return
-
     parts = raw.split(maxsplit=1)
     if len(parts) != 2:
         await message.answer('Формат: <code>/set_menu_del cafe_001 "Латте"</code>')
         return
-
     cafe_id, drink = parts[0], parts[1].strip().strip('"').strip("'")
+    if cafe_id not in CAFES or not drink:
+        await message.answer('Формат: <code>/set_menu_del cafe_001 "Латте"</code>')
+        return
+    r: redis.Redis = message.bot._dispatcher["redis"]
+    await r.hdel(cafe_menu_key(cafe_id), drink)
+    await message.answer(f"✅ Удалено: <code>{html.quote(cafe_id)}</code> → {html.quote(drink)}")
+
+@router.message(Command("cafe"))
+async def cafe_info(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        return
+    cafe_id = (command.args or "").strip() or DEFAULT_CAFE_ID
     if cafe_id not in CAFES:
         await message.answer("Неизвестный cafe_id.")
         return
-    if not drink:
-        await message.answer("Название напитка пустое.")
-        return
-
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
-    await r.hdel(cafe_menu_key(cafe_id), drink)
-    await message.answer(f"✅ Удалено: <code>{html.quote(cafe_id)}</code> → {html.quote(drink)}")
+    r: redis.Redis = message.bot._dispatcher["redis"]
+    cafe = await get_cafe_by_id_effective(r, cafe_id)
+    ws, we = cafe_hours(cafe)
+    await message.answer(
+        f"🏠 <b>{html.quote(str(cafe.get('title','Кафе')))}</b>\n"
+        f"id: <code>{html.quote(cafe_id)}</code>\n"
+        f"admin_id: <code>{int(cafe.get('admin_id') or 0)}</code>\n"
+        f"phone: <code>{html.quote(str(cafe.get('phone','')))}</code>\n"
+        f"address: {html.quote(str(cafe.get('address','')))}\n"
+        f"hours: {ws}:00–{we}:00\n"
+        f"menu items: <b>{len(menu_of(cafe))}</b>",
+    )
 
 @router.message(Command("export_cafe"))
 async def export_cafe_cmd(message: Message, command: CommandObject):
@@ -644,19 +656,11 @@ async def export_cafe_cmd(message: Message, command: CommandObject):
     if cafe_id not in CAFES:
         await message.answer("Неизвестный cafe_id.")
         return
-
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
-
+    r: redis.Redis = message.bot._dispatcher["redis"]
     prof = await r.hgetall(cafe_profile_key(cafe_id))
     menu = await r.hgetall(cafe_menu_key(cafe_id))
     out = {"cafe_id": cafe_id, "profile": prof or {}, "menu": menu or {}}
-
-    await message.answer(
-        "📦 <b>Export</b>\n<code>"
-        + html.quote(json.dumps(out, ensure_ascii=False))
-        + "</code>"
-    )
+    await message.answer("<code>" + html.quote(json.dumps(out, ensure_ascii=False)) + "</code>")
 
 
 # -------------------------
@@ -679,57 +683,48 @@ async def bind_group(message: Message, command: CommandObject):
     if message.chat.type not in ("group", "supergroup"):
         await message.answer("Команда /bind работает только в группе персонала.")
         return
-
     cafe_id = (command.args or "").strip()
     if not cafe_id or cafe_id not in CAFES:
         await message.answer("Формат: <code>/bind cafe_001</code>")
         return
-
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
+    r: redis.Redis = message.bot._dispatcher["redis"]
     cafe = await get_cafe_by_id_effective(r, cafe_id)
-
     if not is_admin_of_cafe(message.from_user.id, cafe):
         await message.answer("Только администратор этого кафе может привязать группу.")
         return
-
-    await set_group_cafe_id(r, message.chat.id, cafe_id)
+    await r.set(group_cafe_key(message.chat.id), cafe_id)
     await message.answer(f"Группа привязана к кафе: <b>{html.quote(str(cafe.get('title','Кафе')))}</b>")
 
 
 # -------------------------
-# Start flow (admin/client)
+# Start flow
 # -------------------------
 async def start_common(message: Message, state: FSMContext, payload: Optional[str]):
     await state.clear()
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
+    r: redis.Redis = message.bot._dispatcher["redis"]
 
     uid = message.from_user.id
     payload = (payload or "").strip() or None
 
-    # admin deep link: admin:<cafe_id>
     if payload and payload.startswith("admin:"):
         cafe_id = payload.split("admin:", 1)[1].strip()
         if cafe_id in CAFES:
             cafe = await get_cafe_by_id_effective(r, cafe_id)
             if is_admin_of_cafe(uid, cafe):
-                await set_user_cafe_id(r, uid, cafe_id)
+                await r.set(user_cafe_key(uid), cafe_id)
                 await send_admin_screen(message, cafe_id, cafe)
                 return
-            await message.answer("Доступ к админ-ссылке запрещён (не администратор кафе).")
+            await message.answer("Доступ к админ-ссылке запрещён.")
             return
 
-    # guest deep link: <cafe_id>
     if payload and payload in CAFES:
-        await set_user_cafe_id(r, uid, payload)
+        await r.set(user_cafe_key(uid), payload)
         cafe_id = payload
         cafe = await get_cafe_by_id_effective(r, cafe_id)
     else:
         cafe_id, cafe = await get_cafe_for_message(message, r)
-        existing = await get_user_cafe_id(r, uid)
-        if not existing:
-            await set_user_cafe_id(r, uid, cafe_id)
+        if not await r.get(user_cafe_key(uid)):
+            await r.set(user_cafe_key(uid), cafe_id)
 
     if is_admin_of_cafe(uid, cafe):
         await send_admin_screen(message, cafe_id, cafe)
@@ -765,13 +760,10 @@ async def start_plain(message: Message, state: FSMContext):
 # -------------------------
 @router.message(Command("stats"))
 async def stats_cmd(message: Message, state: FSMContext):
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
-
+    r: redis.Redis = message.bot._dispatcher["redis"]
     cafe_id, cafe = await get_cafe_for_message(message, r)
     if not is_admin_of_cafe(message.from_user.id, cafe):
         return
-
     total = int(await r.get(stats_total_orders_key(cafe_id)) or 0)
     lines = [f"📊 <b>Статистика</b>\nКафе: <b>{html.quote(str(cafe.get('title','Кафе')))}</b>\n\nВсего заказов: <b>{total}</b>\n"]
     for drink in menu_of(cafe).keys():
@@ -782,33 +774,33 @@ async def stats_cmd(message: Message, state: FSMContext):
 
 
 # -------------------------
-# Booking
+# Booking + Orders
 # -------------------------
-IGNORED_BOOKING_TEXTS = {
-    BTN_CALL, BTN_HOURS, BTN_BOOK,
-    BTN_MENU, BTN_CANCEL, BTN_CONFIRM,
-}
+IGNORED_BOOKING_TEXTS = {BTN_CALL, BTN_HOURS, BTN_BOOK, BTN_MENU, BTN_CANCEL, BTN_CONFIRM}
+QTY_MAP = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5}
 
-async def booking_start(message: Message, state: FSMContext, cafe: Dict[str, Any]):
+async def booking_start(message: Message, state: FSMContext):
     await state.set_state(OrderStates.waiting_for_booking_info)
     await message.answer(
         "📋 <b>Бронирование столика</b>\n\n"
         "Напиши одним сообщением:\n"
-        "• дату и время (например: <i>сегодня в 19:30</i>)\n"
-        "• количество гостей (например: <i>на 3 человека</i>)\n\n"
-        "Я передам заявку администратору, и он свяжется с тобой в Telegram.",
+        "• дату и время\n"
+        "• количество гостей\n\n"
+        "Я передам заявку администратору.",
         reply_markup=kb_info(),
     )
+
+@router.message(StateFilter(None), F.text == BTN_BOOK)
+async def booking_entry(message: Message, state: FSMContext):
+    await booking_start(message, state)
 
 @router.message(StateFilter(OrderStates.waiting_for_booking_info), F.text)
 async def booking_step(message: Message, state: FSMContext):
     if (message.text or "").strip() in IGNORED_BOOKING_TEXTS:
         await message.answer("Напиши одним сообщением дату/время и количество гостей.", reply_markup=kb_info())
         return
-
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
-    cafe_id = await get_user_cafe_id(r, message.from_user.id) or DEFAULT_CAFE_ID
+    r: redis.Redis = message.bot._dispatcher["redis"]
+    cafe_id = str(await r.get(user_cafe_key(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = await get_cafe_by_id_effective(r, cafe_id)
 
     uid = message.from_user.id
@@ -818,57 +810,44 @@ async def booking_step(message: Message, state: FSMContext):
 
     admin_id = int(cafe.get("admin_id") or 0)
     if admin_id:
-        admin_msg = (
+        await message.bot.send_message(
+            admin_id,
             f"📋 <b>ЗАЯВКА НА БРОНЬ</b>\n"
             f"🏠 Кафе: <b>{html.quote(str(cafe.get('title','Кафе')))}</b> (id=<code>{html.quote(cafe_id)}</code>)\n\n"
             f"👤 Гость: {user_link}\n"
             f"🆔 ID: <code>{uid}</code>\n\n"
-            f"📝 <b>Текст:</b>\n{booking_text}\n"
+            f"📝 <b>Текст:</b>\n{booking_text}\n",
+            disable_web_page_preview=True,
         )
-        await message.bot.send_message(admin_id, admin_msg, disable_web_page_preview=True)
 
     await message.answer("👌 Заявка отправлена администратору.", reply_markup=kb_guest(cafe))
     await state.clear()
 
-
-# -------------------------
-# Ordering
-# -------------------------
-QTY_MAP = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5}
-
 @router.message(StateFilter(None), F.text)
-async def guest_entry(message: Message, state: FSMContext):
+async def drink_pick(message: Message, state: FSMContext):
     text = (message.text or "").strip()
     if not text:
         return
 
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
+    if text == BTN_CALL or text == BTN_HOURS:
+        r: redis.Redis = message.bot._dispatcher["redis"]
+        cafe_id, cafe = await get_cafe_for_message(message, r)
+        if text == BTN_CALL:
+            await message.answer(
+                f"📞 <b>{html.quote(str(cafe.get('title','Кафе')))}</b>\n☎️ <code>{html.quote(str(cafe.get('phone','')))}</code>",
+                reply_markup=kb_guest(cafe) if cafe_open(cafe) else kb_info(),
+            )
+        else:
+            await message.answer(
+                f"⏰ <b>Режим работы</b>\n\n{work_status(cafe)}\n📍 {html.quote(str(cafe.get('address','')))}",
+                reply_markup=kb_guest(cafe) if cafe_open(cafe) else kb_info(),
+            )
+        return
+
+    r: redis.Redis = message.bot._dispatcher["redis"]
     cafe_id, cafe = await get_cafe_for_message(message, r)
-
-    if text == BTN_BOOK:
-        await booking_start(message, state, cafe)
-        return
-
-    if text == BTN_CALL:
-        await message.answer(
-            "📞 <b>Связаться с кафе</b>\n\n"
-            f"🏠 <b>{html.quote(str(cafe.get('title','Кафе')))}</b>\n"
-            f"☎️ <code>{html.quote(str(cafe.get('phone','')))}</code>\n",
-            reply_markup=kb_guest(cafe) if cafe_open(cafe) else kb_info(),
-        )
-        return
-
-    if text == BTN_HOURS:
-        await message.answer(
-            "⏰ <b>Режим работы</b>\n\n"
-            f"{work_status(cafe)}\n"
-            f"📍 <b>Адрес:</b> {html.quote(str(cafe.get('address','')))}\n",
-            reply_markup=kb_guest(cafe) if cafe_open(cafe) else kb_info(),
-        )
-        return
-
     menu = menu_of(cafe)
+
     if text not in menu:
         return
 
@@ -878,13 +857,11 @@ async def guest_entry(message: Message, state: FSMContext):
 
     drink = text
     price = int(menu[drink])
-
     await state.set_state(OrderStates.waiting_for_quantity)
     await state.set_data({"drink": drink, "price": price, "cafe_id": cafe_id})
 
-    choice = random.choice(CHOICE_VARIANTS).format(name=html.quote(user_name(message)))
     await message.answer(
-        f"{choice}\n\n"
+        f"{random.choice(CHOICE_VARIANTS)}\n\n"
         f"☕️ <b>{html.quote(drink)}</b>\n"
         f"💰 <b>{price} р</b>\n\n"
         f"<b>Сколько порций нужно?</b>",
@@ -893,8 +870,7 @@ async def guest_entry(message: Message, state: FSMContext):
 
 @router.message(StateFilter(OrderStates.waiting_for_quantity))
 async def qty_step(message: Message, state: FSMContext):
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
+    r: redis.Redis = message.bot._dispatcher["redis"]
     cafe_id = str((await state.get_data()).get("cafe_id") or DEFAULT_CAFE_ID)
     cafe = await get_cafe_by_id_effective(r, cafe_id)
 
@@ -927,8 +903,7 @@ async def qty_step(message: Message, state: FSMContext):
 
 @router.message(StateFilter(OrderStates.waiting_for_confirmation))
 async def confirm_step(message: Message, state: FSMContext):
-    dp = message.bot._dispatcher
-    r: redis.Redis = dp["redis"]
+    r: redis.Redis = message.bot._dispatcher["redis"]
     data = await state.get_data()
     cafe_id = str(data.get("cafe_id") or DEFAULT_CAFE_ID)
     cafe = await get_cafe_by_id_effective(r, cafe_id)
@@ -969,16 +944,17 @@ async def confirm_step(message: Message, state: FSMContext):
 
     admin_id = int(cafe.get("admin_id") or 0)
     if admin_id:
-        admin_text = (
+        await message.bot.send_message(
+            admin_id,
             f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_num}</b>\n"
             f"🏠 Кафе: <b>{html.quote(str(cafe.get('title','Кафе')))}</b> (id=<code>{html.quote(cafe_id)}</code>)\n\n"
             f"👤 Гость: {user_link}\n"
             f"🆔 ID: <code>{uid}</code>\n\n"
             f"☕️ {html.quote(drink)}\n"
             f"🔢 Количество: {qty}\n"
-            f"💰 Сумма: <b>{total} р</b>\n"
+            f"💰 Сумма: <b>{total} р</b>\n",
+            disable_web_page_preview=True,
         )
-        await message.bot.send_message(admin_id, admin_text, disable_web_page_preview=True)
 
     finish = random.choice(FINISH_VARIANTS).format(name=html.quote(user_name(message)))
     await message.answer(
@@ -992,16 +968,39 @@ async def confirm_step(message: Message, state: FSMContext):
 
 
 # -------------------------
-# Webhook server
+# aiohttp app (webhook)
 # -------------------------
-async def on_startup(bot: Bot):
-    logger.info("Startup: cafes=%d default=%s superadmin=%s", len(CAFES), DEFAULT_CAFE_ID, SUPERADMIN_ID)
+async def app_startup(app: web.Application):
+    bot: Bot = app["bot"]
+    dp: Dispatcher = app["dp"]
+    logger.info("Startup: webhook=%s", WEBHOOK_URL)
     await set_commands(bot)
+    await bot.set_webhook(WEBHOOK_URL, secret_token=WEBHOOK_SECRET)  # [web:1]
+    logger.info("Webhook set ok")
 
-    if not WEBHOOK_URL:
-        raise RuntimeError("RENDER_EXTERNAL_HOSTNAME not set, cannot build WEBHOOK_URL")
-    await bot.set_webhook(WEBHOOK_URL, secret_token=WEBHOOK_SECRET)  # secret_token header [web:39]
-    logger.info("Webhook set: %s", WEBHOOK_URL)
+async def app_shutdown(app: web.Application):
+    bot: Bot = app["bot"]
+    dp: Dispatcher = app["dp"]
+    storage: RedisStorage = app["storage"]
+    r: redis.Redis = dp["redis"]
+    try:
+        await bot.delete_webhook()
+    except Exception:
+        pass
+    try:
+        await storage.close()
+    except Exception:
+        pass
+    try:
+        await r.aclose()
+    except Exception:
+        pass
+    try:
+        await bot.session.close()
+    except Exception:
+        pass
+    logger.info("Shutdown complete")
+
 
 async def main():
     if not BOT_TOKEN:
@@ -1012,15 +1011,18 @@ async def main():
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     storage = RedisStorage.from_url(REDIS_URL)
     dp = Dispatcher(storage=storage)
+    dp.include_router(router)
 
     r = redis.from_url(REDIS_URL, decode_responses=True)
     await r.ping()
     dp["redis"] = r
 
-    dp.include_router(router)
-    dp.startup.register(lambda _: on_startup(bot))
-
     app = web.Application()
+    app["bot"] = bot
+    app["dp"] = dp
+    app["storage"] = storage
+    app.on_startup.append(app_startup)
+    app.on_shutdown.append(app_shutdown)
 
     async def healthcheck(_: web.Request):
         return web.json_response({"status": "ok"})
@@ -1035,27 +1037,6 @@ async def main():
     ).register(app, path=WEBHOOK_PATH)
 
     setup_application(app, dp, bot=bot)  # [web:1]
-
-    async def _on_shutdown(_: web.Application):
-        try:
-            await bot.delete_webhook()
-        except Exception:
-            pass
-        try:
-            await storage.close()
-        except Exception:
-            pass
-        try:
-            await r.aclose()
-        except Exception:
-            pass
-        try:
-            await bot.session.close()
-        except Exception:
-            pass
-        logger.info("Shutdown complete")
-
-    app.on_shutdown.append(_on_shutdown)
 
     runner = web.AppRunner(app)
     await runner.setup()
