@@ -1,6608 +1,1053 @@
-{
-  "schema_version": 1,
-  "superadmin_id": 1471275603,
-  "default_cafe_id": "cafe_001",
-  "cafes": {
-    "cafe_001": {
-      "title": "Кафе #1",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_002": {
-      "title": "Кафе #2",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_003": {
-      "title": "Кафе #3",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_004": {
-      "title": "Кафе #4",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_005": {
-      "title": "Кафе #5",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_006": {
-      "title": "Кафе #6",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_007": {
-      "title": "Кафе #7",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_008": {
-      "title": "Кафе #8",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_009": {
-      "title": "Кафе #9",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_010": {
-      "title": "Кафе #10",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_011": {
-      "title": "Кафе #11",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_012": {
-      "title": "Кафе #12",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_013": {
-      "title": "Кафе #13",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_014": {
-      "title": "Кафе #14",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_015": {
-      "title": "Кафе #15",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_016": {
-      "title": "Кафе #16",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_017": {
-      "title": "Кафе #17",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_018": {
-      "title": "Кафе #18",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_019": {
-      "title": "Кафе #19",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_020": {
-      "title": "Кафе #20",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_021": {
-      "title": "Кафе #21",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_022": {
-      "title": "Кафе #22",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_023": {
-      "title": "Кафе #23",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_024": {
-      "title": "Кафе #24",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_025": {
-      "title": "Кафе #25",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_026": {
-      "title": "Кафе #26",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_027": {
-      "title": "Кафе #27",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_028": {
-      "title": "Кафе #28",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_029": {
-      "title": "Кафе #29",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_030": {
-      "title": "Кафе #30",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_031": {
-      "title": "Кафе #31",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_032": {
-      "title": "Кафе #32",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_033": {
-      "title": "Кафе #33",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_034": {
-      "title": "Кафе #34",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_035": {
-      "title": "Кафе #35",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_036": {
-      "title": "Кафе #36",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_037": {
-      "title": "Кафе #37",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_038": {
-      "title": "Кафе #38",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_039": {
-      "title": "Кафе #39",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_040": {
-      "title": "Кафе #40",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_041": {
-      "title": "Кафе #41",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_042": {
-      "title": "Кафе #42",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_043": {
-      "title": "Кафе #43",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_044": {
-      "title": "Кафе #44",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_045": {
-      "title": "Кафе #45",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_046": {
-      "title": "Кафе #46",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_047": {
-      "title": "Кафе #47",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_048": {
-      "title": "Кафе #48",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_049": {
-      "title": "Кафе #49",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_050": {
-      "title": "Кафе #50",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_051": {
-      "title": "Кафе #51",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_052": {
-      "title": "Кафе #52",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_053": {
-      "title": "Кафе #53",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_054": {
-      "title": "Кафе #54",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_055": {
-      "title": "Кафе #55",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_056": {
-      "title": "Кафе #56",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_057": {
-      "title": "Кафе #57",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_058": {
-      "title": "Кафе #58",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_059": {
-      "title": "Кафе #59",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_060": {
-      "title": "Кафе #60",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_061": {
-      "title": "Кафе #61",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_062": {
-      "title": "Кафе #62",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_063": {
-      "title": "Кафе #63",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_064": {
-      "title": "Кафе #64",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_065": {
-      "title": "Кафе #65",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_066": {
-      "title": "Кафе #66",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_067": {
-      "title": "Кафе #67",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_068": {
-      "title": "Кафе #68",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_069": {
-      "title": "Кафе #69",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_070": {
-      "title": "Кафе #70",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_071": {
-      "title": "Кафе #71",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_072": {
-      "title": "Кафе #72",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_073": {
-      "title": "Кафе #73",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_074": {
-      "title": "Кафе #74",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_075": {
-      "title": "Кафе #75",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_076": {
-      "title": "Кафе #76",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_077": {
-      "title": "Кафе #77",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_078": {
-      "title": "Кафе #78",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_079": {
-      "title": "Кафе #79",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_080": {
-      "title": "Кафе #80",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_081": {
-      "title": "Кафе #81",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_082": {
-      "title": "Кафе #82",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_083": {
-      "title": "Кафе #83",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_084": {
-      "title": "Кафе #84",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_085": {
-      "title": "Кафе #85",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_086": {
-      "title": "Кафе #86",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_087": {
-      "title": "Кафе #87",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_088": {
-      "title": "Кафе #88",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_089": {
-      "title": "Кафе #89",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_090": {
-      "title": "Кафе #90",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_091": {
-      "title": "Кафе #91",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_092": {
-      "title": "Кафе #92",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_093": {
-      "title": "Кафе #93",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_094": {
-      "title": "Кафе #94",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_095": {
-      "title": "Кафе #95",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_096": {
-      "title": "Кафе #96",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_097": {
-      "title": "Кафе #97",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_098": {
-      "title": "Кафе #98",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_099": {
-      "title": "Кафе #99",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_100": {
-      "title": "Кафе #100",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_101": {
-      "title": "Кафе #101",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_102": {
-      "title": "Кафе #102",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_103": {
-      "title": "Кафе #103",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_104": {
-      "title": "Кафе #104",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_105": {
-      "title": "Кафе #105",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_106": {
-      "title": "Кафе #106",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_107": {
-      "title": "Кафе #107",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_108": {
-      "title": "Кафе #108",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_109": {
-      "title": "Кафе #109",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_110": {
-      "title": "Кафе #110",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_111": {
-      "title": "Кафе #111",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_112": {
-      "title": "Кафе #112",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_113": {
-      "title": "Кафе #113",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_114": {
-      "title": "Кафе #114",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_115": {
-      "title": "Кафе #115",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_116": {
-      "title": "Кафе #116",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_117": {
-      "title": "Кафе #117",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_118": {
-      "title": "Кафе #118",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_119": {
-      "title": "Кафе #119",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_120": {
-      "title": "Кафе #120",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_121": {
-      "title": "Кафе #121",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_122": {
-      "title": "Кафе #122",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_123": {
-      "title": "Кафе #123",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_124": {
-      "title": "Кафе #124",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_125": {
-      "title": "Кафе #125",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_126": {
-      "title": "Кафе #126",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_127": {
-      "title": "Кафе #127",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_128": {
-      "title": "Кафе #128",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_129": {
-      "title": "Кафе #129",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_130": {
-      "title": "Кафе #130",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_131": {
-      "title": "Кафе #131",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_132": {
-      "title": "Кафе #132",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_133": {
-      "title": "Кафе #133",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_134": {
-      "title": "Кафе #134",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_135": {
-      "title": "Кафе #135",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_136": {
-      "title": "Кафе #136",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_137": {
-      "title": "Кафе #137",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_138": {
-      "title": "Кафе #138",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_139": {
-      "title": "Кафе #139",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_140": {
-      "title": "Кафе #140",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_141": {
-      "title": "Кафе #141",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_142": {
-      "title": "Кафе #142",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_143": {
-      "title": "Кафе #143",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_144": {
-      "title": "Кафе #144",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_145": {
-      "title": "Кафе #145",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_146": {
-      "title": "Кафе #146",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_147": {
-      "title": "Кафе #147",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_148": {
-      "title": "Кафе #148",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_149": {
-      "title": "Кафе #149",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_150": {
-      "title": "Кафе #150",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_151": {
-      "title": "Кафе #151",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_152": {
-      "title": "Кафе #152",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_153": {
-      "title": "Кафе #153",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_154": {
-      "title": "Кафе #154",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_155": {
-      "title": "Кафе #155",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_156": {
-      "title": "Кафе #156",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_157": {
-      "title": "Кафе #157",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_158": {
-      "title": "Кафе #158",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_159": {
-      "title": "Кафе #159",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_160": {
-      "title": "Кафе #160",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_161": {
-      "title": "Кафе #161",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_162": {
-      "title": "Кафе #162",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_163": {
-      "title": "Кафе #163",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_164": {
-      "title": "Кафе #164",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_165": {
-      "title": "Кафе #165",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_166": {
-      "title": "Кафе #166",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_167": {
-      "title": "Кафе #167",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_168": {
-      "title": "Кафе #168",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_169": {
-      "title": "Кафе #169",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_170": {
-      "title": "Кафе #170",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_171": {
-      "title": "Кафе #171",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_172": {
-      "title": "Кафе #172",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_173": {
-      "title": "Кафе #173",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_174": {
-      "title": "Кафе #174",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_175": {
-      "title": "Кафе #175",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_176": {
-      "title": "Кафе #176",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_177": {
-      "title": "Кафе #177",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_178": {
-      "title": "Кафе #178",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_179": {
-      "title": "Кафе #179",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_180": {
-      "title": "Кафе #180",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_181": {
-      "title": "Кафе #181",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_182": {
-      "title": "Кафе #182",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_183": {
-      "title": "Кафе #183",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_184": {
-      "title": "Кафе #184",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_185": {
-      "title": "Кафе #185",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_186": {
-      "title": "Кафе #186",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_187": {
-      "title": "Кафе #187",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_188": {
-      "title": "Кафе #188",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_189": {
-      "title": "Кафе #189",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_190": {
-      "title": "Кафе #190",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_191": {
-      "title": "Кафе #191",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_192": {
-      "title": "Кафе #192",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_193": {
-      "title": "Кафе #193",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_194": {
-      "title": "Кафе #194",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_195": {
-      "title": "Кафе #195",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_196": {
-      "title": "Кафе #196",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_197": {
-      "title": "Кафе #197",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_198": {
-      "title": "Кафе #198",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_199": {
-      "title": "Кафе #199",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_200": {
-      "title": "Кафе #200",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_201": {
-      "title": "Кафе #201",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_202": {
-      "title": "Кафе #202",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_203": {
-      "title": "Кафе #203",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_204": {
-      "title": "Кафе #204",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_205": {
-      "title": "Кафе #205",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_206": {
-      "title": "Кафе #206",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_207": {
-      "title": "Кафе #207",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_208": {
-      "title": "Кафе #208",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_209": {
-      "title": "Кафе #209",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_210": {
-      "title": "Кафе #210",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_211": {
-      "title": "Кафе #211",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_212": {
-      "title": "Кафе #212",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_213": {
-      "title": "Кафе #213",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_214": {
-      "title": "Кафе #214",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_215": {
-      "title": "Кафе #215",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_216": {
-      "title": "Кафе #216",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_217": {
-      "title": "Кафе #217",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_218": {
-      "title": "Кафе #218",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_219": {
-      "title": "Кафе #219",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_220": {
-      "title": "Кафе #220",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_221": {
-      "title": "Кафе #221",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_222": {
-      "title": "Кафе #222",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_223": {
-      "title": "Кафе #223",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_224": {
-      "title": "Кафе #224",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_225": {
-      "title": "Кафе #225",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_226": {
-      "title": "Кафе #226",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_227": {
-      "title": "Кафе #227",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_228": {
-      "title": "Кафе #228",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_229": {
-      "title": "Кафе #229",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_230": {
-      "title": "Кафе #230",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_231": {
-      "title": "Кафе #231",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_232": {
-      "title": "Кафе #232",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_233": {
-      "title": "Кафе #233",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_234": {
-      "title": "Кафе #234",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_235": {
-      "title": "Кафе #235",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_236": {
-      "title": "Кафе #236",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_237": {
-      "title": "Кафе #237",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_238": {
-      "title": "Кафе #238",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_239": {
-      "title": "Кафе #239",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_240": {
-      "title": "Кафе #240",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_241": {
-      "title": "Кафе #241",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_242": {
-      "title": "Кафе #242",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_243": {
-      "title": "Кафе #243",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_244": {
-      "title": "Кафе #244",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_245": {
-      "title": "Кафе #245",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_246": {
-      "title": "Кафе #246",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_247": {
-      "title": "Кафе #247",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_248": {
-      "title": "Кафе #248",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_249": {
-      "title": "Кафе #249",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_250": {
-      "title": "Кафе #250",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_251": {
-      "title": "Кафе #251",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_252": {
-      "title": "Кафе #252",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_253": {
-      "title": "Кафе #253",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_254": {
-      "title": "Кафе #254",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_255": {
-      "title": "Кафе #255",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_256": {
-      "title": "Кафе #256",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_257": {
-      "title": "Кафе #257",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_258": {
-      "title": "Кафе #258",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_259": {
-      "title": "Кафе #259",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_260": {
-      "title": "Кафе #260",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_261": {
-      "title": "Кафе #261",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_262": {
-      "title": "Кафе #262",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_263": {
-      "title": "Кафе #263",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_264": {
-      "title": "Кафе #264",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_265": {
-      "title": "Кафе #265",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_266": {
-      "title": "Кафе #266",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_267": {
-      "title": "Кафе #267",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_268": {
-      "title": "Кафе #268",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_269": {
-      "title": "Кафе #269",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_270": {
-      "title": "Кафе #270",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_271": {
-      "title": "Кафе #271",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_272": {
-      "title": "Кафе #272",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_273": {
-      "title": "Кафе #273",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_274": {
-      "title": "Кафе #274",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_275": {
-      "title": "Кафе #275",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_276": {
-      "title": "Кафе #276",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_277": {
-      "title": "Кафе #277",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_278": {
-      "title": "Кафе #278",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_279": {
-      "title": "Кафе #279",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_280": {
-      "title": "Кафе #280",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_281": {
-      "title": "Кафе #281",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_282": {
-      "title": "Кафе #282",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_283": {
-      "title": "Кафе #283",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_284": {
-      "title": "Кафе #284",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_285": {
-      "title": "Кафе #285",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_286": {
-      "title": "Кафе #286",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_287": {
-      "title": "Кафе #287",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_288": {
-      "title": "Кафе #288",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_289": {
-      "title": "Кафе #289",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_290": {
-      "title": "Кафе #290",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_291": {
-      "title": "Кафе #291",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_292": {
-      "title": "Кафе #292",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_293": {
-      "title": "Кафе #293",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_294": {
-      "title": "Кафе #294",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_295": {
-      "title": "Кафе #295",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_296": {
-      "title": "Кафе #296",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_297": {
-      "title": "Кафе #297",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_298": {
-      "title": "Кафе #298",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_299": {
-      "title": "Кафе #299",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_300": {
-      "title": "Кафе #300",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_301": {
-      "title": "Кафе #301",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_302": {
-      "title": "Кафе #302",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_303": {
-      "title": "Кафе #303",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_304": {
-      "title": "Кафе #304",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_305": {
-      "title": "Кафе #305",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_306": {
-      "title": "Кафе #306",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_307": {
-      "title": "Кафе #307",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_308": {
-      "title": "Кафе #308",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_309": {
-      "title": "Кафе #309",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_310": {
-      "title": "Кафе #310",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_311": {
-      "title": "Кафе #311",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_312": {
-      "title": "Кафе #312",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_313": {
-      "title": "Кафе #313",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_314": {
-      "title": "Кафе #314",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_315": {
-      "title": "Кафе #315",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_316": {
-      "title": "Кафе #316",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_317": {
-      "title": "Кафе #317",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_318": {
-      "title": "Кафе #318",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_319": {
-      "title": "Кафе #319",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_320": {
-      "title": "Кафе #320",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_321": {
-      "title": "Кафе #321",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_322": {
-      "title": "Кафе #322",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_323": {
-      "title": "Кафе #323",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_324": {
-      "title": "Кафе #324",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_325": {
-      "title": "Кафе #325",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_326": {
-      "title": "Кафе #326",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_327": {
-      "title": "Кафе #327",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_328": {
-      "title": "Кафе #328",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_329": {
-      "title": "Кафе #329",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    },
-    "cafe_330": {
-      "title": "Кафе #330",
-      "city": "",
-      "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
-      "features": {
-        "orders_enabled": true,
-        "booking_enabled": true,
-        "staff_group_enabled": true,
-        "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
-      },
-      "menu": {
-        "Капучино": 250,
-        "Латте": 270
-      }
-    }
-  },
-  "chats_to_cafe": {}
-}
+import os
+import json
+import time
+import asyncio
+import random
+import logging
+from pathlib import Path
+from datetime import datetime, timezone, timedelta
+from typing import Dict, Any, Optional, Tuple
+
+import redis.asyncio as redis
+from aiohttp import web
+
+from aiogram import Bot, Dispatcher, F, Router, html
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.filters import CommandStart, Command, StateFilter, CommandObject
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.types import (
+    Message,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    BotCommand,
+    ChatMemberUpdated,
+    ErrorEvent,
+)
+from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter
+from aiogram.filters import IS_NOT_MEMBER, IS_MEMBER
+from aiogram.utils.deep_linking import create_start_link, create_startgroup_link  # deep links [web:24]
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application  # webhook aiohttp [web:1]
+
+
+# -------------------------
+# Logging
+# -------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
+logger = logging.getLogger("cafebotify")
+
+
+# -------------------------
+# Time / constants
+# -------------------------
+MSK_TZ = timezone(timedelta(hours=3))
+
+def now_msk() -> datetime:
+    return datetime.now(MSK_TZ)
+
+DEFAULT_RATE_LIMIT_SECONDS = 60
+
+
+# -------------------------
+# Webhook host (Amvera)
+# -------------------------
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", "cafebot123").strip()
+PUBLIC_HOST = (os.getenv("PUBLIC_HOST") or "cafebotify-start-denvyd.amvera.io").strip()
+
+PORT = int(os.getenv("PORT", "10000"))
+WEBHOOK_PATH = f"/{WEBHOOK_SECRET}/webhook"
+WEBHOOK_URL = f"https://{PUBLIC_HOST}{WEBHOOK_PATH}"
+
+
+# -------------------------
+# Config loader (robust)
+# -------------------------
+def load_config() -> Dict[str, Any]:
+    """
+    Ищем конфиг в /app рядом с main.py.
+
+    Приоритет:
+      1) CONFIG_PATH (если задан)
+      2) config_330_template.json
+      3) config.json
+    """
+    env_path = (os.getenv("CONFIG_PATH") or "").strip()
+    candidates = [env_path] if env_path else []
+    candidates += ["config_330_template.json", "config.json"]
+
+    base_dir = Path(__file__).resolve().parent  # /app
+    tried: list[str] = []
+
+    for name in candidates:
+        p = Path(name)
+        if not p.is_absolute():
+            p = base_dir / p
+        tried.append(str(p))
+        if p.exists() and p.is_file():
+            data = json.loads(p.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                raise ValueError("config root must be an object")
+            if "cafes" not in data or not isinstance(data["cafes"], dict):
+                raise ValueError("config.cafes must be an object: {cafe_id: {...}}")
+            logger.info("CONFIG loaded: %s (cafes=%d)", p, len(data["cafes"]))
+            return data
+
+    try:
+        files = sorted([x.name for x in base_dir.iterdir()])
+    except Exception:
+        files = []
+
+    raise FileNotFoundError(
+        "Config file not found. Tried: "
+        + ", ".join(tried)
+        + f". Files in {base_dir}: {files}"
+    )
+
+
+CONFIG = load_config()
+CAFES: Dict[str, Dict[str, Any]] = CONFIG["cafes"]
+DEFAULT_CAFE_ID: str = str(CONFIG.get("default_cafe_id") or next(iter(CAFES.keys())))
+SUPERADMIN_ID: int = int(CONFIG.get("superadmin_id") or 0)
+CHATS_TO_CAFE: Dict[str, str] = CONFIG.get("chats_to_cafe", {}) if isinstance(CONFIG.get("chats_to_cafe", {}), dict) else {}
+
+def cafe_or_default(cafe_id: Optional[str]) -> Dict[str, Any]:
+    if cafe_id and cafe_id in CAFES:
+        return CAFES[cafe_id]
+    return CAFES[DEFAULT_CAFE_ID]
+
+def is_superadmin(user_id: int) -> bool:
+    return bool(SUPERADMIN_ID) and user_id == SUPERADMIN_ID
+
+
+# -------------------------
+# Router
+# -------------------------
+router = Router()
+
+@router.error()
+async def on_error(event: ErrorEvent):
+    logger.critical("UNHANDLED ERROR: %r", event.exception, exc_info=True)
+
+
+# -------------------------
+# States
+# -------------------------
+class OrderStates(StatesGroup):
+    waiting_for_quantity = State()
+    waiting_for_confirmation = State()
+    waiting_for_booking_info = State()
+
+
+# -------------------------
+# Redis keys
+# -------------------------
+def rl_key(user_id: int) -> str:
+    return f"rate_limit:{user_id}"
+
+def user_cafe_key(user_id: int) -> str:
+    return f"user_cafe:{user_id}"
+
+def group_cafe_key(chat_id: int) -> str:
+    return f"group_cafe:{chat_id}"
+
+def stats_total_orders_key(cafe_id: str) -> str:
+    return f"stats:{cafe_id}:total_orders"
+
+def stats_drink_key(cafe_id: str, drink: str) -> str:
+    return f"stats:{cafe_id}:drink:{drink}"
+
+def cafe_profile_key(cafe_id: str) -> str:
+    return f"cafe:{cafe_id}:profile"   # hash
+
+def cafe_menu_key(cafe_id: str) -> str:
+    return f"cafe:{cafe_id}:menu"      # hash
+
+
+# -------------------------
+# Cafe logic
+# -------------------------
+def menu_of(cafe: Dict[str, Any]) -> Dict[str, int]:
+    menu = cafe.get("menu") or {}
+    out: Dict[str, int] = {}
+    if isinstance(menu, dict):
+        for k, v in menu.items():
+            try:
+                out[str(k)] = int(v)
+            except Exception:
+                continue
+    return out
+
+def cafe_hours(cafe: Dict[str, Any]) -> Tuple[int, int]:
+    feat = cafe.get("features") or {}
+    ws = int(feat.get("work_start", cafe.get("work_start", 9)))
+    we = int(feat.get("work_end", cafe.get("work_end", 21)))
+    return ws, we
+
+def cafe_rate_limit(cafe: Dict[str, Any]) -> int:
+    feat = cafe.get("features") or {}
+    try:
+        return int(feat.get("rate_limit_seconds", DEFAULT_RATE_LIMIT_SECONDS))
+    except Exception:
+        return DEFAULT_RATE_LIMIT_SECONDS
+
+def cafe_open(cafe: Dict[str, Any]) -> bool:
+    ws, we = cafe_hours(cafe)
+    return ws <= now_msk().hour < we
+
+def work_status(cafe: Dict[str, Any]) -> str:
+    ws, we = cafe_hours(cafe)
+    if cafe_open(cafe):
+        return f"🟢 Открыто до {we}:00 (МСК)"
+    return f"🔴 Закрыто\n🕐 Открываемся: {ws}:00 (МСК)"
+
+def user_name(m: Message) -> str:
+    if not m.from_user:
+        return "друг"
+    return m.from_user.first_name or "друг"
+
+def closed_message(cafe: Dict[str, Any]) -> str:
+    m = menu_of(cafe)
+    menu_text = " • ".join([f"<b>{html.quote(d)}</b> {p}р" for d, p in m.items()]) if m else "Меню ещё настраивается."
+    return (
+        f"🔒 <b>{html.quote(str(cafe.get('title','Кафе')))} сейчас закрыто</b>\n\n"
+        f"{work_status(cafe)}\n\n"
+        f"☕️ <b>Меню:</b>\n{menu_text}\n\n"
+        f"📍 <b>Адрес:</b> {html.quote(str(cafe.get('address','')))}\n"
+        f"📞 <b>Телефон:</b> <code>{html.quote(str(cafe.get('phone','')))}</code>\n"
+    )
+
+def is_admin_of_cafe(user_id: int, cafe: Dict[str, Any]) -> bool:
+    admin_id = int(cafe.get("admin_id") or 0)
+    return (admin_id and user_id == admin_id) or is_superadmin(user_id)
+
+
+# -------------------------
+# Redis overrides (profile + menu)
+# -------------------------
+async def apply_overrides(r: redis.Redis, cafe_id: str, base: Dict[str, Any]) -> Dict[str, Any]:
+    cafe = dict(base)
+
+    prof = await r.hgetall(cafe_profile_key(cafe_id))
+    if isinstance(prof, dict) and prof:
+        for k in ("title", "phone", "address", "city", "timezone"):
+            if prof.get(k) is not None and prof.get(k) != "":
+                cafe[k] = str(prof[k])
+        if prof.get("admin_id"):
+            try:
+                cafe["admin_id"] = int(prof["admin_id"])
+            except Exception:
+                pass
+
+        feat = dict(cafe.get("features") or {})
+        for hk in ("work_start", "work_end", "rate_limit_seconds"):
+            if prof.get(hk):
+                try:
+                    feat[hk] = int(prof[hk])
+                except Exception:
+                    pass
+        cafe["features"] = feat
+
+    menu = await r.hgetall(cafe_menu_key(cafe_id))
+    if isinstance(menu, dict) and menu:
+        new_menu: Dict[str, int] = {}
+        for k, v in menu.items():
+            try:
+                new_menu[str(k)] = int(v)
+            except Exception:
+                continue
+        if new_menu:
+            cafe["menu"] = new_menu
+
+    return cafe
+
+async def get_cafe_by_id_effective(r: redis.Redis, cafe_id: str) -> Dict[str, Any]:
+    return await apply_overrides(r, cafe_id, cafe_or_default(cafe_id))
+
+
+# -------------------------
+# Tenant resolve
+# -------------------------
+async def get_cafe_for_message(message: Message, r: redis.Redis) -> Tuple[str, Dict[str, Any]]:
+    if message.chat.type in ("group", "supergroup"):
+        gid = await r.get(group_cafe_key(message.chat.id))
+        cafe_id = str(gid) if gid else DEFAULT_CAFE_ID
+        return cafe_id, await get_cafe_by_id_effective(r, cafe_id)
+
+    mapped = CHATS_TO_CAFE.get(str(message.chat.id))
+    if mapped:
+        return mapped, await get_cafe_by_id_effective(r, mapped)
+
+    uid = message.from_user.id if message.from_user else 0
+    cid = await r.get(user_cafe_key(uid))
+    cafe_id = str(cid) if cid else DEFAULT_CAFE_ID
+    return cafe_id, await get_cafe_by_id_effective(r, cafe_id)
+
+
+# -------------------------
+# Keyboards
+# -------------------------
+BTN_CALL = "📞 Связаться с кафе"
+BTN_HOURS = "⏰ Режим работы"
+BTN_BOOK = "📋 Бронирование / столики"
+
+BTN_ADMIN_LINKS = "Мои ссылки"
+BTN_ADMIN_GROUP = "Подключить группу"
+BTN_ADMIN_STATS = "Статистика"
+BTN_ADMIN_OPEN_MENU = "Открыть меню"
+
+BTN_CANCEL = "Отмена"
+BTN_MENU = "Меню"
+BTN_CONFIRM = "Подтвердить"
+
+def kb_guest(cafe: Dict[str, Any]) -> ReplyKeyboardMarkup:
+    rows = [[KeyboardButton(text=d)] for d in menu_of(cafe).keys()]
+    rows.append([KeyboardButton(text=BTN_CALL), KeyboardButton(text=BTN_HOURS)])
+    rows.append([KeyboardButton(text=BTN_BOOK)])
+    return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
+
+def kb_info() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BTN_CALL), KeyboardButton(text=BTN_HOURS)],
+            [KeyboardButton(text=BTN_BOOK)],
+        ],
+        resize_keyboard=True,
+    )
+
+def kb_admin() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BTN_ADMIN_LINKS)],
+            [KeyboardButton(text=BTN_ADMIN_GROUP)],
+            [KeyboardButton(text=BTN_ADMIN_STATS)],
+            [KeyboardButton(text=BTN_ADMIN_OPEN_MENU)],
+        ],
+        resize_keyboard=True,
+    )
+
+def kb_qty() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="1"), KeyboardButton(text="2"), KeyboardButton(text="3")],
+            [KeyboardButton(text="4"), KeyboardButton(text="5"), KeyboardButton(text=BTN_CANCEL)],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+def kb_confirm() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=BTN_CONFIRM), KeyboardButton(text=BTN_MENU)]],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
+# -------------------------
+# Text variants
+# -------------------------
+WELCOME_VARIANTS = [
+    "Привет, {name}! Заходи по‑домашнему — подберём кофе под настроение.",
+    "{name}, добро пожаловать! Выбирай напиток — приготовим с заботой ☕️",
+    "{name}, привет! Устроим вкусную паузу?",
+]
+CHOICE_VARIANTS = [
+    "Отличный выбор 👍",
+    "Классика, которая никогда не подводит.",
+    "Супер! Один из хитов меню.",
+]
+FINISH_VARIANTS = [
+    "Спасибо за заказ, {name}! Будем рады видеть тебя снова.",
+    "Заказ принят, {name}. Пусть этот кофе сделает день лучше.",
+]
+
+
+# -------------------------
+# Admin screen (3 links)
+# -------------------------
+async def send_admin_screen(message: Message, cafe_id: str, cafe: Dict[str, Any]) -> None:
+    admin_link = await create_start_link(message.bot, payload=f"admin:{cafe_id}", encode=False)  # [web:24]
+    staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=False)       # [web:24]
+    guest_link = await create_start_link(message.bot, payload=cafe_id, encode=False)            # [web:24]
+
+    text = (
+        f"🛠 <b>Режим администратора</b>\n"
+        f"Кафе: <b>{html.quote(str(cafe.get('title','Кафе')))}</b> (id=<code>{html.quote(cafe_id)}</code>)\n\n"
+        f"1️⃣ <b>Ссылка админа</b>:\n{admin_link}\n\n"
+        f"2️⃣ <b>Ссылка для группы персонала</b>:\n{staff_link}\n\n"
+        f"3️⃣ <b>Ссылка для клиентов</b>:\n{guest_link}\n\n"
+        f"После добавления бота в группу напишите там:\n<code>/bind {html.quote(cafe_id)}</code>"
+    )
+    await message.answer(text, reply_markup=kb_admin(), disable_web_page_preview=True)
+
+
+# -------------------------
+# Bot command list
+# -------------------------
+async def set_commands(bot: Bot) -> None:
+    commands = [
+        BotCommand(command="start", description="Запуск бота"),
+        BotCommand(command="myid", description="Показать мой Telegram ID"),
+        BotCommand(command="stats", description="Статистика (админ)"),
+        BotCommand(command="bind", description="Привязать группу к кафе (в группе)"),
+        BotCommand(command="ping", description="Проверка (pong)"),
+
+        BotCommand(command="init_cafe", description="Инициализировать кафе (суперадмин)"),
+        BotCommand(command="init_cafe_json", description="Инициализировать кафе JSON (суперадмин)"),
+        BotCommand(command="set_profile_json", description="Профиль кафе JSON (суперадмин)"),
+        BotCommand(command="set_admin", description="Назначить admin_id (суперадмин)"),
+        BotCommand(command="set_menu_set", description="Добавить/обновить напиток (суперадмин)"),
+        BotCommand(command="set_menu_del", description="Удалить напиток (суперадмин)"),
+        BotCommand(command="cafe", description="Показать кафе (суперадмин)"),
+        BotCommand(command="export_cafe", description="Экспорт кафе JSON (суперадмин)"),
+    ]
+    await bot.set_my_commands(commands)
+
+
+# -------------------------
+# Basic commands
+# -------------------------
+@router.message(Command("ping"))
+async def ping(message: Message):
+    await message.answer("pong")
+
+@router.message(Command("myid"))
+async def myid(message: Message):
+    await message.answer(f"Ваш Telegram ID: <code>{message.from_user.id}</code>")
+
+
+# -------------------------
+# JSON arg helpers
+# -------------------------
+def _parse_cafe_json_args(args: str) -> Tuple[str, Dict[str, Any]]:
+    args = (args or "").strip()
+    if not args:
+        raise ValueError("no args")
+    cafe_id, rest = args.split(maxsplit=1)
+    payload = json.loads(rest)
+    if not isinstance(payload, dict):
+        raise ValueError("json must be object")
+    return cafe_id, payload
+
+def _normalize_profile_payload(p: Dict[str, Any]) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    for k in ("title", "phone", "address", "city", "timezone"):
+        if k in p and p[k] is not None:
+            out[k] = str(p[k])
+    for k in ("admin_id", "work_start", "work_end", "rate_limit_seconds"):
+        if k in p and p[k] is not None:
+            out[k] = str(int(p[k]))
+    return out
+
+def _normalize_menu_payload(p: Any) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    if not isinstance(p, dict):
+        return out
+    for k, v in p.items():
+        try:
+            out[str(k)] = str(int(v))
+        except Exception:
+            continue
+    return out
+
+
+# -------------------------
+# Superadmin: init / profile / menu / export / links
+# -------------------------
+async def _ensure_default_menu(r: redis.Redis, cafe_id: str) -> None:
+    if await r.hlen(cafe_menu_key(cafe_id)):
+        return
+    base_menu = cafe_or_default(cafe_id).get("menu") or {"Капучино": 250, "Латте": 270}
+    menu_map = _normalize_menu_payload(base_menu)
+    if menu_map:
+        await r.hset(cafe_menu_key(cafe_id), mapping=menu_map)
+
+@router.message(Command("init_cafe"))
+async def init_cafe_cmd(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        return
+    cafe_id = (command.args or "").strip()
+    if not cafe_id:
+        await message.answer("Формат: <code>/init_cafe cafe_001</code>")
+        return
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    await _ensure_default_menu(r, cafe_id)
+    cafe = await get_cafe_by_id_effective(r, cafe_id)
+    await send_admin_screen(message, cafe_id, cafe)
+
+@router.message(Command("init_cafe_json"))
+async def init_cafe_json_cmd(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        return
+    try:
+        cafe_id, payload = _parse_cafe_json_args(command.args or "")
+    except Exception:
+        await message.answer(
+            "Формат:\n<code>/init_cafe_json cafe_001 {\"title\":\"...\",\"phone\":\"...\",\"address\":\"...\",\"admin_id\":123,\"menu\":{\"Капучино\":250}}</code>"
+        )
+        return
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+
+    try:
+        prof_map = _normalize_profile_payload(payload)
+    except Exception:
+        await message.answer("Неверные типы в JSON (admin_id/work_start/work_end/rate_limit_seconds должны быть числами).")
+        return
+    if prof_map:
+        await r.hset(cafe_profile_key(cafe_id), mapping=prof_map)
+
+    if "menu" in payload:
+        menu_map = _normalize_menu_payload(payload.get("menu"))
+        if menu_map:
+            await r.hset(cafe_menu_key(cafe_id), mapping=menu_map)
+        else:
+            await _ensure_default_menu(r, cafe_id)
+    else:
+        await _ensure_default_menu(r, cafe_id)
+
+    cafe = await get_cafe_by_id_effective(r, cafe_id)
+    await send_admin_screen(message, cafe_id, cafe)
+
+@router.message(Command("set_profile_json"))
+async def set_profile_json_cmd(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        return
+    try:
+        cafe_id, payload = _parse_cafe_json_args(command.args or "")
+    except Exception:
+        await message.answer(
+            "Формат:\n<code>/set_profile_json cafe_001 {\"title\":\"...\",\"phone\":\"...\",\"address\":\"...\",\"admin_id\":123}</code>"
+        )
+        return
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+    try:
+        prof_map = _normalize_profile_payload(payload)
+    except Exception:
+        await message.answer("Неверные типы в JSON.")
+        return
+    if not prof_map:
+        await message.answer("JSON пустой или без поддерживаемых полей.")
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    await r.hset(cafe_profile_key(cafe_id), mapping=prof_map)
+    cafe = await get_cafe_by_id_effective(r, cafe_id)
+    await message.answer(f"✅ Профиль обновлён: <code>{html.quote(cafe_id)}</code> → <b>{html.quote(str(cafe.get('title','Кафе')))}</b>")
+
+@router.message(Command("set_admin"))
+async def set_admin_cmd(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        return
+    args = (command.args or "").strip().split()
+    if len(args) != 2:
+        await message.answer("Формат: <code>/set_admin cafe_001 123456789</code>")
+        return
+    cafe_id, admin_id_s = args[0], args[1]
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+    try:
+        admin_id = int(admin_id_s)
+    except Exception:
+        await message.answer("admin_id должен быть числом.")
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    await r.hset(cafe_profile_key(cafe_id), mapping={"admin_id": str(admin_id)})
+    await message.answer(f"✅ admin_id установлен: <code>{html.quote(cafe_id)}</code> → <code>{admin_id}</code>")
+
+@router.message(Command("set_menu_set"))
+async def set_menu_set_cmd(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        return
+    raw = (command.args or "").strip()
+    if not raw:
+        await message.answer('Формат: <code>/set_menu_set cafe_001 "Капучино" 250</code>')
+        return
+    tokens = raw.split()
+    if len(tokens) < 3:
+        await message.answer('Формат: <code>/set_menu_set cafe_001 "Капучино" 250</code>')
+        return
+    cafe_id = tokens[0]
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+    try:
+        price = int(tokens[-1])
+    except Exception:
+        await message.answer("Цена должна быть числом.")
+        return
+    drink = raw[len(cafe_id):].strip()
+    drink = drink.rsplit(" ", 1)[0].strip().strip('"').strip("'")
+    if not drink:
+        await message.answer("Название напитка пустое.")
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    await r.hset(cafe_menu_key(cafe_id), mapping={drink: str(price)})
+    await message.answer(f"✅ Меню: <code>{html.quote(cafe_id)}</code> → {html.quote(drink)} = <b>{price}</b> р")
+
+@router.message(Command("set_menu_del"))
+async def set_menu_del_cmd(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        return
+    raw = (command.args or "").strip()
+    if not raw:
+        await message.answer('Формат: <code>/set_menu_del cafe_001 "Латте"</code>')
+        return
+    parts = raw.split(maxsplit=1)
+    if len(parts) != 2:
+        await message.answer('Формат: <code>/set_menu_del cafe_001 "Латте"</code>')
+        return
+    cafe_id, drink = parts[0], parts[1].strip().strip('"').strip("'")
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+    if not drink:
+        await message.answer("Название напитка пустое.")
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    await r.hdel(cafe_menu_key(cafe_id), drink)
+    await message.answer(f"✅ Удалено: <code>{html.quote(cafe_id)}</code> → {html.quote(drink)}")
+
+@router.message(Command("cafe"))
+async def cafe_info(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        return
+    cafe_id = (command.args or "").strip() or DEFAULT_CAFE_ID
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    cafe = await get_cafe_by_id_effective(r, cafe_id)
+    ws, we = cafe_hours(cafe)
+    await message.answer(
+        f"🏠 <b>{html.quote(str(cafe.get('title','Кафе')))}</b>\n"
+        f"id: <code>{html.quote(cafe_id)}</code>\n"
+        f"admin_id: <code>{int(cafe.get('admin_id') or 0)}</code>\n"
+        f"phone: <code>{html.quote(str(cafe.get('phone','')))}</code>\n"
+        f"address: {html.quote(str(cafe.get('address','')))}\n"
+        f"hours: {ws}:00–{we}:00\n"
+        f"menu items: <b>{len(menu_of(cafe))}</b>",
+    )
+
+@router.message(Command("export_cafe"))
+async def export_cafe_cmd(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        return
+    cafe_id = (command.args or "").strip() or DEFAULT_CAFE_ID
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    prof = await r.hgetall(cafe_profile_key(cafe_id))
+    menu = await r.hgetall(cafe_menu_key(cafe_id))
+    out = {"cafe_id": cafe_id, "profile": prof or {}, "menu": menu or {}}
+    await message.answer("<code>" + html.quote(json.dumps(out, ensure_ascii=False)) + "</code>")
+
+
+# -------------------------
+# Group events + bind
+# -------------------------
+@router.my_chat_member(ChatMemberUpdatedFilter(IS_NOT_MEMBER >> IS_MEMBER))
+async def bot_added_to_group(event: ChatMemberUpdated, bot: Bot):
+    if event.chat.type not in ("group", "supergroup"):
+        return
+    await bot.send_message(
+        event.chat.id,
+        "✅ Бот добавлен в группу персонала.\n\n"
+        "Чтобы привязать группу к кафе, напишите:\n"
+        "<code>/bind cafe_001</code>\n\n"
+        "Команду должен выполнить администратор кафе.",
+    )
+
+@router.message(Command("bind"))
+async def bind_group(message: Message, command: CommandObject):
+    if message.chat.type not in ("group", "supergroup"):
+        await message.answer("Команда /bind работает только в группе персонала.")
+        return
+    cafe_id = (command.args or "").strip()
+    if not cafe_id or cafe_id not in CAFES:
+        await message.answer("Формат: <code>/bind cafe_001</code>")
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    cafe = await get_cafe_by_id_effective(r, cafe_id)
+    if not is_admin_of_cafe(message.from_user.id, cafe):
+        await message.answer("Только администратор этого кафе может привязать группу.")
+        return
+    await r.set(group_cafe_key(message.chat.id), cafe_id)
+    await message.answer(f"Группа привязана к кафе: <b>{html.quote(str(cafe.get('title','Кафе')))}</b>")
+
+
+# -------------------------
+# Start flow
+# -------------------------
+async def start_common(message: Message, state: FSMContext, payload: Optional[str]):
+    await state.clear()
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+
+    uid = message.from_user.id
+    payload = (payload or "").strip() or None
+
+    if payload and payload.startswith("admin:"):
+        cafe_id = payload.split("admin:", 1)[1].strip()
+        if cafe_id in CAFES:
+            cafe = await get_cafe_by_id_effective(r, cafe_id)
+            if is_admin_of_cafe(uid, cafe):
+                await r.set(user_cafe_key(uid), cafe_id)
+                await send_admin_screen(message, cafe_id, cafe)
+                return
+            await message.answer("Доступ к админ-ссылке запрещён.")
+            return
+
+    if payload and payload in CAFES:
+        await r.set(user_cafe_key(uid), payload)
+        cafe_id = payload
+        cafe = await get_cafe_by_id_effective(r, cafe_id)
+    else:
+        cafe_id, cafe = await get_cafe_for_message(message, r)
+        if not await r.get(user_cafe_key(uid)):
+            await r.set(user_cafe_key(uid), cafe_id)
+
+    if is_admin_of_cafe(uid, cafe):
+        await send_admin_screen(message, cafe_id, cafe)
+        return
+
+    name = html.quote(user_name(message))
+    welcome = random.choice(WELCOME_VARIANTS).format(name=name)
+    msk = now_msk().strftime("%H:%M")
+
+    if cafe_open(cafe):
+        await message.answer(
+            f"{welcome}\n\n"
+            f"<b>{html.quote(str(cafe.get('title','Кафе')))}</b>\n"
+            f"🕐 <i>Московское время: {msk}</i>\n"
+            f"{work_status(cafe)}\n\n"
+            f"☕️ <b>Выберите напиток:</b>",
+            reply_markup=kb_guest(cafe),
+        )
+    else:
+        await message.answer(closed_message(cafe), reply_markup=kb_info())
+
+@router.message(CommandStart(deep_link=True))
+async def start_deep(message: Message, command: CommandObject, state: FSMContext):
+    await start_common(message, state, (command.args or "").strip())
+
+@router.message(CommandStart())
+async def start_plain(message: Message, state: FSMContext):
+    await start_common(message, state, None)
+
+
+# -------------------------
+# Stats (admin)
+# -------------------------
+@router.message(Command("stats"))
+async def stats_cmd(message: Message, state: FSMContext):
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    cafe_id, cafe = await get_cafe_for_message(message, r)
+    if not is_admin_of_cafe(message.from_user.id, cafe):
+        return
+    total = int(await r.get(stats_total_orders_key(cafe_id)) or 0)
+    lines = [f"📊 <b>Статистика</b>\nКафе: <b>{html.quote(str(cafe.get('title','Кафе')))}</b>\n\nВсего заказов: <b>{total}</b>\n"]
+    for drink in menu_of(cafe).keys():
+        cnt = int(await r.get(stats_drink_key(cafe_id, drink)) or 0)
+        if cnt > 0:
+            lines.append(f"{html.quote(drink)}: {cnt}")
+    await message.answer("\n".join(lines))
+
+
+# -------------------------
+# Booking + Orders
+# -------------------------
+IGNORED_BOOKING_TEXTS = {BTN_CALL, BTN_HOURS, BTN_BOOK, BTN_MENU, BTN_CANCEL, BTN_CONFIRM}
+QTY_MAP = {"1": 1, "2": 2, "3": 3, "4": 4, "5": 5}
+
+async def booking_start(message: Message, state: FSMContext):
+    await state.set_state(OrderStates.waiting_for_booking_info)
+    await message.answer(
+        "📋 <b>Бронирование столика</b>\n\n"
+        "Напиши одним сообщением:\n"
+        "• дату и время\n"
+        "• количество гостей\n\n"
+        "Я передам заявку администратору.",
+        reply_markup=kb_info(),
+    )
+
+@router.message(StateFilter(None), F.text == BTN_BOOK)
+async def booking_entry(message: Message, state: FSMContext):
+    await booking_start(message, state)
+
+@router.message(StateFilter(OrderStates.waiting_for_booking_info), F.text)
+async def booking_step(message: Message, state: FSMContext):
+    if (message.text or "").strip() in IGNORED_BOOKING_TEXTS:
+        await message.answer("Напиши одним сообщением дату/время и количество гостей.", reply_markup=kb_info())
+        return
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    cafe_id = str(await r.get(user_cafe_key(message.from_user.id)) or DEFAULT_CAFE_ID)
+    cafe = await get_cafe_by_id_effective(r, cafe_id)
+
+    uid = message.from_user.id
+    guest_name = message.from_user.username or message.from_user.first_name or "Гость"
+    user_link = f'<a href="tg://user?id={uid}">{html.quote(guest_name)}</a>'
+    booking_text = html.quote((message.text or "").strip())
+
+    admin_id = int(cafe.get("admin_id") or 0)
+    if admin_id:
+        await message.bot.send_message(
+            admin_id,
+            f"📋 <b>ЗАЯВКА НА БРОНЬ</b>\n"
+            f"🏠 Кафе: <b>{html.quote(str(cafe.get('title','Кафе')))}</b> (id=<code>{html.quote(cafe_id)}</code>)\n\n"
+            f"👤 Гость: {user_link}\n"
+            f"🆔 ID: <code>{uid}</code>\n\n"
+            f"📝 <b>Текст:</b>\n{booking_text}\n",
+            disable_web_page_preview=True,
+        )
+
+    await message.answer("👌 Заявка отправлена администратору.", reply_markup=kb_guest(cafe))
+    await state.clear()
+
+@router.message(StateFilter(None), F.text)
+async def drink_pick(message: Message, state: FSMContext):
+    text = (message.text or "").strip()
+    if not text:
+        return
+
+    if text == BTN_CALL or text == BTN_HOURS:
+        dp = message.bot._dispatcher
+        r: redis.Redis = dp["redis"]
+        cafe_id, cafe = await get_cafe_for_message(message, r)
+        if text == BTN_CALL:
+            await message.answer(
+                f"📞 <b>{html.quote(str(cafe.get('title','Кафе')))}</b>\n☎️ <code>{html.quote(str(cafe.get('phone','')))}</code>",
+                reply_markup=kb_guest(cafe) if cafe_open(cafe) else kb_info(),
+            )
+        else:
+            await message.answer(
+                f"⏰ <b>Режим работы</b>\n\n{work_status(cafe)}\n📍 {html.quote(str(cafe.get('address','')))}",
+                reply_markup=kb_guest(cafe) if cafe_open(cafe) else kb_info(),
+            )
+        return
+
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    cafe_id, cafe = await get_cafe_for_message(message, r)
+    menu = menu_of(cafe)
+
+    if text not in menu:
+        return
+
+    if not cafe_open(cafe):
+        await message.answer(closed_message(cafe), reply_markup=kb_info())
+        return
+
+    drink = text
+    price = int(menu[drink])
+    await state.set_state(OrderStates.waiting_for_quantity)
+    await state.set_data({"drink": drink, "price": price, "cafe_id": cafe_id})
+
+    await message.answer(
+        f"{random.choice(CHOICE_VARIANTS)}\n\n"
+        f"☕️ <b>{html.quote(drink)}</b>\n"
+        f"💰 <b>{price} р</b>\n\n"
+        f"<b>Сколько порций нужно?</b>",
+        reply_markup=kb_qty(),
+    )
+
+@router.message(StateFilter(OrderStates.waiting_for_quantity))
+async def qty_step(message: Message, state: FSMContext):
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    cafe_id = str((await state.get_data()).get("cafe_id") or DEFAULT_CAFE_ID)
+    cafe = await get_cafe_by_id_effective(r, cafe_id)
+
+    if message.text == BTN_CANCEL:
+        await state.clear()
+        await message.answer("❌ Заказ отменён.", reply_markup=kb_guest(cafe) if cafe_open(cafe) else kb_info())
+        return
+
+    qty = QTY_MAP.get((message.text or "").strip())
+    if not qty:
+        await message.answer("Выберите количество кнопкой ниже.", reply_markup=kb_qty())
+        return
+
+    data = await state.get_data()
+    drink = str(data["drink"])
+    price = int(data["price"])
+    total = price * qty
+
+    await state.set_state(OrderStates.waiting_for_confirmation)
+    await state.update_data(quantity=qty, total=total)
+
+    await message.answer(
+        f"✨ Проверим заказ:\n\n"
+        f"• Напиток: <b>{html.quote(drink)}</b>\n"
+        f"• Количество: <b>{qty}</b>\n"
+        f"• Итого: <b>{total} р</b>\n\n"
+        f"Если всё верно — нажимай «{BTN_CONFIRM}».",
+        reply_markup=kb_confirm(),
+    )
+
+@router.message(StateFilter(OrderStates.waiting_for_confirmation))
+async def confirm_step(message: Message, state: FSMContext):
+    dp = message.bot._dispatcher
+    r: redis.Redis = dp["redis"]
+    data = await state.get_data()
+    cafe_id = str(data.get("cafe_id") or DEFAULT_CAFE_ID)
+    cafe = await get_cafe_by_id_effective(r, cafe_id)
+
+    if message.text == BTN_MENU:
+        await state.clear()
+        await message.answer("☕️ Меню:", reply_markup=kb_guest(cafe))
+        return
+
+    if message.text != BTN_CONFIRM:
+        await message.answer(f"Нажмите «{BTN_CONFIRM}» или «{BTN_MENU}».", reply_markup=kb_confirm())
+        return
+
+    uid = message.from_user.id
+    rate_limit = cafe_rate_limit(cafe)
+
+    last = await r.get(rl_key(uid))
+    if last and time.time() - float(last) < rate_limit:
+        await message.answer(
+            f"⏳ Заказ уже оформляли недавно.\nНовый можно оформить через {rate_limit} секунд.",
+            reply_markup=kb_guest(cafe),
+        )
+        await state.clear()
+        return
+
+    await r.setex(rl_key(uid), rate_limit, str(time.time()))
+
+    drink = str(data["drink"])
+    qty = int(data["quantity"])
+    total = int(data["total"])
+
+    await r.incr(stats_total_orders_key(cafe_id))
+    await r.incr(stats_drink_key(cafe_id, drink))
+
+    order_num = str(int(time.time()))[-6:]
+    guest_name = message.from_user.username or message.from_user.first_name or "Клиент"
+    user_link = f'<a href="tg://user?id={uid}">{html.quote(guest_name)}</a>'
+
+    admin_id = int(cafe.get("admin_id") or 0)
+    if admin_id:
+        await message.bot.send_message(
+            admin_id,
+            f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_num}</b>\n"
+            f"🏠 Кафе: <b>{html.quote(str(cafe.get('title','Кафе')))}</b> (id=<code>{html.quote(cafe_id)}</code>)\n\n"
+            f"👤 Гость: {user_link}\n"
+            f"🆔 ID: <code>{uid}</code>\n\n"
+            f"☕️ {html.quote(drink)}\n"
+            f"🔢 Количество: {qty}\n"
+            f"💰 Сумма: <b>{total} р</b>\n",
+            disable_web_page_preview=True,
+        )
+
+    finish = random.choice(FINISH_VARIANTS).format(name=html.quote(user_name(message)))
+    await message.answer(
+        f"✅ <b>Заказ #{order_num} принят!</b>\n\n"
+        f"• {html.quote(drink)} × {qty}\n"
+        f"• К оплате: <b>{total}р</b>\n\n"
+        f"{finish}",
+        reply_markup=kb_guest(cafe),
+    )
+    await state.clear()
+
+
+# -------------------------
+# Webhook app
+# -------------------------
+async def on_startup(bot: Bot):
+    logger.info("Startup: cafes=%d default=%s superadmin=%s", len(CAFES), DEFAULT_CAFE_ID, SUPERADMIN_ID)
+    await set_commands(bot)
+    await bot.set_webhook(WEBHOOK_URL, secret_token=WEBHOOK_SECRET)  # secret_token [web:1]
+    logger.info("Webhook set: %s", WEBHOOK_URL)
+
+async def main():
+    if not BOT_TOKEN:
+        raise RuntimeError("BOT_TOKEN not set")
+    REDIS_URL_ENV = os.getenv("REDIS_URL", "").strip()
+    if not REDIS_URL_ENV:
+        raise RuntimeError("REDIS_URL not set")
+
+    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    storage = RedisStorage.from_url(REDIS_URL_ENV)
+    dp = Dispatcher(storage=storage)
+
+    r = redis.from_url(REDIS_URL_ENV, decode_responses=True)
+    await r.ping()
+    dp["redis"] = r
+
+    dp.include_router(router)
+    dp.startup.register(lambda _: on_startup(bot))
+
+    app = web.Application()
+
+    async def healthcheck(_: web.Request):
+        return web.json_response({"status": "ok"})
+
+    app.router.add_get("/", healthcheck)
+
+    SimpleRequestHandler(
+        dispatcher=dp,
+        bot=bot,
+        secret_token=WEBHOOK_SECRET,
+        handle_in_background=True,
+    ).register(app, path=WEBHOOK_PATH)
+
+    setup_application(app, dp, bot=bot)  # [web:1]
+
+    async def _on_shutdown(_: web.Application):
+        try:
+            await bot.delete_webhook()
+        except Exception:
+            pass
+        try:
+            await storage.close()
+        except Exception:
+            pass
+        try:
+            await r.aclose()
+        except Exception:
+            pass
+        try:
+            await bot.session.close()
+        except Exception:
+            pass
+        logger.info("Shutdown complete")
+
+    app.on_shutdown.append(_on_shutdown)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    await site.start()
+
+    logger.info("Server running on 0.0.0.0:%s", PORT)
+    await asyncio.Event().wait()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
