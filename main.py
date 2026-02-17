@@ -54,7 +54,7 @@ PORT = int(os.getenv("PORT", "10000"))
 WEBHOOK_PATH = f"/{WEBHOOK_SECRET}/webhook"
 WEBHOOK_URL = f"https://{PUBLIC_HOST}{WEBHOOK_PATH}"
 
-# DEMO mode (как в твоей демо: показывать клиенту “как это увидит админ”)
+# DEMO mode (как в демо: показывать клиенту “как это увидит админ”)
 DEMO_MODE = bool(int(os.getenv("DEMO_MODE", "0")))
 
 
@@ -239,7 +239,6 @@ async def get_menu(r: redis.Redis, cafe_id: str) -> Dict[str, int]:
         if out:
             return out
 
-    # seed from config if empty
     cafe = cafe_or_default(cafe_id)
     base = cafe.get("menu") or {}
     out: Dict[str, int] = {}
@@ -268,9 +267,9 @@ async def menu_delete_item(r: redis.Redis, cafe_id: str, drink: str):
 def parse_start_payload(payload: str) -> Tuple[Optional[str], str]:
     """
     payload can be:
-      - "cafe_123"                 => client mode
-      - "admin:cafe_123"           => admin mode
-      - "super:cafe_123" (optional)=> superadmin mode (alias for admin + extra)
+      - "cafe_123"       => client mode
+      - "admin:cafe_123" => admin mode
+      - "super:cafe_123" => (alias) superadmin mode
     Returns: (cafe_id or None, mode in {"client","admin","super"})
     """
     p = (payload or "").strip()
@@ -322,7 +321,6 @@ CART_ACT_DEL = "🗑 Удалить"
 CART_ACT_DONE = "✅ Готово"
 
 # Admin
-BTN_ADMIN_HOME = "🏠 Админ-меню"
 BTN_STATS = "📊 Статистика"
 BTN_MENU_EDIT = "🛠 Меню"
 BTN_STAFF_GROUP = "👥 Группа персонала"
@@ -430,8 +428,6 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
         [KeyboardButton(text=BTN_STATS), KeyboardButton(text=BTN_MENU_EDIT)],
         [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)],
     ]
-    if is_super:
-        kb.append([KeyboardButton(text="🧑‍💻 Superadmin: /set_admin")])
     kb.append([KeyboardButton(text="⬅️ В клиентский режим")])
     return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True, is_persistent=True)
 
@@ -480,7 +476,7 @@ class MenuEditStates(StatesGroup):
 
 
 # =========================================================
-# Cart helpers (per-user, per-session in FSM)
+# Cart helpers
 # =========================================================
 def get_cart(data: Dict[str, Any]) -> Dict[str, int]:
     cart = data.get("cart")
@@ -513,11 +509,11 @@ def cart_text(cart: Dict[str, int], menu: Dict[str, int]) -> str:
 # Repeat last order (per cafe + user)
 # =========================================================
 async def set_last_seen(r: redis.Redis, cafe_id: str, user_id: int):
-    await r.set(k_last_seen(cafe_id, user_id), str(time.time()))
+    await r.set(f"last_seen:{cafe_id}:{user_id}", str(time.time()))
 
 async def should_offer_repeat(r: redis.Redis, cafe_id: str, user_id: int) -> bool:
-    last_seen = await r.get(k_last_seen(cafe_id, user_id))
-    last_order = await r.get(k_last_order(cafe_id, user_id))
+    last_seen = await r.get(f"last_seen:{cafe_id}:{user_id}")
+    last_order = await r.get(f"last_order:{cafe_id}:{user_id}")
     if not last_seen or not last_order:
         return False
     try:
@@ -527,7 +523,7 @@ async def should_offer_repeat(r: redis.Redis, cafe_id: str, user_id: int) -> boo
     return last_seen_dt.date() != get_moscow_time().date()
 
 async def get_last_order_snapshot(r: redis.Redis, cafe_id: str, user_id: int) -> Optional[dict]:
-    raw = await r.get(k_last_order(cafe_id, user_id))
+    raw = await r.get(f"last_order:{cafe_id}:{user_id}")
     if not raw:
         return None
     try:
@@ -536,7 +532,7 @@ async def get_last_order_snapshot(r: redis.Redis, cafe_id: str, user_id: int) ->
         return None
 
 async def set_last_order_snapshot(r: redis.Redis, cafe_id: str, user_id: int, snapshot: dict):
-    await r.set(k_last_order(cafe_id, user_id), json.dumps(snapshot, ensure_ascii=False))
+    await r.set(f"last_order:{cafe_id}:{user_id}", json.dumps(snapshot, ensure_ascii=False))
 
 
 # =========================================================
@@ -650,45 +646,12 @@ async def set_commands(bot: Bot):
         BotCommand(command="start", description="Запуск"),
         BotCommand(command="myid", description="Показать мой Telegram ID"),
         BotCommand(command="bind", description="Привязать staff-группу к кафе (в группе)"),
-        BotCommand(command="set_admin", description="Назначить админа кафе (суперадмин)"),
     ]
     await bot.set_my_commands(cmds)
 
 @router.message(Command("myid"))
 async def cmd_myid(message: Message):
     await message.answer(f"Ваш Telegram ID: <code>{message.from_user.id}</code>")
-
-
-# =========================================================
-# /set_admin (superadmin)
-# =========================================================
-@router.message(Command("set_admin"))
-async def cmd_set_admin(message: Message, command: CommandObject):
-    if not is_superadmin(message.from_user.id):
-        await message.answer("Доступ запрещён.")
-        return
-    args = (command.args or "").strip().split()
-    if len(args) != 2:
-        await message.answer("Формат: <code>/set_admin cafe_123 123456789</code>")
-        return
-    cafe_id, admin_id_s = args[0], args[1]
-    if cafe_id not in CAFES:
-        await message.answer("Неизвестный cafe_id.")
-        return
-    try:
-        admin_id = int(admin_id_s)
-    except Exception:
-        await message.answer("admin_id должен быть числом.")
-        return
-
-    # Для простоты — пишем в Redis “переопределение” (без правки файла).
-    # В этом main мы читаем admin_id только из конфига, поэтому: сообщаем, что нужно внести в конфиг.
-    # Если хочешь — сделаю полноценный override-слой (hset cafe:<id>:profile admin_id) как у тебя раньше.
-    await message.answer(
-        "Сейчас admin_id берётся из config_330_template.json.\n"
-        "Скажи — и я добавлю Redis override для admin_id (без правки файла).\n\n"
-        f"Нужно назначить: cafe_id=<code>{html.quote(cafe_id)}</code>, admin_id=<code>{admin_id}</code>"
-    )
 
 
 # =========================================================
@@ -733,7 +696,6 @@ FINISH_VARIANTS = [
 ]
 
 async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any], menu: Dict[str, int]):
-    is_super = is_superadmin(message.from_user.id)
     client_link = await create_start_link(message.bot, payload=cafe_id, encode=True)  # [web:24]
     admin_link = await create_start_link(message.bot, payload=f"admin:{cafe_id}", encode=True)  # [web:24]
     staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)  # [web:24]
@@ -749,7 +711,7 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         f"• В staff-группу: {staff_link}\n\n"
         "В staff-группе выполните:\n"
         f"<code>/bind {html.quote(cafe_id)}</code>",
-        reply_markup=kb_admin_main(is_super),
+        reply_markup=kb_admin_main(is_superadmin(message.from_user.id)),
         disable_web_page_preview=True,
     )
 
@@ -773,7 +735,6 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
     name = html.quote(user_name(message))
     welcome = random.choice(WELCOME_VARIANTS).format(name=name)
 
-    # admin mode (only if rights)
     if mode in ("admin", "super"):
         if not is_cafe_admin(uid, cafe_id):
             await message.answer("🔒 Админ-доступ запрещён.")
@@ -781,7 +742,6 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
         await send_admin_panel(message, cafe_id, cafe, menu)
         return
 
-    # client mode
     offer_repeat = await should_offer_repeat(r, cafe_id, uid)
     await set_last_seen(r, cafe_id, uid)
 
@@ -1092,7 +1052,6 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
         await message.answer("Корзина пустая.", reply_markup=kb_client_main(menu))
         return
 
-    # anti-spam
     rl = cafe_rate_limit_seconds(cafe)
     last_order = await r.get(k_rate_limit(user_id))
     if last_order and time.time() - float(last_order) < rl:
@@ -1106,10 +1065,8 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     ready_at_str = (get_moscow_time() + timedelta(minutes=max(0, ready_in_min))).strftime("%H:%M")
     ready_line = "как можно скорее" if ready_in_min <= 0 else f"через {ready_in_min} мин (к {ready_at_str} МСК)"
 
-    # snapshot for repeat
     await set_last_order_snapshot(r, cafe_id, user_id, {"cart": cart, "total": total, "ts": int(time.time())})
 
-    # stats
     await r.incr(k_stats_total_orders(cafe_id))
     await r.incrby(k_stats_total_revenue(cafe_id), int(total))
     for drink, qty in cart.items():
@@ -1118,7 +1075,6 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
         await r.incrby(k_stats_drink_cnt(cafe_id, drink), qty_i)
         await r.incrby(k_stats_drink_rev(cafe_id, drink), qty_i * price)
 
-    # smart return profile
     try:
         await customer_mark_order(
             r, cafe_id,
@@ -1164,7 +1120,7 @@ async def ready_time(message: Message, state: FSMContext):
 
 
 # =========================================================
-# Client: booking
+# Booking: allow in non-working hours (warn user)
 # =========================================================
 @router.message(F.text == BTN_BOOKING)
 async def booking_start(message: Message, state: FSMContext):
@@ -1174,13 +1130,19 @@ async def booking_start(message: Message, state: FSMContext):
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
 
+    warn = ""
     if not cafe_open(cafe):
-        await message.answer(closed_message(cafe, menu), reply_markup=kb_client_main(menu))
-        return
+        ws, _ = cafe_hours(cafe)
+        warn = (
+            "\n\n⚠️ <b>Сейчас нерабочее время.</b>\n"
+            f"Администратор ответит с началом рабочего дня (с {ws}:00 МСК)."
+        )
 
     await state.set_state(BookingStates.waiting_for_datetime)
     await message.answer(
-        "📅 <b>Бронирование</b>\n\nНапишите дату и время: <code>15.02 19:00</code>\nИли «Отмена».",
+        "📅 <b>Бронирование</b>\n\n"
+        "Напишите дату и время: <code>15.02 19:00</code>\n"
+        "Или «Отмена»." + warn,
         reply_markup=kb_booking_cancel(),
     )
 
@@ -1188,7 +1150,6 @@ async def booking_start(message: Message, state: FSMContext):
 async def booking_datetime(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
-    cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
 
     if message.text == BTN_CANCEL:
@@ -1256,8 +1217,6 @@ async def booking_finish(message: Message, state: FSMContext):
     booking_id = str(int(time.time()))[-6:]
     user_id = message.from_user.id
 
-    await message.answer("✅ Заявка на бронь принята!", reply_markup=kb_client_main(menu))
-
     admin_msg = (
         f"📋 <b>НОВАЯ БРОНЬ #{booking_id}</b> | {html.quote(cafe_title(cafe))}\n\n"
         f"<a href=\"tg://user?id={user_id}\">{html.quote(message.from_user.username or message.from_user.first_name or 'Клиент')}</a>\n"
@@ -1266,17 +1225,27 @@ async def booking_finish(message: Message, state: FSMContext):
     )
 
     await notify_admin(message.bot, r, cafe_id, admin_msg)
-    await send_admin_demo_to_user(message.bot, user_id, admin_msg)
+
+    if cafe_open(cafe):
+        user_text = "✅ Заявка на бронь отправлена администратору. Он свяжется с вами в Telegram."
+    else:
+        ws, _ = cafe_hours(cafe)
+        user_text = (
+            "✅ Заявка на бронь принята.\n\n"
+            "⚠️ Сейчас кафе закрыто — администратор ответит в рабочее время "
+            f"(с {ws}:00 МСК)."
+        )
+
+    await message.answer(user_text, reply_markup=kb_client_main(menu))
     await state.clear()
 
 
 # =========================================================
-# ADMIN: menu + stats entry points (only from admin keyboard)
+# Admin: links / staff / stats / menu edit
 # =========================================================
 def demo_stats_preview_text() -> str:
     return (
         "📊 <b>Статистика (DEMO-пример)</b>\n\n"
-        "Так будет выглядеть отчёт у владельца (админа) после покупки.\n\n"
         "Всего заказов: <b>128</b>\n"
         "Выручка всего: <b>34 560₽</b>\n\n"
         "<b>По позициям:</b>\n"
@@ -1289,9 +1258,7 @@ def demo_stats_preview_text() -> str:
 def demo_menu_edit_preview_text() -> str:
     return (
         "🛠 <b>Управление меню (DEMO-пример)</b>\n\n"
-        "Так будет выглядеть редактор меню после покупки бота.\n"
-        "Изменения доступны только администратору.\n\n"
-        "Пример действий:\n"
+        "Изменения доступны только администратору.\n"
         "• ➕ Добавить позицию\n"
         "• ✏️ Изменить цену\n"
         "• 🗑 Удалить позицию"
@@ -1552,11 +1519,6 @@ async def any_text(message: Message, state: FSMContext):
     menu = await get_menu(r, cafe_id)
 
     text = (message.text or "").strip()
-
-    # in admin panel, ignore unknown
-    if text in (BTN_STATS, BTN_MENU_EDIT, BTN_STAFF_GROUP, BTN_LINKS, BTN_ADMIN_HOME, BTN_BACK):
-        await message.answer("Нажмите кнопку.")
-        return
 
     if text in menu:
         if not cafe_open(cafe):
