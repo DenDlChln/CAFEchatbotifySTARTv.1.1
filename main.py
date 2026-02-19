@@ -549,7 +549,7 @@ async def set_last_order_snapshot(r: redis.Redis, cafe_id: str, user_id: int, sn
 # Smart return
 # =========================================================
 DEFAULT_RETURN_CYCLE_DAYS = 7
-RETURN_COOLDOWN_DAYS = 30
+RETURN_COOLDOWN_DAYS = 14
 RETURN_CHECK_EVERY_SECONDS = 6 * 60 * 60
 RETURN_SEND_FROM_HOUR = 10
 RETURN_SEND_TO_HOUR = 20
@@ -1808,3 +1808,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
