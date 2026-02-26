@@ -4,12 +4,12 @@
   "default_cafe_id": "cafe_001",
   "cafes": {
     "cafe_001": {
-      "title": "Кафе #1",
-      "city": "",
+      "title": "Кафе Бариста",
+      "city": "Краснодар",
       "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
+      "address": "Стасова, 149",
+      "phone": "+7(898)25-45-45 ",
+      "admin_id": 6070166803,
       "features": {
         "orders_enabled": true,
         "booking_enabled": true,
@@ -20,6 +20,8 @@
       },
       "menu": {
         "Капучино": 250,
+        "Пивасик": 230,
+        "Бомбастик":250
         "Латте": 270
       }
     },
