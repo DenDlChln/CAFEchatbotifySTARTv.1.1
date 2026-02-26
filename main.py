@@ -865,19 +865,19 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
     name = html.quote(user_name(message))
     welcome = random.choice(WELCOME_VARIANTS).format(name=name)
 
+    # ✅ если админ — сразу админка
     if await is_cafe_admin(r, uid, cafe_id):
         await send_admin_panel(message, cafe_id, cafe, menu)
         return
 
+    # если НЕ админ, но пытается зайти по admin/super deep-link — запрещаем
     if mode in ("admin", "super"):
-        if not await is_cafe_admin(r, uid, cafe_id):
-            await message.answer("🔒 Админ-доступ запрещён.")
-            return
-        await send_admin_panel(message, cafe_id, cafe, menu)
+        await message.answer("🔒 Админ-доступ запрещён.")
         return
 
-
+    # дальше твой текущий клиентский сценарий (как было ниже в файле)
     offer_repeat = await should_offer_repeat(r, cafe_id, uid)
+    await set_last_seen(r, cafe_id, uid)
     await set_last_seen(r, cafe_id, uid)
 
     if not cafe_open(cafe):
@@ -1816,6 +1816,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
