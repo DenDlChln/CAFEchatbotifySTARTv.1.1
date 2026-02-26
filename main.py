@@ -49,6 +49,7 @@ REDIS_URL = (os.getenv("REDIS_URL") or "").strip()
 
 WEBHOOK_SECRET = (os.getenv("WEBHOOK_SECRET") or "cafebot123").strip()
 PUBLIC_HOST = (os.getenv("PUBLIC_HOST") or os.getenv("RENDER_EXTERNAL_HOSTNAME") or "").strip()
+DEMO_PAY_BASE = (os.getenv("DEMO_PAY_BASE") or "").strip()
 PORT = int(os.getenv("PORT", "10000"))
 
 WEBHOOK_PATH = f"/{WEBHOOK_SECRET}/webhook"
@@ -349,6 +350,11 @@ MENU_EDIT_DEL = "🗑 Удалить позицию"
 BTN_VIEW_CLIENT = "⬅️ В клиентский режим"
 BTN_VIEW_ADMIN = "🛠 В админ-режим"
 
+BTN_RENEW_SUB = "💳 Продлить подписку"
+BTN_RENEW_30 = "Продлить на 30 дней"
+BTN_RENEW_360 = "Продлить на 360 дней"
+
+
 
 # =========================================================
 # Keyboards
@@ -447,7 +453,7 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
     kb = [
         [KeyboardButton(text=BTN_STATS), KeyboardButton(text=BTN_MENU_EDIT)],
         [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)],
-        [KeyboardButton(text=BTN_VIEW_CLIENT)],
+        [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_VIEW_CLIENT)],
     ]
     if is_super:
         kb.append([KeyboardButton(text="ℹ️ /help_admin")])
@@ -1884,6 +1890,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
