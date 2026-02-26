@@ -111,6 +111,10 @@ SUPERADMIN_ID: int = int(CONFIG.get("superadmin_id") or 0)
 def k_user_cafe(user_id: int) -> str:
     return f"user:{user_id}:cafe_id"
 
+def k_view_mode(user_id: int) -> str:
+    # "admin" | "client"
+    return f"user:{user_id}:view_mode"
+
 def k_staff_group(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:staff_group_id"
 
@@ -342,16 +346,21 @@ MENU_EDIT_ADD = "➕ Добавить позицию"
 MENU_EDIT_EDIT = "✏️ Изменить цену"
 MENU_EDIT_DEL = "🗑 Удалить позицию"
 
+BTN_VIEW_CLIENT = "⬅️ В клиентский режим"
+BTN_VIEW_ADMIN = "🛠 В админ-режим"
+
 
 # =========================================================
 # Keyboards
 # =========================================================
-def kb_client_main(menu: Dict[str, int]) -> ReplyKeyboardMarkup:
+def kb_client_main(menu: Dict[str, int], show_admin_button: bool = False) -> ReplyKeyboardMarkup:
     kb: List[List[KeyboardButton]] = []
     for drink in menu.keys():
         kb.append([KeyboardButton(text=drink)])
     kb.append([KeyboardButton(text=BTN_CART), KeyboardButton(text=BTN_CHECKOUT), KeyboardButton(text=BTN_BOOKING)])
     kb.append([KeyboardButton(text=BTN_CALL), KeyboardButton(text=BTN_HOURS)])
+    if show_admin_button:
+        kb.append([KeyboardButton(text=BTN_VIEW_ADMIN)])
     return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True, is_persistent=True)
 
 def kb_cart(menu: Dict[str, int], has_items: bool) -> ReplyKeyboardMarkup:
@@ -438,7 +447,7 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
     kb = [
         [KeyboardButton(text=BTN_STATS), KeyboardButton(text=BTN_MENU_EDIT)],
         [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)],
-        [KeyboardButton(text="⬅️ В клиентский режим")],
+        [KeyboardButton(text=BTN_VIEW_CLIENT)],
     ]
     if is_super:
         kb.append([KeyboardButton(text="ℹ️ /help_admin")])
@@ -865,23 +874,32 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
     name = html.quote(user_name(message))
     welcome = random.choice(WELCOME_VARIANTS).format(name=name)
 
-    # ✅ если админ — сразу админка
-    if await is_cafe_admin(r, uid, cafe_id):
+    is_admin = await is_cafe_admin(r, uid, cafe_id)
+    view_mode = str(await r.get(k_view_mode(uid)) or "admin")  # "admin" | "client"
+
+    # deep-link admin/super: если есть права — принудительно админка
+    if mode in ("admin", "super"):
+        if not is_admin:
+            await message.answer("🔒 Админ-доступ запрещён.")
+            return
+        await r.set(k_view_mode(uid), "admin")
         await send_admin_panel(message, cafe_id, cafe, menu)
         return
 
-    # если НЕ админ, но пытается зайти по admin/super deep-link — запрещаем
-    if mode in ("admin", "super"):
-        await message.answer("🔒 Админ-доступ запрещён.")
+    # обычный /start: если админ и не переключался в client — показываем админку
+    if is_admin and view_mode != "client":
+        await send_admin_panel(message, cafe_id, cafe, menu)
         return
 
-    # дальше твой текущий клиентский сценарий (как было ниже в файле)
+    # дальше клиентский сценарий
     offer_repeat = await should_offer_repeat(r, cafe_id, uid)
-    await set_last_seen(r, cafe_id, uid)
     await set_last_seen(r, cafe_id, uid)
 
     if not cafe_open(cafe):
-        await message.answer(closed_message(cafe, menu), reply_markup=kb_client_main(menu))
+        await message.answer(
+            closed_message(cafe, menu),
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
 
     if offer_repeat:
@@ -904,7 +922,7 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
         f"{welcome}\n\n🏪 {work_status(cafe)}{address_line(cafe)}\n\n"
         "Чтобы добавить в корзину: нажмите напиток → выберите количество.\n"
         "Корзина — «🛒 Корзина».",
-        reply_markup=kb_client_main(menu),
+        reply_markup=kb_client_main(menu, show_admin_button=is_admin),
     )
 
 
@@ -1374,6 +1392,7 @@ async def booking_finish(message: Message, state: FSMContext):
 
 
 # =========================================================
+# =========================================================
 # Admin buttons
 # =========================================================
 def demo_stats_preview_text() -> str:
@@ -1382,12 +1401,17 @@ def demo_stats_preview_text() -> str:
 def demo_menu_edit_preview_text() -> str:
     return "🛠 <b>Управление меню (DEMO-пример)</b>\n\nИзменения доступны только администратору."
 
-@router.message(F.text == "⬅️ В клиентский режим")
+@router.message(F.text == BTN_VIEW_CLIENT)
 async def back_to_client(message: Message):
     r: redis.Redis = message.bot._redis
-    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
-    link = await create_start_link(message.bot, payload=cafe_id, encode=True)  # [web:24]
-    await message.answer(f"Открой клиентский режим:\n{link}", disable_web_page_preview=True)
+    await r.set(k_view_mode(message.from_user.id), "client")
+    await message.answer("Ок. Переключил в клиентский режим.\nНажмите /start, чтобы увидеть интерфейс клиента.")
+
+@router.message(F.text == BTN_VIEW_ADMIN)
+async def back_to_admin(message: Message):
+    r: redis.Redis = message.bot._redis
+    await r.set(k_view_mode(message.from_user.id), "admin")
+    await message.answer("Ок. Переключил в админ-режим.\nНажмите /start, чтобы открыть админ-панель.")
 
 @router.message(F.text == BTN_LINKS)
 async def admin_links_button(message: Message):
@@ -1816,6 +1840,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
