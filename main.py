@@ -934,20 +934,23 @@ async def repeat_no(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
+
     await state.update_data(repeat_offer_snapshot=None)
-    await message.answer("Ок.", reply_markup=kb_client_main(menu))
+    await message.answer("Ок.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
 
 @router.message(F.text == BTN_REPEAT_LAST)
 async def repeat_last(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     data = await state.get_data()
     snap = data.get("repeat_offer_snapshot") or await get_last_order_snapshot(r, cafe_id, message.from_user.id)
 
     if not snap or not isinstance(snap.get("cart"), dict) or not snap.get("cart"):
-        await message.answer("Не нашёл последний заказ.", reply_markup=kb_client_main(menu))
+        await message.answer("Не нашёл последний заказ.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     cart = {}
@@ -959,7 +962,10 @@ async def repeat_last(message: Message, state: FSMContext):
 
     filtered = {d: q for d, q in cart.items() if d in menu and q > 0}
     if not filtered:
-        await message.answer("Позиции из прошлого заказа сейчас отсутствуют в меню.", reply_markup=kb_client_main(menu))
+        await message.answer(
+            "Позиции из прошлого заказа сейчас отсутствуют в меню.",
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
 
     await state.update_data(cart=filtered)
@@ -975,7 +981,12 @@ async def call_phone(message: Message):
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
-    await message.answer(f"📞 <b>Телефон:</b> <code>{html.quote(cafe_phone(cafe))}</code>", reply_markup=kb_client_main(menu))
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
+
+    await message.answer(
+        f"📞 <b>Телефон:</b> <code>{html.quote(cafe_phone(cafe))}</code>",
+        reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+    )
 
 @router.message(F.text == BTN_HOURS)
 async def show_hours(message: Message):
@@ -983,8 +994,13 @@ async def show_hours(message: Message):
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
+
     msk_time = get_moscow_time().strftime("%H:%M")
-    await message.answer(f"🕐 <b>Сейчас:</b> {msk_time} (МСК)\n{work_status(cafe)}{address_line(cafe)}", reply_markup=kb_client_main(menu))
+    await message.answer(
+        f"🕐 <b>Сейчас:</b> {msk_time} (МСК)\n{work_status(cafe)}{address_line(cafe)}",
+        reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+    )
 
 
 # =========================================================
@@ -1006,9 +1022,13 @@ async def cart_button(message: Message, state: FSMContext):
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     if not cafe_open(cafe):
-        await message.answer(closed_message(cafe, menu), reply_markup=kb_client_main(menu))
+        await message.answer(
+            closed_message(cafe, menu),
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
     await show_cart(message, state)
 
@@ -1022,8 +1042,10 @@ async def cancel_order(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
+
     await state.clear()
-    await message.answer("❌ Заказ отменён.", reply_markup=kb_client_main(menu))
+    await message.answer("❌ Заказ отменён.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
 
 
 # =========================================================
@@ -1036,7 +1058,9 @@ async def edit_cart(message: Message, state: FSMContext):
         r: redis.Redis = message.bot._redis
         cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
         menu = await get_menu(r, cafe_id)
-        await message.answer("Корзина пустая.", reply_markup=kb_client_main(menu))
+        is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
+
+        await message.answer("Корзина пустая.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
     await state.set_state(OrderStates.cart_edit_pick_item)
     await message.answer("Выберите позицию:", reply_markup=kb_cart_pick_item(cart))
@@ -1098,7 +1122,10 @@ async def cart_edit_action(message: Message, state: FSMContext):
 async def start_add_item(message: Message, state: FSMContext, cafe_id: str, menu: Dict[str, int], drink: str):
     price = menu.get(drink)
     if price is None:
-        await message.answer("Этой позиции уже нет.", reply_markup=kb_client_main(menu))
+        r: redis.Redis = message.bot._redis
+        is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
+
+        await message.answer("Этой позиции уже нет.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     cart = get_cart(await state.get_data())
@@ -1115,10 +1142,14 @@ async def process_quantity(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     if message.text == BTN_CANCEL:
         cart = get_cart(await state.get_data())
-        await message.answer("Ок.", reply_markup=kb_cart(menu, bool(cart)) if cart else kb_client_main(menu))
+        await message.answer(
+            "Ок.",
+            reply_markup=kb_cart(menu, bool(cart)) if cart else kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
 
     try:
@@ -1135,7 +1166,7 @@ async def process_quantity(message: Message, state: FSMContext):
 
     if not drink or drink not in menu:
         await state.clear()
-        await message.answer("Ошибка. Нажмите /start.", reply_markup=kb_client_main(menu))
+        await message.answer("Ошибка. Нажмите /start.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     cart[drink] = int(cart.get(drink, 0)) + qty
@@ -1157,14 +1188,15 @@ async def checkout(message: Message, state: FSMContext):
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     if not cafe_open(cafe):
-        await message.answer(closed_message(cafe, menu), reply_markup=kb_client_main(menu))
+        await message.answer(closed_message(cafe, menu), reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     cart = get_cart(await state.get_data())
     if not cart:
-        await message.answer("Корзина пустая.", reply_markup=kb_client_main(menu))
+        await message.answer("Корзина пустая.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     await state.set_state(OrderStates.waiting_for_confirmation)
@@ -1175,10 +1207,11 @@ async def confirm_order(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     if message.text == BTN_CANCEL_ORDER:
         await state.clear()
-        await message.answer("❌ Отменено.", reply_markup=kb_client_main(menu))
+        await message.answer("❌ Отменено.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     if message.text == BTN_CART:
@@ -1197,18 +1230,22 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     user_id = message.from_user.id
     cart = get_cart(await state.get_data())
     if not cart:
         await state.clear()
-        await message.answer("Корзина пустая.", reply_markup=kb_client_main(menu))
+        await message.answer("Корзина пустая.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     rl = cafe_rate_limit_seconds(cafe)
     last_order = await r.get(k_rate_limit(user_id))
     if last_order and time.time() - float(last_order) < rl:
-        await message.answer(f"⏳ Подождите {rl} секунд между заказами.", reply_markup=kb_client_main(menu))
+        await message.answer(
+            f"⏳ Подождите {rl} секунд между заказами.",
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         await state.clear()
         return
     await r.setex(k_rate_limit(user_id), rl, str(time.time()))
@@ -1230,7 +1267,8 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
 
     try:
         await customer_mark_order(
-            r, cafe_id,
+            r,
+            cafe_id,
             user_id=user_id,
             first_name=(message.from_user.first_name or ""),
             username=(message.from_user.username or ""),
@@ -1243,9 +1281,9 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     admin_msg = (
         f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_num}</b> | {html.quote(cafe_title(cafe))}\n\n"
         f"<a href=\"tg://user?id={user_id}\">{html.quote(message.from_user.username or message.from_user.first_name or 'Клиент')}</a>\n"
-        f"<code>{user_id}</code>\n\n" +
-        "\n".join(cart_lines(cart, menu)) +
-        f"\n\n💰 Итого: <b>{total}₽</b>\n⏱ Готовность: <b>{html.quote(ready_line)}</b>"
+        f"<code>{user_id}</code>\n\n"
+        + "\n".join(cart_lines(cart, menu))
+        + f"\n\n💰 Итого: <b>{total}₽</b>\n⏱ Готовность: <b>{html.quote(ready_line)}</b>"
     )
 
     await notify_admin(message.bot, r, cafe_id, admin_msg)
@@ -1254,7 +1292,7 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     finish = random.choice(FINISH_VARIANTS).format(name=html.quote(user_name(message)))
     await message.answer(
         f"🎉 <b>Заказ принят!</b>\n\n{cart_text(cart, menu)}\n\n⏱ Готовность: {html.quote(ready_line)}\n\n{finish}",
-        reply_markup=kb_client_main(menu),
+        reply_markup=kb_client_main(menu, show_admin_button=is_admin),
     )
     await state.clear()
 
@@ -1281,6 +1319,7 @@ async def booking_start(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     warn = ""
     if not cafe_open(cafe):
@@ -1303,10 +1342,11 @@ async def booking_datetime(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     if message.text == BTN_CANCEL:
         await state.clear()
-        await message.answer("Ок, отменил.", reply_markup=kb_client_main(menu))
+        await message.answer("Ок, отменил.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     m = re.match(r"^\s*(\d{1,2})\.(\d{1,2})\s+(\d{1,2}):(\d{2})\s*$", message.text or "")
@@ -1331,10 +1371,11 @@ async def booking_people(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     if message.text == BTN_CANCEL:
         await state.clear()
-        await message.answer("Ок, отменил.", reply_markup=kb_client_main(menu))
+        await message.answer("Ок, отменил.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     try:
@@ -1355,10 +1396,11 @@ async def booking_finish(message: Message, state: FSMContext):
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     if message.text == BTN_CANCEL:
         await state.clear()
-        await message.answer("Ок, отменил.", reply_markup=kb_client_main(menu))
+        await message.answer("Ок, отменил.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
         return
 
     data = await state.get_data()
@@ -1387,7 +1429,7 @@ async def booking_finish(message: Message, state: FSMContext):
             f"(с {ws}:00 МСК)."
         )
 
-    await message.answer(user_text, reply_markup=kb_client_main(menu))
+    await message.answer(user_text, reply_markup=kb_client_main(menu, show_admin_button=is_admin))
     await state.clear()
 
 
@@ -1840,6 +1882,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
