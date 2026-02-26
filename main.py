@@ -256,6 +256,9 @@ async def get_menu(r: redis.Redis, cafe_id: str) -> Dict[str, int]:
         if out:
             return out
 
+        # ✅ ВСТАВИТЬ ВОТ ЭТУ СТРОКУ (если Redis-меню есть, но оно "битое"/пустое)
+        await r.delete(k_menu(cafe_id))
+
     cafe = cafe_or_default(cafe_id)
     base = cafe.get("menu") or {}
     out: Dict[str, int] = {}
@@ -1808,4 +1811,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
