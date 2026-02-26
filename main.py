@@ -1282,6 +1282,7 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
         f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_num}</b> | {html.quote(cafe_title(cafe))}\n\n"
         f"<a href=\"tg://user?id={user_id}\">{html.quote(message.from_user.username or message.from_user.first_name or 'Клиент')}</a>\n"
         f"<code>{user_id}</code>\n\n"
+        f"✍️ <a href=\"tg://user?id={user_id}\">Написать клиенту</a>\n\n"
         + "\n".join(cart_lines(cart, menu))
         + f"\n\n💰 Итого: <b>{total}₽</b>\n⏱ Готовность: <b>{html.quote(ready_line)}</b>"
     )
@@ -1415,6 +1416,7 @@ async def booking_finish(message: Message, state: FSMContext):
         f"📋 <b>НОВАЯ БРОНЬ #{booking_id}</b> | {html.quote(cafe_title(cafe))}\n\n"
         f"<a href=\"tg://user?id={user_id}\">{html.quote(message.from_user.username or message.from_user.first_name or 'Клиент')}</a>\n"
         f"<code>{user_id}</code>\n\n"
+        f"✍️ <a href=\"tg://user?id={user_id}\">Написать клиенту</a>\n\n"
         f"🗓 {html.quote(dt_str)}\n👥 {people} чел.\n💬 {html.quote(comment)}"
     )
     await notify_admin(message.bot, r, cafe_id, admin_msg)
@@ -1882,6 +1884,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
