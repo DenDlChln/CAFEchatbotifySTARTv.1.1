@@ -459,6 +459,18 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
         kb.append([KeyboardButton(text="ℹ️ /help_admin")])
     return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True, is_persistent=True)
 
+
+def kb_renew_sub() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BTN_RENEW_30), KeyboardButton(text=BTN_RENEW_360)],
+            [KeyboardButton(text=BTN_BACK)],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
 def kb_menu_edit() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
@@ -469,13 +481,23 @@ def kb_menu_edit() -> ReplyKeyboardMarkup:
         one_time_keyboard=True,
     )
 
+
 def kb_menu_edit_cancel() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=BTN_BACK)]], resize_keyboard=True, one_time_keyboard=True)
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=BTN_BACK)]],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
 
 def kb_pick_menu_item(menu: Dict[str, int]) -> ReplyKeyboardMarkup:
     rows = [[KeyboardButton(text=k)] for k in menu.keys()]
     rows.append([KeyboardButton(text=BTN_BACK)])
-    return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True, one_time_keyboard=True)
+    return ReplyKeyboardMarkup(
+        keyboard=rows,
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
 
 
 # =========================================================
@@ -1890,6 +1912,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
