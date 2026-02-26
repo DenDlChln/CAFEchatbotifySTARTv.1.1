@@ -866,8 +866,8 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
     welcome = random.choice(WELCOME_VARIANTS).format(name=name)
 
     if await is_cafe_admin(r, uid, cafe_id):
-    await send_admin_panel(message, cafe_id, cafe, menu)
-    return
+        await send_admin_panel(message, cafe_id, cafe, menu)
+        return
 
     if mode in ("admin", "super"):
         if not await is_cafe_admin(r, uid, cafe_id):
@@ -875,6 +875,7 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
             return
         await send_admin_panel(message, cafe_id, cafe, menu)
         return
+
 
     offer_repeat = await should_offer_repeat(r, cafe_id, uid)
     await set_last_seen(r, cafe_id, uid)
@@ -1815,6 +1816,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
