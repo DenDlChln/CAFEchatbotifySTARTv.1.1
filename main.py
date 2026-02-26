@@ -866,11 +866,24 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
 
     eff_admin = await get_effective_admin_id(message.bot._redis, cafe_id)
 
+    # 6) Показать “Подписка до …” в админ-панели
+    subline = ""
+    try:
+        uid = message.from_user.id
+        raw_until = await message.bot._redis.hget(f"user:{uid}", "cafebotify_valid_until")
+        until_ts = int(raw_until) if raw_until else 0
+        if until_ts > 0:
+            until_dt = datetime.fromtimestamp(until_ts, tz=MSKTZ).strftime("%d.%m.%Y")
+            subline = f"\n<b>Подписка до:</b> <b>{until_dt}</b>\n"
+    except Exception:
+        subline = ""
+
     await message.answer(
         "🛠 <b>Админ-панель</b>\n\n"
         f"Кафе: <b>{html.quote(cafe_title(cafe))}</b>\n"
         f"ID: <code>{html.quote(cafe_id)}</code>\n"
         f"admin_id (effective): <code>{eff_admin}</code>\n"
+        f"{subline}"
         f"{work_status(cafe)}{address_line(cafe)}\n\n"
         "🔗 <b>Ссылки</b>\n"
         f"• Клиентам: {client_link}\n"
@@ -1963,6 +1976,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
