@@ -865,6 +865,10 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
     name = html.quote(user_name(message))
     welcome = random.choice(WELCOME_VARIANTS).format(name=name)
 
+    if await is_cafe_admin(r, uid, cafe_id):
+    await send_admin_panel(message, cafe_id, cafe, menu)
+    return
+
     if mode in ("admin", "super"):
         if not await is_cafe_admin(r, uid, cafe_id):
             await message.answer("🔒 Админ-доступ запрещён.")
@@ -1811,5 +1815,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
