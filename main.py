@@ -55,6 +55,7 @@ PORT = int(os.getenv("PORT", "10000"))
 WEBHOOK_PATH = f"/{WEBHOOK_SECRET}/webhook"
 WEBHOOK_URL = f"https://{PUBLIC_HOST}{WEBHOOK_PATH}"
 
+DEMO_PAY_BASE = (os.getenv("DEMO_PAY_BASE") or "").strip()
 DEMO_MODE = bool(int(os.getenv("DEMO_MODE", "0")))
 
 
@@ -1912,6 +1913,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
