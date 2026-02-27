@@ -1950,6 +1950,7 @@ async def main():
     bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
     r = await get_redis_client()
+    bot.redis = r
     bot._redis = r
 
     storage = RedisStorage.from_url(REDIS_URL)
@@ -1989,6 +1990,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
