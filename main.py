@@ -1580,6 +1580,19 @@ async def admin_links_button(message: Message):
     menu = await get_menu(r, cafe_id)
     await send_admin_panel(message, cafe_id, cafe, menu)
 
+@router.message(F.text == BTN_ADMIN_HELP)
+async def admin_help_button(message: Message):
+    r: redis.Redis = message.bot.redis
+    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await message.answer("Нет доступа.")
+        return
+
+    cafe = cafe_or_default(cafe_id)
+    menu = await get_menu(r, cafe_id)
+    await send_admin_panel_message(message, cafe_id, cafe, menu)
+
 @router.message(F.text == BTN_STAFF_GROUP)
 async def admin_staff_group_button(message: Message):
     r: redis.Redis = message.bot._redis
@@ -1997,6 +2010,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
