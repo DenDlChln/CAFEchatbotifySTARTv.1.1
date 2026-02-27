@@ -722,68 +722,97 @@ async def cmd_whoami(message: Message):
     )
 
 @router.message(Command("help_admin"))
-async def cmd_help_admin(message: Message, command: CommandObject):
-    r: redis.Redis = message.bot.redis
+async def cmdhelpadminmessage(message: Message, command: CommandObject):
+    r: redis.Redis = message.bot.redis  # в твоём main Redis лежит тут
+
     uid = message.from_user.id
-    is_super = issuperadminuserid(uid)
+    issuper = issuperadminuserid(uid)
 
     args = (command.args or "").strip()
-    cafe_id = args if args in CAFES else None
+    cafeid_arg = args if args in CAFES else None
 
-    cafes_list = ", ".join(sorted(CAFES.keys())[:30])
-    if len(CAFES) > 30:
-        cafes_list += f" … (+{len(CAFES)-30})"
+    # 1) Если суперадмин
+    if issuper:
+        cafeid = cafeid_arg  # может быть None
+
+        cafeslist = ", ".join(sorted(list(CAFES.keys()))[:30])
+        if len(CAFES) > 30:
+            cafeslist = f"{cafeslist} …(+{len(CAFES) - 30})"
+
+        lines: List[str] = []
+        lines.append("📌 /help_admin")
+        lines.append(f"ID: <code>{uid}</code>")
+        lines.append("<b>SUPERADMIN</b>")
+        lines.append("")
+        lines.append("<code>/myid</code> — Telegram ID")
+        lines.append("<code>/whoami</code> — роль/кафе")
+        lines.append("<code>/start admincafe001</code> — открыть админку кафе (пример)")
+        lines.append("<code>/bind cafe001</code> — привязать staff-группу (в группе)")
+        lines.append("")
+        lines.append("<b>Супер-команды:</b>")
+        lines.append("<code>/setadmin cafe001 123456789</code> — Redis override adminid")
+        lines.append("<code>/unsetadmin cafe001</code> — убрать override adminid")
+        lines.append("")
+        lines.append("<b>Список cafe_id:</b>")
+        lines.append(html.quote(cafeslist))
+        lines.append("")
+        lines.append("Детали по кафе:")
+        lines.append("<code>/help_admin cafe001</code>")
+
+        # Если суперадмин указал cafeid — добавим блок со ссылками
+        if cafeid:
+            cafe = cafeordefault(cafeid)
+            effadmin = await geteffectiveadminid(r, cafeid)
+            clientlink = await createstartlink(message.bot, payload=cafeid, encode=True)
+            adminlink = await createstartlink(message.bot, payload=f"admin{cafeid}", encode=True)
+            stafflink = await createstartgrouplink(message.bot, payload=cafeid, encode=True)
+
+            lines.append("")
+            lines.append(f"<b>{html.quote(cafetitle(cafe))}</b> (<code>{html.quote(cafeid)}</code>)")
+            lines.append(f"adminid effective: <code>{effadmin}</code>")
+            lines.append("")
+            lines.append(clientlink)
+            lines.append(adminlink)
+            lines.append(f"staff-group: {stafflink}")
+
+        await message.answer("\n".join(lines), disable_web_page_preview=True)
+        return
+
+    # 2) Не суперадмин: разрешаем только админам конкретного кафе
+    # cafeid определяем так: аргумент -> из Redis -> дефолт
+    cafeid = cafeid_arg
+    if not cafeid:
+        cafeid = str(await r.get(kusercafe(uid)) or DEFAULTCAFEID)
+
+    if cafeid not in CAFES:
+        cafeid = DEFAULTCAFEID
+
+    isadmin = await iscafeadmin(r, uid, cafeid)
+    if not isadmin:
+        await message.answer("Доступ только для администратора кафе.")
+        return
+
+    cafe = cafeordefault(cafeid)
+    effadmin = await geteffectiveadminid(r, cafeid)
+    clientlink = await createstartlink(message.bot, payload=cafeid, encode=True)
+    adminlink = await createstartlink(message.bot, payload=f"admin{cafeid}", encode=True)
+    stafflink = await createstartgrouplink(message.bot, payload=cafeid, encode=True)
 
     lines: List[str] = []
-    lines.append("🧾 <b>Справка админа</b>")
-    lines.append(f"Ваш ID: <code>{uid}</code>")
-    lines.append(f"Роль: <b>{'SUPERADMIN' if is_super else 'пользователь/админ кафе'}</b>")
+    lines.append("📌 Админ-подсказка")
+    lines.append(f"<b>{html.quote(cafetitle(cafe))}</b>")
+    lines.append(f"cafe_id: <code>{html.quote(cafeid)}</code>")
+    lines.append(f"adminid effective: <code>{effadmin}</code>")
     lines.append("")
-    lines.append("✅ <b>Базовые команды</b>")
-    lines.append("• <code>/myid</code> — показать ваш Telegram ID")
-    lines.append("• <code>/whoami</code> — роль и текущее кафе")
-    lines.append("• <code>/start admin:cafe_001</code> — открыть админ-панель кафе")
-    lines.append("• <code>/bind cafe_001</code> — привязать текущую группу как staff-группу (в группе)")
+    lines.append("Ссылки:")
+    lines.append(clientlink)
+    lines.append(adminlink)
+    lines.append(f"staff-group: {stafflink}")
     lines.append("")
-    if is_super:
-        lines.append("⭐ <b>Команды супер-админа</b>")
-        lines.append("• <code>/set_admin cafe_001 123456789</code> — назначить админа кафе (Redis override)")
-        lines.append("• <code>/unset_admin cafe_001</code> — сбросить override admin_id")
-        lines.append("")
-    lines.append("🏪 <b>Доступные cafe_id</b>")
-    lines.append(html.quote(cafes_list))
-    lines.append("")
-    lines.append("ℹ️ Подсказка: <code>/help_admin cafe_001</code> покажет ссылки для конкретного кафе.")
-
-    if cafe_id:
-        cafe = cafeordefault(cafe_id)
-        eff_admin = await geteffectiveadminid(r, cafe_id)
-        client_link = await createstartlink(message.bot, payload=cafe_id, encode=True)
-        admin_link = await createstartlink(message.bot, payload=f"admin{cafe_id}", encode=True)
-        staff_link = await createstartgrouplink(message.bot, payload=cafe_id, encode=True)
-
-        lines.append("")
-        lines.append(f"🏪 <b>{html.quote(cafetitle(cafe))}</b> (<code>{html.quote(cafe_id)}</code>)")
-        lines.append(f"admin_id (effective): <code>{eff_admin}</code>")
-
-        lines.append("")
-        lines.append("🌐 <b>Сайт</b>")
-        lines.append(TILDA_URL)
-
-        lines.append("")
-        lines.append("👥 <b>Подключение staff-группы (уведомления)</b>")
-        lines.append("1) Открой ссылку «В staff-группу» и выбери группу.")
-        lines.append("2) Добавь бота в группу и выдай ему права админа (минимум: отправка сообщений).")
-        lines.append(f"3) В группе напиши: <code>/bind {html.quote(cafe_id)}</code>")
-
-        lines.append("")
-        lines.append("🔗 <b>Ссылки</b>")
-        lines.append(f"• Клиентам: {client_link}")
-        lines.append(f"• Админу: {admin_link}")
-        lines.append(f"• В staff-группу: {staff_link}")
+    lines.append("Staff-группа (в группе):")
+    lines.append(f"<code>/bind {html.quote(cafeid)}</code>")
 
     await message.answer("\n".join(lines), disable_web_page_preview=True)
-
 
 @router.message(Command("set_admin"))
 async def cmd_set_admin(message: Message, command: CommandObject):
@@ -1990,6 +2019,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
