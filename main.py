@@ -342,6 +342,7 @@ BTN_STATS = "📊 Статистика"
 BTN_MENU_EDIT = "🛠 Меню"
 BTN_STAFF_GROUP = "👥 Группа персонала"
 BTN_LINKS = "🔗 Ссылки"
+BTNADMININFO = "ℹ️ Справка админа"
 BTN_BACK = "⬅️ Назад"
 
 MENU_EDIT_ADD = "➕ Добавить позицию"
@@ -2019,6 +2020,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
