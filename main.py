@@ -723,9 +723,9 @@ async def cmd_whoami(message: Message):
 
 @router.message(Command("help_admin"))
 async def cmd_help_admin(message: Message, command: CommandObject):
-    r: redis.Redis = message.bot._redis
+    r: redis.Redis = message.bot.redis
     uid = message.from_user.id
-    is_super = is_superadmin(uid)
+    is_super = issuperadmin(uid)
 
     args = (command.args or "").strip()
     cafe_id = args if args in CAFES else None
@@ -756,22 +756,20 @@ async def cmd_help_admin(message: Message, command: CommandObject):
     lines.append("ℹ️ Подсказка: <code>/help_admin cafe_001</code> покажет ссылки для конкретного кафе.")
 
     if cafe_id:
-        cafe = cafe_or_default(cafe_id)
-        eff_admin = await get_effective_admin_id(r, cafe_id)
-        client_link = await create_start_link(message.bot, payload=cafe_id, encode=True)
-        admin_link = await create_start_link(message.bot, payload=f"admin:{cafe_id}", encode=True)
-        staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
+        cafe = cafeordefault(cafe_id)
+        eff_admin = await geteffectiveadminid(r, cafe_id)
+        client_link = await createstartlink(message.bot, payload=cafe_id, encode=True)
+        admin_link = await createstartlink(message.bot, payload=f"admin{cafe_id}", encode=True)
+        staff_link = await createstartgrouplink(message.bot, payload=cafe_id, encode=True)
 
         lines.append("")
-        lines.append(f"🏪 <b>{html.quote(cafe_title(cafe))}</b> (<code>{html.quote(cafe_id)}</code>)")
+        lines.append(f"🏪 <b>{html.quote(cafetitle(cafe))}</b> (<code>{html.quote(cafe_id)}</code>)")
         lines.append(f"admin_id (effective): <code>{eff_admin}</code>")
 
-        # ✅ ДОБАВЬ: ссылка на сайт Тильда
         lines.append("")
         lines.append("🌐 <b>Сайт</b>")
-        lines.append(TILDA_URL)  # например "https://xxx.tilda.ws" или твой домен
+        lines.append(TILDA_URL)
 
-        # ✅ ДОБАВЬ: инструкция для staff-группы (как раньше)
         lines.append("")
         lines.append("👥 <b>Подключение staff-группы (уведомления)</b>")
         lines.append("1) Открой ссылку «В staff-группу» и выбери группу.")
@@ -1991,6 +1989,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
