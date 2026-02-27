@@ -725,7 +725,7 @@ async def cmd_whoami(message: Message):
 async def cmd_help_admin(message: Message, command: CommandObject):
     r: redis.Redis = message.bot.redis
     uid = message.from_user.id
-    is_super = issuperadmin(uid)
+    is_super = issuperadminuserid(uid)
 
     args = (command.args or "").strip()
     cafe_id = args if args in CAFES else None
@@ -1990,6 +1990,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
