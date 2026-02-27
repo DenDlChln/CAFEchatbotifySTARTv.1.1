@@ -706,6 +706,7 @@ async def set_commands(bot: Bot):
         BotCommand(command="myid", description="Показать мой Telegram ID"),
         BotCommand(command="whoami", description="Кто я (роль/кафе)"),
         BotCommand(command="help_admin", description="Справка для админа/суперадмина"),
+        BotCommand(command="help_admin", description="Справка супер-админа"),
         BotCommand(command="bind", description="Привязать staff-группу (в группе)"),
         BotCommand(command="set_admin", description="Назначить админа кафе (superadmin)"),
         BotCommand(command="unset_admin", description="Сбросить override admin_id (superadmin)"),
@@ -2018,6 +2019,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
