@@ -459,6 +459,7 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
         KeyboardButton(text=BTNMENUEDIT),
         KeyboardButton(text=BTNSTAFFGROUP),
         KeyboardButton(text=BTNLINKS),
+        KeyboardButton(text=BTNADMININFO),
         KeyboardButton(text=BTNRENEWSUB),
         KeyboardButton(text=BTNVIEWCLIENT),
     ]]
@@ -2020,6 +2021,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
