@@ -722,82 +722,53 @@ async def cmd_whoami(message: Message):
     )
 
 @router.message(Command("help_admin"))
-async def cmdhelpadminmessage(message: Message, command: CommandObject):
-    r: redis.Redis = message.bot.redis
+async def cmd_help_admin(message: Message, command: CommandObject):
+    r: redis.Redis = message.bot._redis
     uid = message.from_user.id
-
-    # FAILSAFE: не используем issuperadminuserid(), чтобы не ловить NameError
-    issuper = bool(SUPERADMINID and uid == SUPERADMINID)
+    is_super = is_superadmin(uid)
 
     args = (command.args or "").strip()
-    cafeid = args if args in CAFES else None
+    cafe_id = args if args in CAFES else None
 
-    # Если cafeid не передали — пробуем взять текущий cafeid пользователя из Redis
-    if not cafeid:
-        saved = await r.get(kusercafe(uid))
-        if saved:
-            cafeid = str(saved)
-
-    # Нормализуем cafeid
-    if cafeid not in CAFES:
-        cafeid = None
-
-    cafeslist = ", ".join(sorted(list(CAFES.keys()))[:30])
+    cafes_list = ", ".join(sorted(CAFES.keys())[:30])
     if len(CAFES) > 30:
-        cafeslist = f"{cafeslist} …(+{len(CAFES) - 30})"
+        cafes_list += f" вЂ¦ (+{len(CAFES)-30})"
 
     lines: List[str] = []
-    lines.append("ℹ️ <b>help_admin</b>")
-    lines.append(f"ID: <code>{uid}</code>")
-    lines.append(f"<b>{'SUPERADMIN' if issuper else 'admin'}</b>")
+    lines.append("рџ§ѕ <b>РЎРїСЂР°РІРєР° Р°РґРјРёРЅР°</b>")
+    lines.append(f"Р’Р°С€ ID: <code>{uid}</code>")
+    lines.append(f"Р РѕР»СЊ: <b>{'SUPERADMIN' if is_super else 'РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ/Р°РґРјРёРЅ РєР°С„Рµ'}</b>")
     lines.append("")
-    lines.append("Команды:")
-    lines.append("<code>/myid</code> — Telegram ID")
-    lines.append("<code>/whoami</code> — роль/кафе")
-    lines.append("<code>/start admincafe001</code> — вход в админку (пример)")
-    lines.append("<code>/bind cafe001</code> — привязать staff-группу (команду писать в группе)")
+    lines.append("вњ… <b>Р‘Р°Р·РѕРІС‹Рµ РєРѕРјР°РЅРґС‹</b>")
+    lines.append("вЂў <code>/myid</code> вЂ” РїРѕРєР°Р·Р°С‚СЊ РІР°С€ Telegram ID")
+    lines.append("вЂў <code>/whoami</code> вЂ” СЂРѕР»СЊ Рё С‚РµРєСѓС‰РµРµ РєР°С„Рµ")
+    lines.append("вЂў <code>/start admin:cafe_001</code> вЂ” РѕС‚РєСЂС‹С‚СЊ Р°РґРјРёРЅ-РїР°РЅРµР»СЊ РєР°С„Рµ")
+    lines.append("вЂў <code>/bind cafe_001</code> вЂ” РїСЂРёРІСЏР·Р°С‚СЊ С‚РµРєСѓС‰СѓСЋ РіСЂСѓРїРїСѓ РєР°Рє staff-РіСЂСѓРїРїСѓ (РІ РіСЂСѓРїРїРµ)")
     lines.append("")
-
-    if issuper:
-        lines.append("<b>Суперадмин:</b>")
-        lines.append("<code>/setadmin cafe001 123456789</code> — Redis override adminid")
-        lines.append("<code>/unsetadmin cafe001</code> — убрать override adminid")
+    if is_super:
+        lines.append("в­ђ <b>РљРѕРјР°РЅРґС‹ СЃСѓРїРµСЂ-Р°РґРјРёРЅР°</b>")
+        lines.append("вЂў <code>/set_admin cafe_001 123456789</code> вЂ” РЅР°Р·РЅР°С‡РёС‚СЊ Р°РґРјРёРЅР° РєР°С„Рµ (Redis override)")
+        lines.append("вЂў <code>/unset_admin cafe_001</code> вЂ” СЃР±СЂРѕСЃРёС‚СЊ override admin_id")
         lines.append("")
-        lines.append("<b>cafe_id:</b>")
-        lines.append(html.quote(cafeslist))
+    lines.append("рџЏЄ <b>Р”РѕСЃС‚СѓРїРЅС‹Рµ cafe_id</b>")
+    lines.append(html.quote(cafes_list))
+    lines.append("")
+    lines.append("в„№пёЏ РџРѕРґСЃРєР°Р·РєР°: <code>/help_admin cafe_001</code> РїРѕРєР°Р¶РµС‚ СЃСЃС‹Р»РєРё РґР»СЏ РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ РєР°С„Рµ.")
+
+    if cafe_id:
+        cafe = cafe_or_default(cafe_id)
+        eff_admin = await get_effective_admin_id(r, cafe_id)
+        client_link = await create_start_link(message.bot, payload=cafe_id, encode=True)  # [web:24]
+        admin_link = await create_start_link(message.bot, payload=f"admin:{cafe_id}", encode=True)  # [web:24]
+        staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)  # [web:24]
         lines.append("")
-        lines.append("Детали по кафе: <code>/help_admin cafe001</code>")
-
-    # Детали кафе показываем:
-    # - суперадмину всегда (если cafeid определён),
-    # - обычному админу только если он админ этого cafeid
-    if cafeid:
-        if issuper or await iscafeadminr(r, uid, cafeid):
-            cafe = cafeordefault(cafeid)
-            effadmin = await geteffectiveadminidr(r, cafeid)
-
-            clientlink = await createstartlink(message.bot, payload=cafeid, encode=True)
-            adminlink = await createstartlink(message.bot, payload=f"admin{cafeid}", encode=True)
-            stafflink = await createstartgrouplink(message.bot, payload=cafeid, encode=True)
-
-            lines.append("")
-            lines.append(f"🏪 <b>{html.quote(cafetitle(cafe))}</b> (<code>{html.quote(cafeid)}</code>)")
-            lines.append(f"adminid effective: <code>{effadmin}</code>")
-            lines.append("")
-            if 'TILDAURL' in globals() and TILDAURL:
-                lines.append(str(TILDAURL))
-                lines.append("")
-            lines.append("👥 <b>staff-группа</b>")
-            lines.append("1) Добавь бота в группу")
-            lines.append("2) Дай права администратора")
-            lines.append(f"3) В группе выполни: <code>/bind {html.quote(cafeid)}</code>")
-            lines.append("")
-            lines.append("🔗 <b>Ссылки</b>")
-            lines.append(f"• Клиентам: {clientlink}")
-            lines.append(f"• Админу: {adminlink}")
-            lines.append(f"• В staff-группу: {stafflink}")
-        else:
-            lines.append("⚠️ Нет прав на выбранное кафе (или cafe_id не привязан).")
+        lines.append(f"рџЏЄ <b>{html.quote(cafe_title(cafe))}</b> (<code>{html.quote(cafe_id)}</code>)")
+        lines.append(f"admin_id (effective): <code>{eff_admin}</code>")
+        lines.append("")
+        lines.append("рџ”— <b>РЎСЃС‹Р»РєРё</b>")
+        lines.append(f"вЂў РљР»РёРµРЅС‚Р°Рј: {client_link}")
+        lines.append(f"вЂў РђРґРјРёРЅСѓ: {admin_link}")
+        lines.append(f"вЂў Р’ staff-РіСЂСѓРїРїСѓ: {staff_link}")
 
     await message.answer("\n".join(lines), disable_web_page_preview=True)
 
@@ -2006,6 +1977,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
