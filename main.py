@@ -1593,7 +1593,7 @@ async def admin_links_button(message: Message):
 
 @router.message(F.text == BTN_ADMIN_HELP)
 async def admin_help_button(message: Message):
-    r: redis.Redis = message.bot.redis
+    r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
@@ -1603,6 +1603,25 @@ async def admin_help_button(message: Message):
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
     await send_admin_panel_message(message, cafe_id, cafe, menu)
+
+@router.message(F.text == BTNADMININFO)
+async def admin_info_button_message(message: Message):
+    r: redis.Redis = message.bot._redis
+    cafeid: str = await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID
+
+    # Проверка, что нажимает админ этого кафе (или супер-админ)
+    if not await is_cafe_admin(r, message.from_user.id, cafeid):
+        await message.answer("Нет доступа.")
+        return
+
+    await message.answer(
+        "🧾 <b>Справка админа кафе</b>\n"
+        "• «Статистика» — покажет продажи и выручку.\n"
+        "• «Меню» — добавление/изменение/удаление позиций.\n"
+        "• «Группа персонала» — привязка staff-группы.\n"
+        "• «Ссылки» — ссылки для клиента/админа/staff.\n"
+        "• «Продлить» — продление подписки.\n"
+    )
 
 @router.message(F.text == BTN_STAFF_GROUP)
 async def admin_staff_group_button(message: Message):
@@ -2021,6 +2040,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
