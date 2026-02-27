@@ -730,7 +730,7 @@ async def cmd_whoami(message: Message):
         f"admin_id (effective) для этого кафе: <code>{eff_admin}</code>"
     )
 
-@router.message(Command("help_admin"))
+@router.message(Command("helpadmin"))
 async def cmd_help_admin(message: Message, command: CommandObject):
     r: redis.Redis = message.bot._redis
     uid = message.from_user.id
@@ -791,6 +791,14 @@ async def cmd_help_admin(message: Message, command: CommandObject):
         lines.append(f"• В staff-группу: {staff_link}")
 
     await message.answer("\n".join(lines), disable_web_page_preview=True)
+
+@router.message(Command("help_admin"))
+async def cmd_help_admin_super(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        await message.answer("Нет доступа.")
+        return
+
+    await message.answer("🧾 <b>Справка супер-админа</b>\n...")
 
 @router.message(Command("set_admin"))
 async def cmd_set_admin(message: Message, command: CommandObject):
@@ -2010,6 +2018,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
