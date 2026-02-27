@@ -457,7 +457,7 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
         [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_VIEW_CLIENT)],
     ]
     if is_super:
-        kb.append([KeyboardButton(text="ℹ️ /helpadmin")])
+        kb.append([KeyboardButton(text="ℹ️ /help_admin")])
     return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True, is_persistent=True)
 
 
@@ -1988,6 +1988,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
