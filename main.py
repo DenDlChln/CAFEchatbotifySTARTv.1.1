@@ -1604,13 +1604,12 @@ async def admin_help_button(message: Message):
     menu = await get_menu(r, cafe_id)
     await send_admin_panel_message(message, cafe_id, cafe, menu)
 
-@router.message(F.text == BTNADMININFO)
+@router.message(F.text == BTN_ADMIN_INFO)
 async def admin_info_button_message(message: Message):
-    r: redis.Redis = message.bot._redis
-    cafeid: str = await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID
+    r: redis.Redis = message.bot.redis
+    cafe_id: str = await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID
 
-    # Проверка, что нажимает админ этого кафе (или супер-админ)
-    if not await is_cafe_admin(r, message.from_user.id, cafeid):
+    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
         await message.answer("Нет доступа.")
         return
 
@@ -2040,6 +2039,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
