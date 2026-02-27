@@ -725,7 +725,9 @@ async def cmd_whoami(message: Message):
 async def cmdhelpadminmessage(message: Message, command: CommandObject):
     r: redis.Redis = message.bot.redis
     uid = message.from_user.id
-    issuper = issuperadminuserid(uid)
+
+    # FAILSAFE: не используем issuperadminuserid(), чтобы не ловить NameError
+    issuper = bool(SUPERADMINID and uid == SUPERADMINID)
 
     args = (command.args or "").strip()
     cafeid = args if args in CAFES else None
@@ -2004,6 +2006,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
