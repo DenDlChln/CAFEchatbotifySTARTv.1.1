@@ -454,15 +454,12 @@ def kb_booking_people() -> ReplyKeyboardMarkup:
     )
 
 def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
-    kb = [[
-        KeyboardButton(text=BTN_STATS),
-        KeyboardButton(text=BTN_MENU_EDIT),
-        KeyboardButton(text=BTN_STAFF_GROUP),
-        KeyboardButton(text=BTN_LINKS),
-        KeyboardButton(text=BTN_ADMIN_INFO),
-        KeyboardButton(text=BTN_RENEW_SUB),
-        KeyboardButton(text=BTN_VIEW_CLIENT),
-    ]]
+    kb = [
+        [KeyboardButton(text=BTN_STATS), KeyboardButton(text=BTN_MENU_EDIT)], 
+        [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)], 
+        [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_VIEW_CLIENT)],
+        [KeyboardButton(text=BTN_ADMIN_INFO)],
+    ]
 
     if is_super:
         kb[0].append(KeyboardButton(text=BTN_HELP_ADMIN))   # "/help_admin"
@@ -2039,6 +2036,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
