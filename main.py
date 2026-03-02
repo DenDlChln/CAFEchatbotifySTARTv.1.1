@@ -1703,10 +1703,10 @@ async def sub_info_button_message(message: Message):
         await message.answer("Эта информация доступна только админам кафе.")
         return
 
-    raw_until = await r.hget(f"user:{uid}", "cafebotify_valid_until")
-    until_ts = int(raw_until) if raw_until else 0
+    rawuntil = await r.hget(f"user:{uid}", "cafebotify_valid_until")
+    untilts = int(rawuntil) if rawuntil else 0
 
-    if until_ts <= 0:
+    if untilts <= 0:
         await message.answer(
             "⏳ <b>Срок действия подписки</b>\n"
             "Подписка не активна.\n\n"
@@ -1715,13 +1715,14 @@ async def sub_info_button_message(message: Message):
         )
         return
 
-    until_dt = datetime.fromtimestamp(until_ts, tz=MSK_TZ)
-    days_left = (until_dt.date() - get_moscow_time().date()).days
+    untildt = datetime.fromtimestamp(untilts, tz=MSK_TZ)
+    days_left = (untildt.date() - get_moscow_time().date()).days
+
     left_line = f"Осталось: <b>{days_left}</b> дн." if days_left >= 0 else "Подписка истекла."
 
     await message.answer(
         "⏳ <b>Срок действия подписки</b>\n"
-        f"До: <b>{until_dt.strftime('%d.%m.%Y')}</b>\n"
+        f"До: <b>{untildt.strftime('%d.%m.%Y')}</b>\n"
         f"{left_line}",
         reply_markup=kb_admin_main(is_superadmin(uid)),
     )
@@ -2154,6 +2155,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
