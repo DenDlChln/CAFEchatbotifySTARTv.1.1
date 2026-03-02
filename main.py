@@ -1695,15 +1695,14 @@ async def admin_info_button_message(message: Message):
 
 @router.message(F.text == BTN_SUB_INFO)
 async def sub_info_button_message(message: Message):
-    r: redis.Redis = message.bot.redis
+    r: redis.Redis = message.bot._redis
     uid = message.from_user.id
 
-    cafeid = str(await r.get(kusercafe(uid)) or DEFAULT_CAFE_ID)
-    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+    if not await is_cafe_admin(r, uid, cafe_id):
         await message.answer("Эта информация доступна только админам кафе.")
         return
 
-    # Как в sendadminpanelmessage: hash key = f"user:{uid}", field = "cafebotify_valid_until"
     rawuntil = await r.hget(f"user:{uid}", "cafebotify_valid_until")
     untilts = int(rawuntil) if rawuntil else 0
 
@@ -1711,26 +1710,22 @@ async def sub_info_button_message(message: Message):
         await message.answer(
             "⏳ <b>Срок действия подписки</b>\n"
             "Подписка не активна.\n\n"
-            "Чтобы продлить: нажми <b>Продлить</b>.",
-            reply_markup=kbadminmain(issuperadminuserid(uid)),
+            "Чтобы продлить: нажми <b>💳 Продлить подписку</b>.",
+            reply_markup=kb_admin_main(is_superadmin(uid)),
         )
         return
 
-    untildt = datetime.fromtimestamp(untilts, tz=MSKTZ)
-    days_left = (untildt.date() - getmoscowtime.date()).days
+    untildt = datetime.fromtimestamp(untilts, tz=MSK_TZ)
+    days_left = (untildt.date() - get_moscow_time().date()).days
 
-    if days_left >= 0:
-        left_line = f"Осталось: <b>{days_left}</b> дн."
-    else:
-        left_line = "Подписка истекла."
+    left_line = f"Осталось: <b>{days_left}</b> дн." if days_left >= 0 else "Подписка истекла."
 
     await message.answer(
         "⏳ <b>Срок действия подписки</b>\n"
         f"До: <b>{untildt.strftime('%d.%m.%Y')}</b>\n"
         f"{left_line}",
-        reply_markup=kb_admin_main(is_superadmin_user_id(uid)),
+        reply_markup=kb_admin_main(is_superadmin(uid)),
     )
-
 
 @router.message(F.text == BTN_STAFF_GROUP)
 async def admin_staff_group_button(message: Message):
@@ -2149,6 +2144,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
