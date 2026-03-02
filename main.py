@@ -2118,10 +2118,21 @@ async def main():
     app.on_startup.append(on_startup)
     app.on_shutdown.append(on_shutdown)
 
-    async def healthcheck(_: web.Request):
-        return web.json_response({"status": "healthy"})
+    async def healthcheck(request: web.Request):
+    return web.json_response({"status": "healthy"})
+
+    async def robots(request: web.Request):
+        return web.Response(
+            text="User-agent: *\nDisallow: /\n",
+            content_type="text/plain",
+        )
 
     app.router.add_get("/", healthcheck)
+    app.router.add_get("/robots.txt", robots)
+
+    SimpleRequestHandler(dispatcher=dp, bot=bot, secret_token=WEBHOOK_SECRET, handle_in_background=True).register(
+        app, path=WEBHOOK_PATH
+    )
 
     SimpleRequestHandler(
         dispatcher=dp,
@@ -2143,6 +2154,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
