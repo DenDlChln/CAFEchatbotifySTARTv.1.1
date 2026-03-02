@@ -356,7 +356,7 @@ BTN_RENEW_SUB = "💳 Продлить подписку"
 BTN_RENEW_30 = "Продлить на 30 дней"
 BTN_RENEW_360 = "Продлить на 360 дней"
 
-BTN_ADMIN_HELP = "admin_help"     # для админа кафе
+BTN_SUB_INFO = "🗓️Подписка"     # для админа кафе
 BTN_HELP_ADMIN = "/help_admin"    # для супер-админа (именно команда)
 
 
@@ -457,15 +457,12 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
     kb = [
         [KeyboardButton(text=BTN_STATS), KeyboardButton(text=BTN_MENU_EDIT)], 
         [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)], 
-        [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_VIEW_CLIENT)],
+        [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_SUB_INFO)],
         [KeyboardButton(text=BTN_ADMIN_INFO)],
     ]
 
     if is_super:
         kb[0].append(KeyboardButton(text=BTN_HELP_ADMIN))   # "/help_admin"
-    else:
-        kb[0].append(KeyboardButton(text=BTN_ADMIN_HELP))   # "admin_help"
-
     return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True, is_persistent=True)
 
 
@@ -2126,6 +2123,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
