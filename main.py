@@ -1741,7 +1741,7 @@ async def sub_info_button_message(message: Message):
         "⏳ <b>Срок действия подписки</b>\n"
         f"До: <b>{untildt.strftime('%d.%m.%Y')}</b>\n"
         f"{left_line}",
-        reply_markup=kb_admin_main(is_super_admin_user_id(uid)),
+        reply_markup=kb_admin_main(is_superadmin_user_id(uid)),
     )
 
 
@@ -2162,6 +2162,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
