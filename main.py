@@ -1979,21 +1979,38 @@ async def menu_pick_remove_item(message: Message, state: FSMContext):
 # Fallback (drink pick)
 # =========================================================
 @router.message(F.text)
-async def any_text(message: Message, state: FSMContext):
+async def anytextmessage(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
-    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+    uid = message.from_user.id
+
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
-
     text = (message.text or "").strip()
+
+    is_admin = await is_cafe_admin(r, uid, cafe_id)
+    view_mode = str(await r.get(k_view_mode(uid)) or "admin")  # "admin" | "client"
+
+    # Если админ в админ-режиме — неизвестный текст возвращает в админку
+    if is_admin and view_mode != "client":
+        await send_admin_panel(message, cafe_id, cafe, menu)
+        return
+
+    # Клиентский режим: старая логика
     if text in menu:
         if not cafe_open(cafe):
-            await message.answer(closed_message(cafe, menu), reply_markup=kb_client_main(menu))
+            await message.answer(
+                closed_message(cafe, menu),
+                reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+            )
             return
         await start_add_item(message, state, cafe_id, menu, text)
         return
 
-    await message.answer("Нажмите напиток или «🛒 Корзина».", reply_markup=kb_client_main(menu))
+    await message.answer(
+        "Пожалуйста, выберите напиток из меню.",
+        reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+    )
 
 
 # =========================================================
@@ -2166,6 +2183,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
