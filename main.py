@@ -1030,12 +1030,23 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         disable_web_page_preview=True,
     )
 
+from aiogram.enums import ChatType
+
+
+def is_group_chat(message: Message) -> bool:
+    return message.chat.type in {ChatType.GROUP, ChatType.SUPERGROUP}
+
+
 @router.message(CommandStart(deep_link=True))
 async def cmd_start_deep(message: Message, command: CommandObject, state: FSMContext):
     await cmd_start(message, command, state)
 
+
 @router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     await state.clear()
     r: redis.Redis = message.bot._redis
 
@@ -1107,6 +1118,9 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
 # =========================================================
 @router.message(F.text == BTN_REPEAT_NO)
 async def repeat_no(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
@@ -1115,8 +1129,12 @@ async def repeat_no(message: Message, state: FSMContext):
     await state.update_data(repeat_offer_snapshot=None)
     await message.answer("Ок.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
 
+
 @router.message(F.text == BTN_REPEAT_LAST)
 async def repeat_last(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
@@ -1149,82 +1167,13 @@ async def repeat_last(message: Message, state: FSMContext):
 
 
 # =========================================================
-# Admin: renew subscription (point 5) — real paths
-# =========================================================
-@router.message(F.text == BTN_RENEW_SUB)
-async def renew_sub_entry(message: Message):
-    r: redis.Redis = message.bot._redis
-    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
-
-    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
-        await message.answer("🔒 Доступно только администратору.")
-        return
-
-    if not DEMO_PAY_BASE:
-        await message.answer("⚙️ DEMO_PAY_BASE не настроен.")
-        return
-
-    await message.answer("Выберите срок продления:", reply_markup=kb_renew_sub())
-
-
-@router.message(F.text.in_({BTN_RENEW_30, BTN_RENEW_360}))
-async def renew_sub_choose(message: Message):
-    r: redis.Redis = message.bot._redis
-    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
-
-    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
-        await message.answer("🔒 Доступно только администратору.")
-        return
-
-    if not DEMO_PAY_BASE:
-        await message.answer("⚙️ DEMO_PAY_BASE не настроен.")
-        return
-
-    if message.text == BTN_RENEW_360:
-        days = 360
-        path = "/pay-year"
-    else:
-        days = 30
-        path = "/pay-month"
-
-    pay_url = f"{DEMO_PAY_BASE}{path}?tg_id={message.from_user.id}"
-
-    await message.answer(
-        f"💳 Продление на <b>{days} дней</b>\n\n"
-        f"Ссылка для оплаты:\n{pay_url}\n\n"
-        "После оплаты подписка обновится автоматически.",
-        disable_web_page_preview=True,
-        reply_markup=kb_admin_main(is_super=is_superadmin(message.from_user.id)),
-    )
-
-
-from aiogram.filters import StateFilter
-from aiogram import F
-
-@router.message(StateFilter(None), F.text == BTN_BACK)
-async def back_from_renew_sub(message: Message):
-    r: redis.Redis = message.bot._redis
-    uid = message.from_user.id
-    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
-
-    is_admin = await is_cafe_admin(r, uid, cafe_id)
-    view_mode = str(await r.get(k_view_mode(uid)) or "admin")  # "admin" | "client"
-
-    cafe = cafe_or_default(cafe_id)
-    menu = await get_menu(r, cafe_id)
-
-    if is_admin and view_mode != "client":
-        await send_admin_panel(message, cafe_id, cafe, menu)
-        return
-
-    await message.answer("Ок.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
-
-
-# =========================================================
 # Client: info
 # =========================================================
 @router.message(F.text == BTN_CALL)
 async def call_phone(message: Message):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
@@ -1236,8 +1185,12 @@ async def call_phone(message: Message):
         reply_markup=kb_client_main(menu, show_admin_button=is_admin),
     )
 
+
 @router.message(F.text == BTN_HOURS)
 async def show_hours(message: Message):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
@@ -1255,6 +1208,9 @@ async def show_hours(message: Message):
 # Client: cart show/clear/cancel
 # =========================================================
 async def show_cart(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
@@ -1264,8 +1220,12 @@ async def show_cart(message: Message, state: FSMContext):
     await state.update_data(cart=cart)
     await message.answer(cart_text(cart, menu), reply_markup=kb_cart(menu, bool(cart)))
 
+
 @router.message(F.text == BTN_CART)
 async def cart_button(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
@@ -1280,13 +1240,21 @@ async def cart_button(message: Message, state: FSMContext):
         return
     await show_cart(message, state)
 
+
 @router.message(F.text == BTN_CLEAR_CART)
 async def clear_cart(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     await state.update_data(cart={})
     await show_cart(message, state)
 
+
 @router.message(F.text == BTN_CANCEL_ORDER)
 async def cancel_order(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
@@ -1301,6 +1269,9 @@ async def cancel_order(message: Message, state: FSMContext):
 # =========================================================
 @router.message(F.text == BTN_EDIT_CART)
 async def edit_cart(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     cart = get_cart(await state.get_data())
     if not cart:
         r: redis.Redis = message.bot._redis
@@ -1313,8 +1284,12 @@ async def edit_cart(message: Message, state: FSMContext):
     await state.set_state(OrderStates.cart_edit_pick_item)
     await message.answer("Выберите позицию:", reply_markup=kb_cart_pick_item(cart))
 
+
 @router.message(StateFilter(OrderStates.cart_edit_pick_item))
 async def pick_item_to_edit(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     text = (message.text or "").strip()
     if text in {BTN_CANCEL, BTN_CART}:
         await show_cart(message, state)
@@ -1329,8 +1304,12 @@ async def pick_item_to_edit(message: Message, state: FSMContext):
     await state.update_data(edit_item=text)
     await message.answer(f"Что сделать с <b>{html.quote(text)}</b>?", reply_markup=kb_cart_edit_actions())
 
+
 @router.message(StateFilter(OrderStates.cart_edit_pick_action))
 async def cart_edit_action(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     action = (message.text or "").strip()
     if action == BTN_CANCEL:
         await show_cart(message, state)
@@ -1368,6 +1347,9 @@ async def cart_edit_action(message: Message, state: FSMContext):
 # Client: add item
 # =========================================================
 async def start_add_item(message: Message, state: FSMContext, cafe_id: str, menu: Dict[str, int], drink: str):
+    if is_group_chat(message):
+        return
+
     price = menu.get(drink)
     if price is None:
         r: redis.Redis = message.bot._redis
@@ -1385,8 +1367,12 @@ async def start_add_item(message: Message, state: FSMContext, cafe_id: str, menu
         reply_markup=kb_qty(),
     )
 
+
 @router.message(StateFilter(OrderStates.waiting_for_quantity))
 async def process_quantity(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
@@ -2397,6 +2383,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
