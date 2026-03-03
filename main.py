@@ -513,10 +513,8 @@ def kb_pick_menu_item(menu: Dict[str, int]) -> ReplyKeyboardMarkup:
 def kb_staff_main() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=BTN_MENU_EDIT)],   # Меню (кафе)
             [KeyboardButton(text=BTN_LINKS)],       # Ссылки
-            [KeyboardButton(text=BTN_SUB_INFO)],    # Подписка
-            [KeyboardButton(text=BTN_STATS)],       # Статистика
+            [KeyboardButton(text=BTN_SUB_INFO)],    # Подписка   
         ],
         resize_keyboard=True,
         is_persistent=True,
@@ -2352,6 +2350,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
