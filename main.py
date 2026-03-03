@@ -675,19 +675,19 @@ async def notify_admin(bot: Bot, r: redis.Redis, cafe_id: str, text: str):
     admin_id = await get_effective_admin_id(r, cafe_id)
     if admin_id:
         try:
-            await bot.send_message(
-                int(group_id),
-                text,
-                disable_web_page_preview=True,
-                reply_markup=kb_staff_main(),  # staff-меню
-            )
+            await bot.send_message(admin_id, text, disable_web_page_preview=True)
         except Exception:
             pass
 
     try:
         group_id = await r.get(k_staff_group(cafe_id))
         if group_id:
-            await bot.send_message(int(group_id), text, disable_web_page_preview=True)
+            await bot.send_message(
+                int(group_id),
+                text,
+                disable_web_page_preview=True,
+                reply_markup=kb_staff_main(),  # ВАЖНО
+            )
     except Exception:
         pass
 
@@ -2315,6 +2315,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
