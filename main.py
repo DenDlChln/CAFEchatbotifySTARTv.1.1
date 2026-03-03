@@ -848,7 +848,7 @@ async def cmdhelpadminmessage(message: Message, command: CommandObject):
     lines.append("<code>/bind cafe001</code> — привязать staff-группу (писать в группе)")
     lines.append("")
 
-    if issuper:
+    if is_superadmin:
         lines.append("<b>Суперадмин:</b>")
         lines.append("<code>/setadmin cafe001 123456789</code> — override adminid (Redis)")
         lines.append("<code>/unsetadmin cafe001</code> — убрать override")
@@ -2397,6 +2397,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
