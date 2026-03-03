@@ -762,7 +762,7 @@ async def cmd_help_admin(message: Message, command: CommandObject):
     lines: List[str] = []
     lines.append("🧾 <b>Справка админа</b>")
     lines.append(f"Ваш ID: <code>{uid}</code>")
-    lines.append(f"Роль: <b>{'SUPERADMIN' if is_super else 'пользователь/админ кафе'}</b>")
+    lines.append(f"Роль: <b>{'SUPERADMIN' if is_superadmin else 'пользователь/админ кафе'}</b>")
     lines.append("")
     lines.append("✅ <b>Базовые команды</b>")
     lines.append("• <code>/myid</code> — показать ваш Telegram ID")
@@ -770,7 +770,7 @@ async def cmd_help_admin(message: Message, command: CommandObject):
     lines.append("• <code>/start admin:cafe_001</code> — открыть админ-панель кафе")
     lines.append("• <code>/bind cafe_001</code> — привязать текущую группу как staff-группу (в группе)")
     lines.append("")
-    if is_super:
+    if is_superadmin:
         lines.append("⭐ <b>Команды супер-админа</b>")
         lines.append("• <code>/set_admin cafe_001 123456789</code> — назначить админа кафе (Redis override)")
         lines.append("• <code>/unset_admin cafe_001</code> — сбросить override admin_id")
@@ -2397,6 +2397,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
