@@ -23,7 +23,12 @@ from aiogram.enums import ParseMode
 
 from aiogram.utils.deep_linking import create_start_link, create_startgroup_link  # [web:24]
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application  # [web:1]
+from aiogram.enums import ChatType
 
+
+def is_group_chat(message: Message) -> bool:
+    return message.chat.type in {ChatType.GROUP, ChatType.SUPERGROUP}
+    
 
 # =========================================================
 # Logging
@@ -1694,18 +1699,29 @@ def demo_menu_edit_preview_text() -> str:
 
 @router.message(F.text == BTN_VIEW_CLIENT)
 async def back_to_client(message: Message):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     await r.set(k_view_mode(message.from_user.id), "client")
     await message.answer("Ок. Переключил в клиентский режим.\nНажмите /start, чтобы увидеть интерфейс клиента.")
 
+
 @router.message(F.text == BTN_VIEW_ADMIN)
 async def back_to_admin(message: Message):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     await r.set(k_view_mode(message.from_user.id), "admin")
     await message.answer("Ок. Переключил в админ-режим.\nНажмите /start, чтобы открыть админ-панель.")
 
+
 @router.message(F.text == BTN_LINKS)
 async def admin_links_button(message: Message):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
@@ -1715,8 +1731,12 @@ async def admin_links_button(message: Message):
     menu = await get_menu(r, cafe_id)
     await send_admin_panel(message, cafe_id, cafe, menu)
 
+
 @router.message(F.text == BTN_ADMIN_INFO)
 async def admin_info_button_message(message: Message):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot.redis
     cafe_id: str = await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID
 
@@ -1733,8 +1753,12 @@ async def admin_info_button_message(message: Message):
         "• «Продлить» — продление подписки.\n"
     )
 
+
 @router.message(F.text == BTN_SUB_INFO)
 async def sub_info_button_message(message: Message):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     uid = message.from_user.id
 
@@ -1767,15 +1791,19 @@ async def sub_info_button_message(message: Message):
         reply_markup=kb_admin_main(is_superadmin(uid)),
     )
 
+
 @router.message(F.text == BTN_STAFF_GROUP)
 async def admin_staff_group_button(message: Message):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
         await message.answer("🔒 Доступно только администратору.")
         return
 
-    staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)  # [web:24]
+    staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
     gid = await r.get(k_staff_group(cafe_id))
     gid_line = f"Текущая группа: <code>{gid}</code>\n\n" if gid else "Группа ещё не привязана.\n\n"
     await message.answer(
@@ -1788,8 +1816,12 @@ async def admin_staff_group_button(message: Message):
         disable_web_page_preview=True,
     )
 
+
 @router.message(F.text == BTN_STATS)
 async def stats_button(message: Message):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
 
@@ -1819,8 +1851,13 @@ async def stats_button(message: Message):
     )
     await message.answer(text)
 
+
 @router.message(F.text == BTN_MENU_EDIT)
 async def menu_edit_entry(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        # В группе эту кнопку обрабатывает staff_menu_edit_entry
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
 
@@ -1835,6 +1872,7 @@ async def menu_edit_entry(message: Message, state: FSMContext):
     await state.clear()
     await state.set_state(MenuEditStates.waiting_for_action)
     await message.answer("🛠 Управление меню: выберите действие", reply_markup=kb_menu_edit())
+
 
 @router.message(StateFilter(MenuEditStates.waiting_for_action))
 async def menu_edit_choose_action(message: Message, state: FSMContext):
@@ -2315,6 +2353,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
