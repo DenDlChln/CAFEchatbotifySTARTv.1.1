@@ -1184,7 +1184,7 @@ from aiogram import F
 
 @router.message(StateFilter(None), F.text == BTN_BACK)
 async def back_from_renew_sub(message: Message):
-    r: redis.Redis = message.bot.redis  # или message.bot._redis — как у тебя везде
+    r: redis.Redis = message.bot._redis
     uid = message.from_user.id
     cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
 
@@ -2166,6 +2166,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
