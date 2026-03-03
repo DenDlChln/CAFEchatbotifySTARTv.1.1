@@ -1179,6 +1179,28 @@ async def renew_sub_choose(message: Message):
     )
 
 
+from aiogram.filters import StateFilter
+from aiogram import F
+
+@router.message(StateFilter(None), F.text == BTN_BACK)
+async def back_from_renew_sub(message: Message):
+    r: redis.Redis = message.bot.redis  # или message.bot._redis — как у тебя везде
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    is_admin = await is_cafe_admin(r, uid, cafe_id)
+    view_mode = str(await r.get(k_view_mode(uid)) or "admin")  # "admin" | "client"
+
+    cafe = cafe_or_default(cafe_id)
+    menu = await get_menu(r, cafe_id)
+
+    if is_admin and view_mode != "client":
+        await send_admin_panel(message, cafe_id, cafe, menu)
+        return
+
+    await message.answer("Ок.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+
+
 # =========================================================
 # Client: info
 # =========================================================
@@ -2144,6 +2166,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
