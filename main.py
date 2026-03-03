@@ -23,6 +23,8 @@ from aiogram.enums import ParseMode
 
 from aiogram.utils.deep_linking import create_start_link, create_startgroup_link  # [web:24]
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application  # [web:1]
+
+
 from aiogram.enums import ChatType
 
 def is_group_chat(message: Message) -> bool:
@@ -1418,6 +1420,9 @@ async def process_quantity(message: Message, state: FSMContext):
 # =========================================================
 @router.message(F.text == BTN_CHECKOUT)
 async def checkout(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
@@ -1425,7 +1430,10 @@ async def checkout(message: Message, state: FSMContext):
     is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     if not cafe_open(cafe):
-        await message.answer(closed_message(cafe, menu), reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+        await message.answer(
+            closed_message(cafe, menu),
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
 
     cart = get_cart(await state.get_data())
@@ -1434,10 +1442,17 @@ async def checkout(message: Message, state: FSMContext):
         return
 
     await state.set_state(OrderStates.waiting_for_confirmation)
-    await message.answer("✅ <b>Подтвердите заказ</b>\n\n" + cart_text(cart, menu), reply_markup=kb_confirm())
+    await message.answer(
+        "✅ <b>Подтвердите заказ</b>\n\n" + cart_text(cart, menu),
+        reply_markup=kb_confirm(),
+    )
+
 
 @router.message(StateFilter(OrderStates.waiting_for_confirmation))
 async def confirm_order(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
@@ -1459,7 +1474,11 @@ async def confirm_order(message: Message, state: FSMContext):
     await state.set_state(OrderStates.waiting_for_ready_time)
     await message.answer("Когда забрать?", reply_markup=kb_ready_time())
 
+
 async def finalize_order(message: Message, state: FSMContext, ready_in_min: int):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
@@ -1531,8 +1550,12 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     )
     await state.clear()
 
+
 @router.message(StateFilter(OrderStates.waiting_for_ready_time))
 async def ready_time(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     if message.text == BTN_CANCEL:
         await show_cart(message, state)
         return
@@ -2180,6 +2203,10 @@ async def staff_sub_info_button(message: Message):
 # =========================================================
 @router.message(F.text)
 async def anytextmessage(message: Message, state: FSMContext):
+    # в группах ничего клиентского не делаем
+    if is_group_chat(message):
+        return
+        
     r: redis.Redis = message.bot._redis
     uid = message.from_user.id
 
@@ -2383,6 +2410,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
