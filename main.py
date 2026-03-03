@@ -1993,6 +1993,120 @@ async def menu_pick_remove_item(message: Message, state: FSMContext):
     await message.answer("🗑 Удалено.", reply_markup=kb_admin_main(is_superadmin(message.from_user.id)))
 
 
+from aiogram.enums import ChatType
+
+async def resolve_cafe_by_staff_group(r: redis.Redis, chat_id: int) -> Optional[str]:
+    """
+    По chat_id группы находим cafe_id, к которому она привязана через /bind.
+    """
+    for cafe_id in CAFES.keys():
+        gid = await r.get(k_staff_group(cafe_id))
+        if gid and int(gid) == chat_id:
+            return cafe_id
+    return None
+
+
+@router.message(
+    F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}),
+    F.text == BTN_MENU_EDIT,
+)
+async def staff_menu_edit_entry(message: Message, state: FSMContext):
+    r: redis.Redis = message.bot._redis
+    cafe_id = await resolve_cafe_by_staff_group(r, message.chat.id)
+    if not cafe_id:
+        await message.answer("Этот чат не привязан ни к одному кафе. Используйте /bind в этом чате.")
+        return
+
+    if not await is_cafe_admin(r, message.from_user.id, cafe_id) and not is_superadmin(message.from_user.id):
+        if DEMO_MODE:
+            await message.answer(demo_menu_edit_preview_text(), reply_markup=kb_menu_edit())
+            await message.answer("🔒 Редактирование доступно только администратору.")
+        else:
+            await message.answer("🔒 Редактирование доступно только администратору.")
+        return
+
+    await state.clear()
+    await state.set_state(MenuEditStates.waiting_for_action)
+    await message.answer("🛠 Управление меню (staff-чат): выберите действие", reply_markup=kb_menu_edit())
+
+
+@router.message(
+    F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}),
+    F.text == BTN_LINKS,
+)
+async def staff_links_button(message: Message):
+    r: redis.Redis = message.bot._redis
+    cafe_id = await resolve_cafe_by_staff_group(r, message.chat.id)
+    if not cafe_id:
+        await message.answer("Этот чат не привязан ни к одному кафе. Используйте /bind в этом чате.")
+        return
+
+    cafe = cafe_or_default(cafe_id)
+    menu = await get_menu(r, cafe_id)
+    await send_admin_panel(message, cafe_id, cafe, menu)
+
+
+@router.message(
+    F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}),
+    F.text == BTN_SUB_INFO,
+)
+async def staff_sub_info_button(message: Message):
+    r: redis.Redis = message.bot._redis
+    cafe_id = await resolve_cafe_by_staff_group(r, message.chat.id)
+    if not cafe_id:
+        await message.answer("Этот чат не привязан ни к одному кафе. Используйте /bind в этом чате.")
+        return
+
+    admin_id = await get_effective_admin_id(r, cafe_id)
+    raw_until = await r.hget(f"user:{admin_id}", "cafebotify_valid_until")
+    until_ts = int(raw_until) if raw_until else 0
+
+    if until_ts <= 0:
+        await message.answer("❌ Подписка не активна.")
+        return
+
+    untildt = datetime.fromtimestamp(until_ts, tz=MSK_TZ)
+    days_left = (untildt.date() - get_moscow_time().date()).days
+    left_line = f"Осталось <b>{days_left} дней</b>." if days_left > 0 else "Истекает сегодня!"
+    await message.answer(
+        f"🗓️ Подписка до <b>{untildt.strftime('%d.%m.%Y')}</b>.\n{left_line}"
+    )
+
+
+@router.message(
+    F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}),
+    F.text == BTN_STATS,
+)
+async def staff_stats_button(message: Message):
+    r: redis.Redis = message.bot._redis
+    cafe_id = await resolve_cafe_by_staff_group(r, message.chat.id)
+    if not cafe_id:
+        await message.answer("Этот чат не привязан ни к одному кафе. Используйте /bind в этом чате.")
+        return
+
+    if DEMO_MODE:
+        await message.answer(demo_stats_preview_text())
+        return
+
+    menu = await get_menu(r, cafe_id)
+    total_orders = int(await r.get(k_stats_total_orders(cafe_id)) or 0)
+    total_rev = int(await r.get(k_stats_total_revenue(cafe_id)) or 0)
+
+    lines: List[str] = []
+    for drink in menu.keys():
+        cnt = int(await r.get(k_stats_drink_cnt(cafe_id, drink)) or 0)
+        rev = int(await r.get(k_stats_drink_rev(cafe_id, drink)) or 0)
+        lines.append(f"{html.quote(drink)} — <b>{cnt}</b> шт., {rev}₽")
+
+    text = (
+        f"📊 Статистика по кафе <code>{html.quote(cafe_id)}</code>\n\n"
+        f"Всего заказов: <b>{total_orders}</b>\n"
+        f"Выручка: <b>{total_rev}₽</b>\n\n"
+        + ("\n".join(lines) if lines else "Пока нет заказов.")
+    )
+    await message.answer(text)
+
+
 # =========================================================
 # Fallback (drink pick)
 # =========================================================
@@ -2201,6 +2315,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
