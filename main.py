@@ -1169,6 +1169,78 @@ async def repeat_last(message: Message, state: FSMContext):
 
 
 # =========================================================
+# Admin: renew subscription (point 5) — real paths
+# =========================================================
+@router.message(F.text == BTN_RENEW_SUB)
+async def renew_sub_entry(message: Message):
+    r: redis.Redis = message.bot._redis
+    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await message.answer("🔒 Доступно только администратору.")
+        return
+
+    if not DEMO_PAY_BASE:
+        await message.answer("⚙️ DEMO_PAY_BASE не настроен.")
+        return
+
+    await message.answer("Выберите срок продления:", reply_markup=kb_renew_sub())
+
+
+@router.message(F.text.in_({BTN_RENEW_30, BTN_RENEW_360}))
+async def renew_sub_choose(message: Message):
+    r: redis.Redis = message.bot._redis
+    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await message.answer("🔒 Доступно только администратору.")
+        return
+
+    if not DEMO_PAY_BASE:
+        await message.answer("⚙️ DEMO_PAY_BASE не настроен.")
+        return
+
+    if message.text == BTN_RENEW_360:
+        days = 360
+        path = "/pay-year"
+    else:
+        days = 30
+        path = "/pay-month"
+
+    pay_url = f"{DEMO_PAY_BASE}{path}?tg_id={message.from_user.id}"
+
+    await message.answer(
+        f"💳 Продление на <b>{days} дней</b>\n\n"
+        f"Ссылка для оплаты:\n{pay_url}\n\n"
+        "После оплаты подписка обновится автоматически.",
+        disable_web_page_preview=True,
+        reply_markup=kb_admin_main(is_super=is_superadmin(message.from_user.id)),
+    )
+
+
+from aiogram.filters import StateFilter
+from aiogram import F
+
+@router.message(StateFilter(None), F.text == BTN_BACK)
+async def back_from_renew_sub(message: Message):
+    r: redis.Redis = message.bot._redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    is_admin = await is_cafe_admin(r, uid, cafe_id)
+    view_mode = str(await r.get(k_view_mode(uid)) or "admin")  # "admin" | "client"
+
+    cafe = cafe_or_default(cafe_id)
+    menu = await get_menu(r, cafe_id)
+
+    if is_admin and view_mode != "client":
+        await send_admin_panel(message, cafe_id, cafe, menu)
+        return
+
+    await message.answer("Ок.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+
+
+# =========================================================
 # Client: info
 # =========================================================
 @router.message(F.text == BTN_CALL)
@@ -2410,6 +2482,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
