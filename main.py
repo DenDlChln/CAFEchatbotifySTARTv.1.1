@@ -24,7 +24,7 @@ from aiogram.enums import ParseMode
 from aiogram.utils.deep_linking import create_start_link, create_startgroup_link  # [web:24]
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application  # [web:1]
 
-
+from aiogram.utils.deep_linking import decode_payload
 from aiogram.enums import ChatType
 
 def is_group_chat(message: Message) -> bool:
@@ -2482,6 +2482,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
