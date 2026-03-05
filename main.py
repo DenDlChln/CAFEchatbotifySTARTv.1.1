@@ -1080,13 +1080,13 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
             
             if until_ts > 0 and until_ts > int(time.time()):
                 until_dt = datetime.fromtimestamp(until_ts, tz=MSK_TZ).strftime("%d.%m.%Y")
-                subline = f"\\n<b>Подписка до:</b> <b>{until_dt}</b>\\n"
+                subline = f"\n<b>Подписка до:</b> <b>{until_dt}</b>\n"
             else:
-                subline = "\\n<b>❌ Подписка просрочена</b>\\n"
+                subline = "\n<b>❌ Подписка просрочена</b>\n"
         except Exception:
-            subline = "\\n<b>❌ Ошибка проверки</b>\\n"
+            subline = "\n<b>❌ Ошибка проверки</b>\n"
     else:
-        subline = "\\n<b>🛠 Суперадмин (без ограничений)</b>\\n"
+        subline = "\n<b>🛠 Суперадмин (без ограничений)</b>\n"
 
     eff_admin = admin_id
     # ... остальной message.answer без изменений ...
@@ -1101,11 +1101,11 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         
         if until_ts > 0 and until_ts > int(time.time()):
             until_dt = datetime.fromtimestamp(until_ts, tz=MSK_TZ).strftime("%d.%m.%Y")
-            subline = f"\\n<b>Подписка до:</b> <b>{until_dt}</b>\\n"
+            subline = f"\n<b>Подписка до:</b> <b>{until_dt}</b>\n"
         else:
-            subline = "\\n<b>❌ Подписка просрочена</b>\\n"
+            subline = "\n<b>❌ Подписка просрочена</b>\n"
     except Exception:
-        subline = "\\n<b>❌ Ошибка проверки подписки</b>\\n"
+        subline = "\n<b>❌ Ошибка проверки подписки</b>\n"
 
     await message.answer(
         "🛠 <b>Админ-панель</b>\n\n"
@@ -2651,6 +2651,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
