@@ -162,9 +162,41 @@ def k_customer_drinks(cafe_id: str, user_id: int) -> str:
 def k_cafe_profile(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:profile"
 
+# После других def k_... 
 def k_admin_subscription(cafe_id: str) -> str:
-    """Подписка админа для конкретного кафе"""
     return f"cafe:{cafe_id}:admin_subscription"
+
+# Функция миграции старых подписок (запускается ОДИН раз)
+async def migrate_old_subscriptions(r: redis.Redis):
+    """Переносит user:{uid}:cafebotify_valid_until → cafe:{cafe_id}:admin_subscription"""
+    try:
+        # Находим всех пользователей с глобальными подписками
+        keys = await r.keys("user:*:cafebotify_valid_until")
+        migrated = 0
+        
+        for user_key in keys:
+            uid_str = user_key.split(":")[1]
+            uid = int(uid_str)
+            
+            # Находим текущее кафе пользователя
+            cafe_id = await r.get(k_user_cafe(uid))
+            if not cafe_id or cafe_id not in CAFES:
+                continue
+                
+            # Читаем старую подписку
+            raw_until = await r.hget(user_key, "cafebotify_valid_until")
+            if raw_until:
+                sub_key = k_admin_subscription(cafe_id)
+                await r.hset(sub_key, mapping={
+                    "cafebotify_valid_until": raw_until,
+                    "cafebotify_paid": "1",
+                    "admin_id": str(uid),
+                })
+                migrated += 1
+                
+        logger.info(f"Мигрировано {migrated} подписок")
+    except Exception as e:
+        logger.error(f"Миграция подписок упала: {e}")
 
 
 # =========================================================
@@ -2562,6 +2594,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
