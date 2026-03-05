@@ -1020,17 +1020,21 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
 
     eff_admin = admin_id
 
-    # 6) Показать “Подписка до …” в админ-панели
+    # ✅ НОВЫЙ БЛОК: подписка ПО КАФЕ
     subline = ""
     try:
-        uid = message.from_user.id
-        raw_until = await message.bot._redis.hget(f"user:{uid}", "cafebotify_valid_until")
+        r = message.bot._redis
+        sub_key = k_admin_subscription(cafe_id)
+        raw_until = await r.hget(sub_key, "cafebotify_valid_until")
         until_ts = int(raw_until) if raw_until else 0
-        if until_ts > 0:
-            until_dt = datetime.fromtimestamp(until_ts, tz=MSKTZ).strftime("%d.%m.%Y")
-            subline = f"\n<b>Подписка до:</b> <b>{until_dt}</b>\n"
+        
+        if until_ts > 0 and until_ts > int(time.time()):
+            until_dt = datetime.fromtimestamp(until_ts, tz=MSK_TZ).strftime("%d.%m.%Y")
+            subline = f"\\n<b>Подписка до:</b> <b>{until_dt}</b>\\n"
+        else:
+            subline = "\\n<b>❌ Подписка просрочена</b>\\n"
     except Exception:
-        subline = ""
+        subline = "\\n<b>❌ Ошибка проверки подписки</b>\\n"
 
     await message.answer(
         "🛠 <b>Админ-панель</b>\n\n"
@@ -2526,6 +2530,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
