@@ -296,15 +296,28 @@ async def menu_delete_item(r: redis.Redis, cafe_id: str, drink: str):
 # =========================================================
 # /start payload
 # =========================================================
-def parse_start_payload(payload: str) -> Tuple[Optional[str], str]:
+def parse_start_payload(payload: str) -> tuple[Optional[str], str]:
     p = (payload or "").strip()
     if not p:
         return None, "client"
+    if p.startswith("adminid:"):
+        return p.split("adminid:", 1)[1].strip() or None, "adminid"  # НОВОЕ
     if p.startswith("admin:"):
         return p.split("admin:", 1)[1].strip() or None, "admin"
     if p.startswith("super:"):
         return p.split("super:", 1)[1].strip() or None, "super"
     return p, "client"
+
+def cafes_for_admin(admin_id: int) -> list[str]:
+    """Возвращает список cafe_id для данного admin_id"""
+    out: list[str] = []
+    for cafe_id, cafe in CAFES.items():
+        try:
+            if int(cafe.get("admin_id") or 0) == admin_id:
+                out.append(cafe_id)
+        except Exception:
+            continue
+    return out
 
 async def resolve_cafe_id(r: redis.Redis, message: Message, cafe_id_from_payload: Optional[str]) -> str:
     uid = message.from_user.id
@@ -1052,19 +1065,45 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
     await state.clear()
     r: redis.Redis = message.bot._redis
 
-    payload = (command.args or "").strip()
-    cafe_id_payload, mode = parse_start_payload(payload)
+    # ✅ ДЕКОДИРОВАНИЕ + НОВЫЙ ПАРСИНГ
+    payload_raw = (command.args or "").strip()
+    payload = payload_raw
+    if payload_raw:
+        try:
+            payload = decode_payload(payload_raw)
+        except Exception:
+            pass  # fallback на сырой payload
 
-    cafe_id = await resolve_cafe_id(r, message, cafe_id_payload)
+    id_from_payload, mode = parse_start_payload(payload)
+
+    uid = message.from_user.id
+    cafe_id: str
+
+    # ✅ НОВАЯ ЛОГИКА: adminid: → поиск по admin_id
+    if mode == "adminid" and id_from_payload:
+        try:
+            admin_id = int(id_from_payload)
+            cids = cafes_for_admin(admin_id)
+            if cids:
+                cids.sort()  # первое по алфавиту
+                cafe_id = cids[0]
+                await r.set(k_user_cafe(uid), cafe_id)
+            else:
+                cafe_id = await resolve_cafe_id(r, message, None)
+        except ValueError:
+            cafe_id = await resolve_cafe_id(r, message, None)
+    else:
+        # старый путь для cafe_id / admin:cafe_id / super:cafe_id
+        cafe_id = await resolve_cafe_id(r, message, id_from_payload)
+
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
 
-    uid = message.from_user.id
     name = html.quote(user_name(message))
     welcome = random.choice(WELCOME_VARIANTS).format(name=name)
 
     is_admin = await is_cafe_admin(r, uid, cafe_id)
-    view_mode = str(await r.get(k_view_mode(uid)) or "admin")  # "admin" | "client"
+    view_mode = str(await r.get(k_view_mode(uid)) or "admin")
 
     # deep-link admin/super: если есть права — принудительно админка
     if mode in ("admin", "super"):
@@ -1080,7 +1119,7 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
         await send_admin_panel(message, cafe_id, cafe, menu)
         return
 
-    # дальше клиентский сценарий
+    # дальше клиентский сценарий (без изменений)
     offer_repeat = await should_offer_repeat(r, cafe_id, uid)
     await set_last_seen(r, cafe_id, uid)
 
@@ -2482,6 +2521,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
