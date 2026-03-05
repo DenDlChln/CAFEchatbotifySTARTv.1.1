@@ -1014,7 +1014,7 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
     admin_link = await create_start_link(message.bot, payload=f"adminid:{admin_id}", encode=True)
     staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
 
-     eff_admin = admin_id
+    eff_admin = admin_id
 
     # 6) Показать “Подписка до …” в админ-панели
     subline = ""
@@ -2522,6 +2522,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
