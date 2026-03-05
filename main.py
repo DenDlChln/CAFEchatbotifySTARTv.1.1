@@ -1009,11 +1009,12 @@ FINISH_VARIANTS = [
 ]
 
 async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any], menu: Dict[str, int]):
-    client_link = await create_start_link(message.bot, payload=cafe_id, encode=True)  # [web:24]
-    admin_link = await create_start_link(message.bot, payload=f"admin:{cafe_id}", encode=True)  # [web:24]
-    staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)  # [web:24]
+    client_link = await create_start_link(message.bot, payload=cafe_id, encode=True)
+    admin_id = await get_effective_admin_id(message.bot._redis, cafe_id)
+    admin_link = await create_start_link(message.bot, payload=f"adminid:{admin_id}", encode=True)
+    staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
 
-    eff_admin = await get_effective_admin_id(message.bot._redis, cafe_id)
+     eff_admin = admin_id
 
     # 6) Показать “Подписка до …” в админ-панели
     subline = ""
@@ -2521,6 +2522,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
