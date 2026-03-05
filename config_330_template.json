@@ -26,12 +26,12 @@
       }
     },
     "cafe_002": {
-      "title": "Кафе #2",
-      "city": "",
+      "title": "Кафе Пикасо",
+      "city": "Сочи",
       "timezone": "Europe/Moscow",
-      "address": "",
-      "phone": "",
-      "admin_id": 0,
+      "address": "Красная Поляна, ул. Пушкина, 10",
+      "phone": "+7 852 254-54-54",
+      "admin_id": 6070166803,
       "features": {
         "orders_enabled": true,
         "booking_enabled": true,
@@ -42,6 +42,8 @@
       },
       "menu": {
         "Капучино": 250,
+        "Пивасик": 230,
+        "Бомбастик": 250,
         "Латте": 270
       }
     },
