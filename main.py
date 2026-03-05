@@ -162,6 +162,10 @@ def k_customer_drinks(cafe_id: str, user_id: int) -> str:
 def k_cafe_profile(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:profile"
 
+def k_admin_subscription(cafe_id: str) -> str:
+    """Подписка админа для конкретного кафе"""
+    return f"cafe:{cafe_id}:admin_subscription"
+
 
 # =========================================================
 # Redis client
@@ -2522,6 +2526,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
