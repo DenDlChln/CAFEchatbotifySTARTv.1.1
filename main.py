@@ -1049,8 +1049,47 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
     admin_id = await get_effective_admin_id(message.bot._redis, cafe_id)
     admin_link = await create_start_link(message.bot, payload=f"adminid:{admin_id}", encode=True)
     staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
+    
+    uid = message.from_user.id
+    is_super = is_superadmin(uid)  # ✅ СУПЕРАДМИН ОБХОДИТ ПОДПИСКУ
+    
+    # ✅ ПОДПИСКА ПО КАФЕ + МИГРАЦИЯ + СУПЕРАДМИН
+    subline = ""
+    if not is_super:  # суперадмин всегда видит "активную"
+        try:
+            r = message.bot._redis
+            sub_key = k_admin_subscription(cafe_id)
+            
+            # Пробуем новый ключ
+            raw_until = await r.hget(sub_key, "cafebotify_valid_until")
+            
+            # Fallback на старую подписку (миграция)
+            if not raw_until:
+                raw_until = await r.hget(f"user:{uid}", "cafebotify_valid_until")
+                if raw_until:
+                    # Автоматическая миграция при первом обращении
+                    until_ts = int(raw_until)
+                    await r.hset(sub_key, mapping={
+                        "cafebotify_valid_until": raw_until,
+                        "cafebotify_paid": "1", 
+                        "admin_id": str(uid),
+                    })
+                    logger.info(f"Автомиграция подписки user:{uid} → {sub_key}")
+            
+            until_ts = int(raw_until) if raw_until else 0
+            
+            if until_ts > 0 and until_ts > int(time.time()):
+                until_dt = datetime.fromtimestamp(until_ts, tz=MSK_TZ).strftime("%d.%m.%Y")
+                subline = f"\\n<b>Подписка до:</b> <b>{until_dt}</b>\\n"
+            else:
+                subline = "\\n<b>❌ Подписка просрочена</b>\\n"
+        except Exception:
+            subline = "\\n<b>❌ Ошибка проверки</b>\\n"
+    else:
+        subline = "\\n<b>🛠 Суперадмин (без ограничений)</b>\\n"
 
     eff_admin = admin_id
+    # ... остальной message.answer без изменений ...
 
     # ✅ НОВЫЙ БЛОК: подписка ПО КАФЕ
     subline = ""
@@ -2594,6 +2633,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
