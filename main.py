@@ -1140,8 +1140,8 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
             # Подписка просрочена — кнопка продления
                 renew_kb = ReplyKeyboardMarkup(
                     keyboard=[
-                        [KeyboardButton(text=BTN_RENEW30)],
-                        [KeyboardButton(text=BTN_RENEW360)],
+                        [KeyboardButton(text=BTN_RENEW_30)],
+                        [KeyboardButton(text=BTN_RENEW_360)],
                         [KeyboardButton(text=BTN_BACK)],
                     ],
                     resize_keyboard=True,
@@ -2562,6 +2562,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
