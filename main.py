@@ -1287,7 +1287,7 @@ async def renew_sub_choose(message: Message):
         days = 30
         path = "/pay-month"
 
-    pay_url = f"{DEMO_PAY_BASE}{path}?tg_id={message.from_user.id}"
+    pay_url = f"{DEMO_PAY_BASE}/{path}?cafe_id={cafe_id}&admin_id={uid}"
 
     await message.answer(
         f"💳 Продление на <b>{days} дней</b>\n\n"
@@ -2562,6 +2562,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
