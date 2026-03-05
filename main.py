@@ -1231,7 +1231,7 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
                 )
                 await message.answer(
                     f"🔒 <b>{cafe_title(cafe)}</b>\\n\\n"
-                    "❌ Подписка просрочена.\\n"
+                    "❌ Подписка просрочена.\n"
                     "Оплатите для доступа к админ-панели:",
                     reply_markup=renew_kb,
                 )
@@ -2651,6 +2651,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
