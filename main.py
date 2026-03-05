@@ -1194,42 +1194,51 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
         await send_admin_panel(message, cafe_id, cafe, menu)
         return
 
-    # ✅ НОВАЯ ЛОГИКА с проверкой подписки
+    # ✅ НОВАЯ ЛОГИКА с проверкой подписки + СУПЕРАДМИН
     if is_admin:
+        # ✅ СУПЕРАДМИН ВСЕГДА ПРОХОДИТ
+        if is_superadmin(uid):
+            await r.set(k_view_mode(uid), "admin")
+            await send_admin_panel(message, cafe_id, cafe, menu)
+            return
+        
+        # Обычный админ — проверяем подписку
         try:
-            r = message.bot._redis
             sub_key = k_admin_subscription(cafe_id)
             raw_until = await r.hget(sub_key, "cafebotify_valid_until")
+            
+            # Fallback на старую подписку (миграция)
+            if not raw_until:
+                raw_until = await r.hget(f"user:{uid}", "cafebotify_valid_until")
+            
             until_ts = int(raw_until) if raw_until else 0
-        
+            
             if until_ts > 0 and until_ts > int(time.time()):
-            # Подписка активна
+                # Подписка активна
                 await r.set(k_view_mode(uid), "admin")
                 await send_admin_panel(message, cafe_id, cafe, menu)
                 return
             else:
-            # Подписка просрочена — кнопка продления
+                # Подписка просрочена — кнопка продления
                 renew_kb = ReplyKeyboardMarkup(
                     keyboard=[
-                        [KeyboardButton(text=BTN_RENEW_30)],
-                        [KeyboardButton(text=BTN_RENEW_360)],
+                        [KeyboardButton(text=BTN_RENEW30)],  # ✅ ИСПРАВЛЕНО: BTN_RENEW30
+                        [KeyboardButton(text=BTN_RENEW360)], # ✅ ИСПРАВЛЕНО: BTN_RENEW360
                         [KeyboardButton(text=BTN_BACK)],
                     ],
                     resize_keyboard=True,
                     one_time_keyboard=True,
                 )
                 await message.answer(
-                    f"🔒 <b>{cafe_title(cafe)}</b>\n\n"
-                    "❌ Подписка просрочена.\n"
+                    f"🔒 <b>{cafe_title(cafe)}</b>\\n\\n"
+                    "❌ Подписка просрочена.\\n"
                     "Оплатите для доступа к админ-панели:",
                     reply_markup=renew_kb,
                 )
                 return
         except Exception:
-        # Ошибка проверки — показываем клиентский интерфейс
+            # Ошибка проверки — показываем клиентский интерфейс
             pass
-
-# дальше клиентская логика без изменений
 
     # дальше клиентский сценарий (без изменений)
     offer_repeat = await should_offer_repeat(r, cafe_id, uid)
@@ -2633,6 +2642,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
