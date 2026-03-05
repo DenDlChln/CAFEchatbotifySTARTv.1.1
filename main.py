@@ -2560,6 +2560,15 @@ async def on_startup(app: web.Application):
 
     await bot.set_webhook(WEBHOOK_URL, secret_token=WEBHOOK_SECRET)  # [web:1]
     logger.info("Webhook set: %s", WEBHOOK_URL)
+    
+    # ✅ МИГРАЦИЯ СТАРЫХ ПОДПИСОК (выполняется ОДИН раз при старте)
+    try:
+        r = await get_redis_client()
+        await migrate_old_subscriptions(r)
+        await r.aclose()
+        logger.info("✅ Миграция старых подписок завершена")
+    except Exception as e:
+        logger.error(f"Ошибка миграции подписок при старте: {e}")
 
 async def on_shutdown(app: web.Application):
     bot: Bot = app["bot"]
@@ -2642,6 +2651,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
