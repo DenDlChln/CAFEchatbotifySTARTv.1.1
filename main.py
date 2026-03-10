@@ -1026,8 +1026,6 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         f"• В staff-группу: {staff_link}\n\n"
         "В staff-группе выполните:\n"
         f"<code>/bind {html.quote(cafe_id)}</code>\n\n"
-        reply_markup=kb_admin_main(is_superadmin(message.from_user.id)),
-        disable_web_page_preview=True,
     )
 
 from aiogram.enums import ChatType
@@ -2556,6 +2554,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
