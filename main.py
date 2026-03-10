@@ -27,8 +27,6 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 from aiogram.utils.deep_linking import decode_payload
 from aiogram.enums import ChatType
 
-from aiogram.types import BotCommand, BotCommandScopeChat
-
 def is_group_chat(message: Message) -> bool:
     return message.chat.type in {ChatType.GROUP, ChatType.SUPERGROUP}
     
@@ -768,44 +766,17 @@ async def error_handler(event: ErrorEvent):
 # =========================================================
 # Commands
 # =========================================================
-async def set_commands_for_user(bot: Bot, user_id: int):
-    """Устанавливает команды в зависимости от роли пользователя"""
-    if is_superadmin(user_id):
-        # 👑 SUPERADMIN — все команды
-        cmds = [
-            BotCommand(command="start", description="🔄 Перезапуск"),
-            BotCommand(command="myid", description="🆔 Мой Telegram ID"),
-            BotCommand(command="whoami", description="👤 Роль/кафе"),
-            BotCommand(command="help_admin", description="👑 Справка супер-админа"),
-            BotCommand(command="bind", description="📢 Привязать staff-группу"),
-            BotCommand(command="set_admin", description="👑 Назначить админа кафе"),
-            BotCommand(command="unset_admin", description="👑 Сбросить админа"),
-        ]
-    else:
-        # 👤 ОБЫЧНЫЕ — БЕЗ help_admin/set_admin/unset_admin
-        cmds = [
-            BotCommand(command="start", description="🔄 Перезапуск"),
-            BotCommand(command="myid", description="🆔 Мой Telegram ID"),
-            BotCommand(command="whoami", description="👤 Роль/кафе"),
-            BotCommand(command="bind", description="📢 Привязать staff-группу"),
-        ]
-    
-    await bot.set_my_commands(cmds, scope=BotCommandScopeChat(user_id))
-
-# Базовые команды для BotFather (глобальные)
-async def set_global_commands(bot: Bot):
-    """Базовые команды для всех (BotFather)"""
-    base_cmds = [
-        BotCommand(command="start", description="🔄 Перезапуск"),
-        BotCommand(command="myid", description="🆔 Мой Telegram ID"),
-        BotCommand(command="whoami", description="👤 Роль/кафе"),
-        BotCommand(command="bind", description="📢 Привязать staff-группу"),
+async def set_commands(bot: Bot):
+    cmds = [
+        BotCommand(command="start", description="Запуск"),
+        BotCommand(command="myid", description="Показать мой Telegram ID"),
+        BotCommand(command="whoami", description="Кто я (роль/кафе)"),
+        BotCommand(command="help_admin", description="Справка супер-админа"),
+        BotCommand(command="bind", description="Привязать staff-группу (в группе)"),
+        BotCommand(command="set_admin", description="👑 Назначить админа"),
+        BotCommand(command="unset_admin", description="Сбросить override admin_id (superadmin)"),
     ]
-    await bot.set_my_commands(base_cmds)
-
-# В on_startup()
-async def on_startup(bot: Bot):
-    await set_global_commands(bot)
+    await bot.set_my_commands(cmds)  # [web:204]
 
 @router.message(Command("myid"))
 async def cmd_myid(message: Message):
@@ -2487,7 +2458,7 @@ _smart_task: Optional[asyncio.Task] = None
 
 async def on_startup(app: web.Application):
     bot: Bot = app["bot"]
-    await set_global_commands(bot)
+    await set_commands(bot)
 
     global _smart_task
     if _smart_task is None or _smart_task.done():
