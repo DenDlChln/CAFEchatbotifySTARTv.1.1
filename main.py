@@ -27,6 +27,8 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 from aiogram.utils.deep_linking import decode_payload
 from aiogram.enums import ChatType
 
+from aiogram.types import BotCommand, BotCommandScopeChat
+
 def is_group_chat(message: Message) -> bool:
     return message.chat.type in {ChatType.GROUP, ChatType.SUPERGROUP}
     
@@ -2485,7 +2487,7 @@ _smart_task: Optional[asyncio.Task] = None
 
 async def on_startup(app: web.Application):
     bot: Bot = app["bot"]
-    await set_commands(bot)
+    await set_global_commands(bot)
 
     global _smart_task
     if _smart_task is None or _smart_task.done():
@@ -2584,6 +2586,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
