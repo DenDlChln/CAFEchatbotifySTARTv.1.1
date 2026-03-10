@@ -797,7 +797,7 @@ async def cmd_whoami(message: Message):
         f"admin_id (effective) для этого кафе: <code>{eff_admin}</code>"
     )
 
-@router.message(Command("help_admin"))
+@router.message(Command("helpadmin"))
 async def cmd_help_admin(message: Message, command: CommandObject):
     r: redis.Redis = message.bot._redis
     uid = message.from_user.id
@@ -869,24 +869,24 @@ async def cmdhelpadminmessage(message: Message, command: CommandObject):
     v = (os.getenv("SUPERADMINID") or os.getenv("SUPER_ADMIN_ID") or "").strip()
     if v.isdigit():
         superadmin_id = int(v)
-    issuper = bool(superadmin_id and uid == superadmin_id)
+    is_super = bool(superadmin_id and uid == superadmin_id)
 
     args = (command.args or "").strip()
     CAFES = globals().get("CAFES") if isinstance(globals().get("CAFES"), dict) else {}
 
-    cafeid = args if args in CAFES else None
+    cafe_id = args if args in CAFES else None
 
     # если cafeid не передали — пробуем взять из Redis
-    if not cafeid and r is not None and callable(globals().get("kusercafe")):
+    if not cafe_id and r is not None and callable(globals().get("k_user_cafe")):
         try:
-            saved = await r.get(globals()["kusercafe"](uid))
+            saved = await r.get(globals()["k_user_cafe"](uid))
             if saved and str(saved) in CAFES:
                 cafeid = str(saved)
         except Exception:
             pass
 
     lines = []
-    lines.append("🧾 <b>Справка супер-админа</b>" if issuper else "🧾 <b>Справка админа</b>")
+    lines.append("🧾 <b>Справка супер-админа</b>" if is_super else "🧾 <b>Справка админа</b>")
     lines.append(f"ID: <code>{uid}</code>")
     lines.append("")
     lines.append("Команды:")
@@ -901,33 +901,33 @@ async def cmdhelpadminmessage(message: Message, command: CommandObject):
         lines.append("<code>/setadmin cafe001 123456789</code> — override adminid (Redis)")
         lines.append("<code>/unsetadmin cafe001</code> — убрать override")
         if CAFES:
-            cafeslist = ", ".join(sorted(list(CAFES.keys()))[:30])
+            cafes_list = ", ".join(sorted(list(CAFES.keys()))[:30])
             if len(CAFES) > 30:
-                cafeslist = f"{cafeslist} …(+{len(CAFES) - 30})"
+                cafes_list = f"{cafeslist} …(+{len(CAFES) - 30})"
             lines.append("")
             lines.append("<b>cafe_id:</b>")
-            lines.append(html.quote(cafeslist))
+            lines.append(html.quote(cafes_list))
             lines.append("Детали по кафе: <code>/help_admin cafe001</code>")
         lines.append("")
 
     # Детали по кафе (если нашли cafeid и есть нужные функции)
-    if cafeid and callable(globals().get("cafeordefault")) and callable(globals().get("cafetitle")):
-        allowed = issuper
-        if not allowed and r is not None and callable(globals().get("iscafeadminr")):
+    if cafe_id and callable(globals().get("cafe_or_default")) and callable(globals().get("cafe_title")):
+        allowed = is_super
+        if not allowed and r is not None and callable(globals().get("is_cafe_admin_r")):
             try:
-                allowed = await globals()["iscafeadminr"](r, uid, cafeid)
+                allowed = await globals()["is_cafe_admin_r"](r, uid, cafeid)
             except Exception:
                 allowed = False
 
         if allowed:
-            cafe = globals()["cafeordefault"](cafeid)
-            title = globals()["cafetitle"](cafe)
-            effadmin = 0
-            if r is not None and callable(globals().get("geteffectiveadminidr")):
+            cafe = globals()["cafe_or_default"](cafeid)
+            title = globals()["cafe_title"](cafe)
+            eff_admin = 0
+            if r is not None and callable(globals().get("get_effective_admin_id_r")):
                 try:
-                    effadmin = await globals()["geteffectiveadminidr"](r, cafeid)
+                    eff_admin = await globals()["get_effective_admin_id_r"](r, cafeid)
                 except Exception:
-                    effadmin = 0
+                    eff_admin = 0
 
             lines.append(f"🏪 <b>{html.quote(str(title))}</b> (<code>{html.quote(cafeid)}</code>)")
             lines.append(f"adminid effective: <code>{effadmin}</code>")
@@ -2648,6 +2648,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
