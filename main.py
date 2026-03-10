@@ -824,12 +824,9 @@ async def cmd_help_admin(message: Message, command: CommandObject):
     if is_superadmin:
         lines.append("⭐ <b>Команды супер-админа</b>")
         lines.append("• <code>/set_admin cafe_001 123456789</code> — назначить админа кафе (Redis override)")
-        lines.append("• <code>/unset_admin cafe_001</code> — сбросить override admin_id")
+        lines.append("• <code>/unset_admin cafe_001</code> — сбросить override admin_id") 
+        lines.append("ℹ️ Подсказка: <code>/help_admin cafe_001</code> покажет ссылки для конкретного кафе.")
         lines.append("")
-    lines.append("🏪 <b>Доступные cafe_id</b>")
-    lines.append(html.quote(cafes_list))
-    lines.append("")
-    lines.append("ℹ️ Подсказка: <code>/help_admin cafe_001</code> покажет ссылки для конкретного кафе.")
     
     if cafe_id:
         cafe = cafe_or_default(cafe_id)
@@ -2651,6 +2648,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
