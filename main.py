@@ -797,7 +797,7 @@ async def cmd_whoami(message: Message):
         f"admin_id (effective) для этого кафе: <code>{eff_admin}</code>"
     )
 
-@router.message(Command("helpadmin"))
+@router.message(Command("help_admin"))
 async def cmd_help_admin(message: Message, command: CommandObject):
     r: redis.Redis = message.bot._redis
     uid = message.from_user.id
@@ -2651,6 +2651,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
