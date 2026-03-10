@@ -900,11 +900,6 @@ async def cmdhelpadminmessage(message: Message, command: CommandObject):
         lines.append("<b>Суперадмин:</b>")
         lines.append("<code>/setadmin cafe001 123456789</code> — override adminid (Redis)")
         lines.append("<code>/unsetadmin cafe001</code> — убрать override")
-        if CAFES:
-            cafes_list = ", ".join(sorted(list(CAFES.keys()))[:30])
-            if len(CAFES) > 30:
-                cafes_list = f"{cafeslist} …(+{len(CAFES) - 30})"
-            lines.append("")
             lines.append("<b>cafe_id:</b>")
             lines.append(html.quote(cafes_list))
             lines.append("Детали по кафе: <code>/help_admin cafe001</code>")
@@ -2648,6 +2643,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
