@@ -774,7 +774,7 @@ async def set_commands(bot: Bot):
         BotCommand(command="help_admin", description="Справка для админа/суперадмина"),
         BotCommand(command="help_admin", description="Справка супер-админа"),
         BotCommand(command="bind", description="Привязать staff-группу (в группе)"),
-        BotCommand(command="set_admin cafe_", description="👑 Назначить админа"),
+        BotCommand(command="set_admin", description="👑 Назначить админа"),
         BotCommand(command="unset_admin", description="Сбросить override admin_id (superadmin)"),
     ]
     await bot.set_my_commands(cmds)  # [web:204]
@@ -2651,6 +2651,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
