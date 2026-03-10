@@ -797,7 +797,7 @@ async def cmd_whoami(message: Message):
         f"admin_id (effective) для этого кафе: <code>{eff_admin}</code>"
     )
 
-@router.message(Command("helpadmin"))
+@router.message(Command("help_admin"))
 async def cmd_help_admin(message: Message, command: CommandObject):
     r: redis.Redis = message.bot._redis
     uid = message.from_user.id
@@ -856,97 +856,6 @@ async def cmd_help_admin(message: Message, command: CommandObject):
 
     await message.answer("\n".join(lines), disable_web_page_preview=True)
 
-@router.message(Command("help_admin"))
-async def cmdhelpadminmessage(message: Message, command: CommandObject):
-    import os
-    from aiogram import html
-
-    r = getattr(message.bot, "redis", None)
-    uid = message.from_user.id
-
-    # superadmin из ENV (чтобы не зависеть от глобалей)
-    superadmin_id = 0
-    v = (os.getenv("SUPERADMINID") or os.getenv("SUPER_ADMIN_ID") or "").strip()
-    if v.isdigit():
-        superadmin_id = int(v)
-    is_super = bool(superadmin_id and uid == superadmin_id)
-
-    args = (command.args or "").strip()
-    CAFES = globals().get("CAFES") if isinstance(globals().get("CAFES"), dict) else {}
-
-    cafe_id = args if args in CAFES else None
-
-    # если cafeid не передали — пробуем взять из Redis
-    if not cafe_id and r is not None and callable(globals().get("k_user_cafe")):
-        try:
-            saved = await r.get(globals()["k_user_cafe"](uid))
-            if saved and str(saved) in CAFES:
-                cafeid = str(saved)
-        except Exception:
-            pass
-
-    lines = []
-    lines.append("🧾 <b>Справка супер-админа</b>" if is_super else "🧾 <b>Справка админа</b>")
-    lines.append(f"ID: <code>{uid}</code>")
-    lines.append("")
-    lines.append("Команды:")
-    lines.append("<code>/myid</code> — Telegram ID")
-    lines.append("<code>/whoami</code> — роль/кафе")
-    lines.append("<code>/start admincafe001</code> — вход в админку (пример)")
-    lines.append("<code>/bind cafe001</code> — привязать staff-группу (писать в группе)")
-    lines.append("")
-
-    if is_superadmin:
-        lines.append("<b>Суперадмин:</b>")
-        lines.append("<code>/setadmin cafe001 123456789</code> — override adminid (Redis)")
-        lines.append("<code>/unsetadmin cafe001</code> — убрать override")
-        lines.append("<b>cafe_id:</b>")
-        lines.append("Детали по кафе: <code>/help_admin cafe001</code>")
-        lines.append("")
-
-    # Детали по кафе (если нашли cafeid и есть нужные функции)
-    if cafe_id and callable(globals().get("cafe_or_default")) and callable(globals().get("cafe_title")):
-        allowed = is_super
-        if not allowed and r is not None and callable(globals().get("is_cafe_admin_r")):
-            try:
-                allowed = await globals()["is_cafe_admin_r"](r, uid, cafeid)
-            except Exception:
-                allowed = False
-
-        if allowed:
-            cafe = globals()["cafe_or_default"](cafeid)
-            title = globals()["cafe_title"](cafe)
-            eff_admin = 0
-            if r is not None and callable(globals().get("get_effective_admin_id_r")):
-                try:
-                    eff_admin = await globals()["get_effective_admin_id_r"](r, cafeid)
-                except Exception:
-                    eff_admin = 0
-
-            lines.append(f"🏪 <b>{html.quote(str(title))}</b> (<code>{html.quote(cafeid)}</code>)")
-            lines.append(f"adminid effective: <code>{effadmin}</code>")
-            lines.append("")
-
-            # Инструкции staff-группы
-            lines.append("👥 <b>staff-группа</b>")
-            lines.append("1) Добавь бота в группу")
-            lines.append("2) Дай боту права администратора")
-            lines.append(f"3) В группе выполни: <code>/bind {html.quote(cafeid)}</code>")
-            lines.append("")
-
-            # Ссылки (если доступны deep-link функции)
-            if callable(globals().get("createstartlink")) and callable(globals().get("createstartgrouplink")):
-                clientlink = await globals()["createstartlink"](message.bot, payload=cafeid, encode=True)
-                adminlink = await globals()["createstartlink"](message.bot, payload=f"admin{cafeid}", encode=True)
-                stafflink = await globals()["createstartgrouplink"](message.bot, payload=cafeid, encode=True)
-                lines.append("🔗 <b>Ссылки</b>")
-                lines.append(f"• Клиентам: {clientlink}")
-                lines.append(f"• Админу: {adminlink}")
-                lines.append(f"• В staff-группу: {stafflink}")
-        else:
-            lines.append("⚠️ Нет прав на выбранное кафе (или cafe_id не привязан).")
-
-    await message.answer("\n".join(lines), disable_web_page_preview=True)
 
 @router.message(Command("set_admin"))
 async def cmd_set_admin(message: Message, command: CommandObject):
@@ -2642,6 +2551,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
