@@ -840,10 +840,6 @@ async def cmd_help_admin(message: Message, command: CommandObject):
         lines.append(f"admin_id (effective): <code>{eff_admin}</code>")
 
         lines.append("")
-        lines.append("🌐 <b>Сайт</b>")
-        lines.append(TILDA_URL)
-
-        lines.append("")
         lines.append("👥 <b>Подключение staff-группы (уведомления)</b>")
         lines.append("1) Открой ссылку «В staff-группу» и выбери группу.")
         lines.append("2) Добавь бота в группу и выдай ему права админа (минимум: отправка сообщений).")
@@ -2552,6 +2548,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
