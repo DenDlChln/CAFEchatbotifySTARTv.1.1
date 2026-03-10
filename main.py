@@ -835,6 +835,7 @@ async def cmd_help_admin(message: Message, command: CommandObject):
         admin_link = await create_start_link(message.bot, payload=f"admin:{cafe_id}", encode=True)  # [web:24]
         staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)  # [web:24]
         lines.append("")
+        cafetitle = lambda cafe: CAFES.get(cafe, {}).get("name", cafe)
         lines.append(f"🏪 <b>{html.quote(cafetitle(cafe))}</b> (<code>{html.quote(cafe_id)}</code>)")
         lines.append(f"admin_id (effective): <code>{eff_admin}</code>")
 
@@ -2551,6 +2552,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
