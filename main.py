@@ -766,18 +766,44 @@ async def error_handler(event: ErrorEvent):
 # =========================================================
 # Commands
 # =========================================================
-async def set_commands(bot: Bot):
-    cmds = [
-        BotCommand(command="start", description="Запуск"),
-        BotCommand(command="myid", description="Показать мой Telegram ID"),
-        BotCommand(command="whoami", description="Кто я (роль/кафе)"),
-        BotCommand(command="help_admin", description="Справка для админа/суперадмина"),
-        BotCommand(command="help_admin", description="Справка супер-админа"),
-        BotCommand(command="bind", description="Привязать staff-группу (в группе)"),
-        BotCommand(command="set_admin", description="👑 Назначить админа"),
-        BotCommand(command="unset_admin", description="Сбросить override admin_id (superadmin)"),
+async def set_commands_for_user(bot: Bot, user_id: int):
+    """Устанавливает команды в зависимости от роли пользователя"""
+    if is_superadmin(user_id):
+        # 👑 SUPERADMIN — все команды
+        cmds = [
+            BotCommand(command="start", description="🔄 Перезапуск"),
+            BotCommand(command="myid", description="🆔 Мой Telegram ID"),
+            BotCommand(command="whoami", description="👤 Роль/кафе"),
+            BotCommand(command="help_admin", description="👑 Справка супер-админа"),
+            BotCommand(command="bind", description="📢 Привязать staff-группу"),
+            BotCommand(command="set_admin", description="👑 Назначить админа кафе"),
+            BotCommand(command="unset_admin", description="👑 Сбросить админа"),
+        ]
+    else:
+        # 👤 ОБЫЧНЫЕ — БЕЗ help_admin/set_admin/unset_admin
+        cmds = [
+            BotCommand(command="start", description="🔄 Перезапуск"),
+            BotCommand(command="myid", description="🆔 Мой Telegram ID"),
+            BotCommand(command="whoami", description="👤 Роль/кафе"),
+            BotCommand(command="bind", description="📢 Привязать staff-группу"),
+        ]
+    
+    await bot.set_my_commands(cmds, scope=BotCommandScopeChat(user_id))
+
+# Базовые команды для BotFather (глобальные)
+async def set_global_commands(bot: Bot):
+    """Базовые команды для всех (BotFather)"""
+    base_cmds = [
+        BotCommand(command="start", description="🔄 Перезапуск"),
+        BotCommand(command="myid", description="🆔 Мой Telegram ID"),
+        BotCommand(command="whoami", description="👤 Роль/кафе"),
+        BotCommand(command="bind", description="📢 Привязать staff-группу"),
     ]
-    await bot.set_my_commands(cmds)  # [web:204]
+    await bot.set_my_commands(base_cmds)
+
+# В on_startup()
+async def on_startup(bot: Bot):
+    await set_global_commands(bot)
 
 @router.message(Command("myid"))
 async def cmd_myid(message: Message):
@@ -2558,6 +2584,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
