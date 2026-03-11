@@ -1152,7 +1152,7 @@ FINISH_VARIANTS = [
 async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any], menu: Dict[str, int]):
     client_link = await create_start_link(message.bot, payload=cafe_id, encode=True)
     admin_id = await get_effective_admin_id(message.bot._redis, cafe_id)
-    admin_link = await create_start_link(message.bot, payload=f"adminid:{admin_id}", encode=True)
+    admin_link = await create_start_link(message.bot, payload=f"adminid:{cafe_id}", encode=True)
     staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
 
     uid = message.from_user.id
@@ -1424,12 +1424,13 @@ async def renew_sub_choose(message: Message):
 
     if message.text == BTN_RENEW_360:
         days = 360
-        path = "/pay-year"
+        path = "pay-year"
     else:
         days = 30
-        path = "/pay-month"
+        path = "pay-month"
 
-    pay_url = f"{DEMO_PAY_BASE}/{path}?cafe_id={cafe_id}&admin_id={uid}"
+    pay_base = DEMO_PAY_BASE.rstrip("/")
+    pay_url = f"{pay_base}/{path}?cafe_id={cafe_id}&admin_id={uid}"
 
     await message.answer(
         f"💳 Продление на <b>{days} дней</b>\n\n"
@@ -2713,6 +2714,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
