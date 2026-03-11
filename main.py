@@ -385,24 +385,11 @@ def parse_start_payload(payload: str) -> tuple[Optional[str], str]:
     p = (payload or "").strip()
     if not p:
         return None, "client"
-    if p.startswith("adminid:"):
-        return p.split("adminid:", 1)[1].strip() or None, "adminid"  # НОВОЕ
     if p.startswith("admin:"):
         return p.split("admin:", 1)[1].strip() or None, "admin"
     if p.startswith("super:"):
         return p.split("super:", 1)[1].strip() or None, "super"
     return p, "client"
-
-def cafes_for_admin(admin_id: int) -> list[str]:
-    """Возвращает список cafe_id для данного admin_id"""
-    out: list[str] = []
-    for cafe_id, cafe in CAFES.items():
-        try:
-            if int(cafe.get("admin_id") or 0) == admin_id:
-                out.append(cafe_id)
-        except Exception:
-            continue
-    return out
 
 async def resolve_cafe_id(r: redis.Redis, message: Message, cafe_id_from_payload: Optional[str]) -> str:
     uid = message.from_user.id
@@ -832,7 +819,7 @@ async def set_commands(bot: Bot):
         BotCommand(command="unset_admin", description="Сбросить override admin_id (superadmin)"),
         BotCommand(command="wipe_cafe", description="⚠️ Полная очистка кафе (superadmin)"),
         BotCommand(command="wipe_cafe_confirm", description="⚠️ Подтверждение очистки кафе (superadmin)"),
-        BotCommand(command="set_cafe_subscription", description="Установить конец подписки кафе (superadmin)"),
+        BotCommand(command="set_cafe_subscription", description="Дата или +дни для подписки кафе (superadmin)"),
     ]
     await bot.set_my_commands(cmds)
 
@@ -884,6 +871,7 @@ async def cmd_help_admin(message: Message, command: CommandObject):
     lines.append("• <code>/set_admin cafe_001 123456789</code> — назначить админа")
     lines.append("• <code>/unset_admin cafe_001</code> — убрать админа")
     lines.append("• <code>/set_cafe_subscription cafe_001 2026-12-31</code> — выставить конец подписки")
+    lines.append("• <code>/set_cafe_subscription cafe_001 +30</code> — продлить на 30 дней от текущего срока/сегодня")
     lines.append("• <code>/wipe_cafe cafe_001</code> — показать, что будет очищено")
     lines.append("• <code>/wipe_cafe_confirm cafe_001 WIPE</code> — ПОЛНОСТЬЮ очистить кафе")
     lines.append("ℹ️ <code>/help_admin cafe_001</code> — справка по кафе")
@@ -978,26 +966,49 @@ async def cmd_set_cafe_subscription(message: Message, command: CommandObject):
     args = (command.args or "").strip().split()
     if len(args) != 2:
         await message.answer(
-            "Формат: <code>/set_cafe_subscription cafe_001 2026-12-31</code>\n"
-            "Дата в формате YYYY-MM-DD."
+            "Формат:\n"
+            "<code>/set_cafe_subscription cafe_001 2026-12-31</code>\n"
+            "<code>/set_cafe_subscription cafe_001 +30</code>\n"
+            "<code>/set_cafe_subscription cafe_001 +360</code>"
         )
         return
 
-    cafe_id, date_str = args
+    cafe_id, value = args
     if cafe_id not in CAFES:
         await message.answer("Неизвестный cafe_id.")
         return
 
-    try:
-        year, month, day = map(int, date_str.split("-"))
-        dt = datetime(year, month, day, 23, 59, 59, tzinfo=MSK_TZ)
-        until_ts = int(dt.timestamp())
-    except Exception:
-        await message.answer("Неверный формат даты. Ожидаю YYYY-MM-DD, например 2026-12-31.")
-        return
-
     r: redis.Redis = message.bot._redis
     sub_key = k_admin_subscription(cafe_id)
+    now_ts = int(time.time())
+
+    try:
+        if value.startswith("+"):
+            add_days = int(value[1:])
+            if add_days <= 0:
+                raise ValueError
+
+            raw_until = await r.hget(sub_key, "cafebotify_valid_until")
+            current_until = int(raw_until) if raw_until else 0
+
+            base_ts = current_until if current_until > now_ts else now_ts
+            base_dt = datetime.fromtimestamp(base_ts, tz=MSK_TZ)
+            target_dt = base_dt + timedelta(days=add_days)
+            target_dt = target_dt.replace(hour=23, minute=59, second=59, microsecond=0)
+        else:
+            year, month, day = map(int, value.split("-"))
+            target_dt = datetime(year, month, day, 23, 59, 59, tzinfo=MSK_TZ)
+
+        until_ts = int(target_dt.timestamp())
+    except Exception:
+        await message.answer(
+            "Неверный формат.\n"
+            "Используй либо дату YYYY-MM-DD, либо +N дней.\n"
+            "Примеры:\n"
+            "<code>/set_cafe_subscription cafe_001 2026-12-31</code>\n"
+            "<code>/set_cafe_subscription cafe_001 +30</code>"
+        )
+        return
 
     eff_admin = await get_effective_admin_id(r, cafe_id)
 
@@ -1010,7 +1021,7 @@ async def cmd_set_cafe_subscription(message: Message, command: CommandObject):
     await message.answer(
         "✅ Подписка обновлена\n\n"
         f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
-        f"Новая дата окончания: <b>{dt.strftime('%d.%m.%Y')}</b>"
+        f"Новая дата окончания: <b>{target_dt.strftime('%d.%m.%Y')}</b>"
     )
 
 
@@ -1152,7 +1163,7 @@ FINISH_VARIANTS = [
 async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any], menu: Dict[str, int]):
     client_link = await create_start_link(message.bot, payload=cafe_id, encode=True)
     admin_id = await get_effective_admin_id(message.bot._redis, cafe_id)
-    admin_link = await create_start_link(message.bot, payload=f"adminid:{cafe_id}", encode=True)
+    admin_link = await create_start_link(message.bot, payload=f"admin:{cafe_id}", encode=True)
     staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
 
     uid = message.from_user.id
@@ -1223,24 +1234,7 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
     id_from_payload, mode = parse_start_payload(payload)
 
     uid = message.from_user.id
-    cafe_id: str
-
-    # ✅ НОВАЯ ЛОГИКА: adminid: → поиск по admin_id
-    if mode == "adminid" and id_from_payload:
-        try:
-            admin_id = int(id_from_payload)
-            cids = cafes_for_admin(admin_id)
-            if cids:
-                cids.sort()  # первое по алфавиту
-                cafe_id = cids[0]
-                await r.set(k_user_cafe(uid), cafe_id)
-            else:
-                cafe_id = await resolve_cafe_id(r, message, None)
-        except ValueError:
-            cafe_id = await resolve_cafe_id(r, message, None)
-    else:
-        # старый путь для cafe_id / admin:cafe_id / super:cafe_id
-        cafe_id = await resolve_cafe_id(r, message, id_from_payload)
+    cafe_id = await resolve_cafe_id(r, message, id_from_payload)
 
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
@@ -2731,6 +2725,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
