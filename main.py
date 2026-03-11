@@ -1818,13 +1818,32 @@ def demo_menu_edit_preview_text() -> str:
     return "🛠 <b>Управление меню (DEMO-пример)</b>\n\nИзменения доступны только администратору."
 
 @router.message(F.text == BTN_VIEW_CLIENT)
-async def back_to_client(message: Message):
+async def back_to_client(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
 
     r: redis.Redis = message.bot._redis
-    await r.set(k_view_mode(message.from_user.id), "client")
-    await message.answer("Ок. Переключил в клиентский режим.\nНажмите /start, чтобы увидеть интерфейс клиента.")
+    uid = message.from_user.id
+
+    await r.set(k_view_mode(uid), "client")
+    await state.clear()
+
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+    cafe = cafe_or_default(cafe_id)
+    menu = await get_menu(r, cafe_id)
+    is_admin = await is_cafe_admin(r, uid, cafe_id)
+
+    if not cafe_open(cafe):
+        await message.answer(
+            closed_message(cafe, menu),
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
+        return
+
+    await message.answer(
+        "Ок, переключил в клиентский режим.",
+        reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+    )
 
 
 @router.message(F.text == BTN_VIEW_ADMIN)
@@ -2534,6 +2553,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
