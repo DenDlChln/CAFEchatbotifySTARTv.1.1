@@ -1163,15 +1163,6 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         sub_key = k_admin_subscription(cafe_id)
         raw_until = await r.hget(sub_key, "cafebotify_valid_until")
 
-        if not raw_until and not is_super:
-            raw_until = await r.hget(f"user:{uid}", "cafebotify_valid_until")
-            if raw_until:
-                await r.hset(sub_key, mapping={
-                    "cafebotify_valid_until": raw_until,
-                    "cafebotify_paid": "1",
-                    "admin_id": str(uid),
-                })
-
         if is_super:
             subline = "\n<b>🛠 Суперадмин (без ограничений)</b>\n"
         else:
@@ -1281,11 +1272,6 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
         try:
             sub_key = k_admin_subscription(cafe_id)
             raw_until = await r.hget(sub_key, "cafebotify_valid_until")
-            
-            # Fallback на старую подписку (миграция)
-            if not raw_until:
-                raw_until = await r.hget(f"user:{uid}", "cafebotify_valid_until")
-            
             until_ts = int(raw_until) if raw_until else 0
             
             if until_ts > 0 and until_ts > int(time.time()):
@@ -2106,7 +2092,8 @@ async def sub_info_button_message(message: Message):
         await message.answer("Эта информация доступна только админам кафе.")
         return
 
-    rawuntil = await r.hget(f"user:{uid}", "cafebotify_valid_until")
+    sub_key = k_admin_subscription(cafe_id)
+    rawuntil = await r.hget(sub_key, "cafebotify_valid_until")
     untilts = int(rawuntil) if rawuntil else 0
 
     if untilts <= 0:
@@ -2120,7 +2107,6 @@ async def sub_info_button_message(message: Message):
 
     untildt = datetime.fromtimestamp(untilts, tz=MSK_TZ)
     days_left = (untildt.date() - get_moscow_time().date()).days
-
     left_line = f"Осталось: <b>{days_left}</b> дн." if days_left >= 0 else "Подписка истекла."
 
     await message.answer(
@@ -2434,8 +2420,8 @@ async def staff_sub_info_button(message: Message):
         await message.answer("Этот чат не привязан ни к одному кафе. Используйте /bind в этом чате.")
         return
 
-    admin_id = await get_effective_admin_id(r, cafe_id)
-    raw_until = await r.hget(f"user:{admin_id}", "cafebotify_valid_until")
+    sub_key = k_admin_subscription(cafe_id)
+    raw_until = await r.hget(sub_key, "cafebotify_valid_until")
     until_ts = int(raw_until) if raw_until else 0
 
     if until_ts <= 0:
@@ -2445,6 +2431,7 @@ async def staff_sub_info_button(message: Message):
     untildt = datetime.fromtimestamp(until_ts, tz=MSK_TZ)
     days_left = (untildt.date() - get_moscow_time().date()).days
     left_line = f"Осталось <b>{days_left} дней</b>." if days_left > 0 else "Истекает сегодня!"
+
     await message.answer(
         f"🗓️ Подписка до <b>{untildt.strftime('%d.%m.%Y')}</b>.\n{left_line}"
     )
@@ -2753,6 +2740,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
