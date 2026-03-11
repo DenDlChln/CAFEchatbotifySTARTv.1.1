@@ -2492,33 +2492,6 @@ async def staff_link_for_client(message: Message):
     )
 
 
-@router.message(
-    F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}),
-    F.text == BTN_SUB_INFO,
-)
-async def staff_sub_info_button(message: Message):
-    r: redis.Redis = message.bot._redis
-    cafe_id = await resolve_cafe_by_staff_group(r, message.chat.id)
-    if not cafe_id:
-        await message.answer("Этот чат не привязан ни к одному кафе. Используйте /bind в этом чате.")
-        return
-
-    admin_id = await get_effective_admin_id(r, cafe_id)
-    raw_until = await r.hget(f"user:{admin_id}", "cafebotify_valid_until")
-    until_ts = int(raw_until) if raw_until else 0
-
-    if until_ts <= 0:
-        await message.answer("❌ Подписка не активна.")
-        return
-
-    untildt = datetime.fromtimestamp(until_ts, tz=MSK_TZ)
-    days_left = (untildt.date() - get_moscow_time().date()).days
-    left_line = f"Осталось <b>{days_left} дней</b>." if days_left > 0 else "Истекает сегодня!"
-    await message.answer(
-        f"🗓️ Подписка до <b>{untildt.strftime('%d.%m.%Y')}</b>.\n{left_line}"
-    )
-
-
 # =========================================================
 # Fallback (drink pick)
 # =========================================================
@@ -2740,6 +2713,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
