@@ -168,36 +168,85 @@ def k_admin_subscription(cafe_id: str) -> str:
 
 # Функция миграции старых подписок (запускается ОДИН раз)
 async def migrate_old_subscriptions(r: redis.Redis):
-    """Переносит user:{uid}:cafebotify_valid_until → cafe:{cafe_id}:admin_subscription"""
+    """Переносит user:{uid}.cafebotify_valid_until -> cafe:{cafe_id}:admin_subscription"""
     try:
-        # Находим всех пользователей с глобальными подписками
-        keys = await r.keys("user:*:cafebotify_valid_until")
         migrated = 0
-        
-        for user_key in keys:
-            uid_str = user_key.split(":")[1]
-            uid = int(uid_str)
-            
-            # Находим текущее кафе пользователя
-            cafe_id = await r.get(k_user_cafe(uid))
+
+        user_cafe_keys = await r.keys("user:*:cafe_id")
+        for key in user_cafe_keys:
+            try:
+                uid = int(str(key).split(":")[1])
+            except Exception:
+                continue
+
+            cafe_id = await r.get(key)
             if not cafe_id or cafe_id not in CAFES:
                 continue
-                
-            # Читаем старую подписку
-            raw_until = await r.hget(user_key, "cafebotify_valid_until")
-            if raw_until:
-                sub_key = k_admin_subscription(cafe_id)
-                await r.hset(sub_key, mapping={
-                    "cafebotify_valid_until": raw_until,
-                    "cafebotify_paid": "1",
-                    "admin_id": str(uid),
-                })
-                migrated += 1
-                
+
+            raw_until = await r.hget(f"user:{uid}", "cafebotify_valid_until")
+            if not raw_until:
+                continue
+
+            sub_key = k_admin_subscription(cafe_id)
+            await r.hset(sub_key, mapping={
+                "cafebotify_valid_until": raw_until,
+                "cafebotify_paid": "1",
+                "admin_id": str(uid),
+            })
+            migrated += 1
+
         logger.info(f"Мигрировано {migrated} подписок")
     except Exception as e:
         logger.error(f"Миграция подписок упала: {e}")
 
+async def collect_cafe_wipe_keys(r: redis.Redis, cafe_id: str) -> List[str]:
+    keys: List[str] = [
+        k_menu(cafe_id),
+        k_staff_group(cafe_id),
+        k_cafe_profile(cafe_id),
+        k_admin_subscription(cafe_id),
+        k_stats_total_orders(cafe_id),
+        k_stats_total_revenue(cafe_id),
+        k_customers_set(cafe_id),
+    ]
+
+    patterns = [
+        f"stats:{cafe_id}:drink:*",
+        f"customer:{cafe_id}:*:profile",
+        f"customer:{cafe_id}:*:drinks",
+        f"last_seen:{cafe_id}:*",
+        f"last_order:{cafe_id}:*",
+    ]
+
+    for pattern in patterns:
+        found = await r.keys(pattern)
+        if found:
+            keys.extend(found)
+
+    seen = set()
+    out: List[str] = []
+    for k in keys:
+        if k and k not in seen:
+            seen.add(k)
+            out.append(k)
+
+    return out
+
+
+async def collect_linked_users_for_cafe(r: redis.Redis, cafe_id: str) -> List[Tuple[int, str]]:
+    linked: List[Tuple[int, str]] = []
+
+    user_cafe_keys = await r.keys("user:*:cafe_id")
+    for key in user_cafe_keys:
+        try:
+            uid = int(str(key).split(":")[1])
+            val = await r.get(key)
+            if str(val) == cafe_id:
+                linked.append((uid, key))
+        except Exception:
+            continue
+
+    return linked
 
 # =========================================================
 # Redis client
@@ -781,8 +830,10 @@ async def set_commands(bot: Bot):
         BotCommand(command="bind", description="Привязать staff-группу (в группе)"),
         BotCommand(command="set_admin", description="👑 Назначить админа"),
         BotCommand(command="unset_admin", description="Сбросить override admin_id (superadmin)"),
+        BotCommand(command="wipe_cafe", description="⚠️ Полная очистка кафе"),
+        BotCommand(command="wipe_cafe_confirm", description="⚠️ Подтверждение очистки кафе"),
     ]
-    await bot.set_my_commands(cmds)  # [web:204]
+    await bot.set_my_commands(cmds)
 
 @router.message(Command("myid"))
 async def cmd_myid(message: Message):
@@ -831,9 +882,10 @@ async def cmd_help_admin(message: Message, command: CommandObject):
     lines.append("👑 <b>SUPERADMIN команды</b>")
     lines.append("• <code>/set_admin cafe_001 123456789</code> — назначить админа")
     lines.append("• <code>/unset_admin cafe_001</code> — убрать админа")
+    lines.append("• <code>/wipe_cafe cafe_001</code> — показать, что будет очищено")
+    lines.append("• <code>/wipe_cafe_confirm cafe_001 WIPE</code> — ПОЛНОСТЬЮ очистить кафе")
     lines.append("ℹ️ <code>/help_admin cafe_001</code> — справка по кафе")
-    lines.append("")
-    
+
     # Конкретное кафе
     if cafe_id:
         lines.append("🎯 <b>КАФЕ: " + html.quote(CAFES.get(cafe_id, {}).get("name", cafe_id)).upper() + "</b>")
@@ -936,6 +988,100 @@ async def cmd_bind(message: Message, command: CommandObject):
 
     await r.set(k_staff_group(cafe_id), str(message.chat.id))
     await message.answer(f"✅ Группа привязана к кафе <code>{html.quote(cafe_id)}</code>.")
+    
+
+@router.message(Command("wipe_cafe"))
+async def cmd_wipe_cafe(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        await message.answer("🔒 Доступ запрещён.")
+        return
+
+    cafe_id = (command.args or "").strip()
+    if not cafe_id or cafe_id not in CAFES:
+        await message.answer("Формат: <code>/wipe_cafe cafe_001</code>")
+        return
+
+    r: redis.Redis = message.bot._redis
+    keys = await collect_cafe_wipe_keys(r, cafe_id)
+    linked_users = await collect_linked_users_for_cafe(r, cafe_id)
+
+    await message.answer(
+        "⚠️ <b>Полная очистка кафе</b>\n\n"
+        f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
+        f"Будет удалено Redis-ключей: <b>{len(keys)}</b>\n"
+        f"Пользователей с привязкой к этому кафе: <b>{len(linked_users)}</b>\n\n"
+        "Что очистится:\n"
+        "• меню\n"
+        "• статистика\n"
+        "• staff-группа\n"
+        "• override admin_id\n"
+        "• подписка кафе\n"
+        "• клиенты и их история\n"
+        "• last_seen / last_order\n"
+        "• привязки user -> cafe_id\n\n"
+        "Для подтверждения отправьте:\n"
+        f"<code>/wipe_cafe_confirm {html.quote(cafe_id)} WIPE</code>"
+    )
+
+
+@router.message(Command("wipe_cafe_confirm"))
+async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        await message.answer("🔒 Доступ запрещён.")
+        return
+
+    args = (command.args or "").strip().split()
+    if len(args) != 2:
+        await message.answer("Формат: <code>/wipe_cafe_confirm cafe_001 WIPE</code>")
+        return
+
+    cafe_id, confirm_word = args
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+    if confirm_word != "WIPE":
+        await message.answer("Неверное подтверждение. Последнее слово должно быть <code>WIPE</code>.")
+        return
+
+    r: redis.Redis = message.bot._redis
+
+    keys = await collect_cafe_wipe_keys(r, cafe_id)
+    linked_users = await collect_linked_users_for_cafe(r, cafe_id)
+
+    pipe = r.pipeline()
+
+    if keys:
+        pipe.delete(*keys)
+
+    fixed_users = 0
+    for uid, user_cafe_key in linked_users:
+        fixed_users += 1
+
+        if cafe_id == DEFAULT_CAFE_ID:
+            pipe.delete(user_cafe_key)
+        else:
+            pipe.set(user_cafe_key, DEFAULT_CAFE_ID)
+
+        pipe.delete(k_view_mode(uid))
+
+    await pipe.execute()
+
+    logger.warning(
+        "SUPERADMIN WIPE_CAFE by user_id=%s cafe_id=%s deleted_keys=%s fixed_users=%s",
+        message.from_user.id,
+        cafe_id,
+        len(keys),
+        fixed_users,
+    )
+
+    await message.answer(
+        "✅ <b>Очистка завершена</b>\n\n"
+        f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
+        f"Удалено Redis-ключей: <b>{len(keys)}</b>\n"
+        f"Исправлено пользовательских привязок: <b>{fixed_users}</b>\n\n"
+        "Важно: само кафе не удалено из config.json.\n"
+        "Если в конфиге есть базовое меню, оно может появиться снова после /start."
+    )
 
 
 # =========================================================
@@ -2560,6 +2706,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
