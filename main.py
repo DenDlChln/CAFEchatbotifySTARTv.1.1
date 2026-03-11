@@ -830,8 +830,9 @@ async def set_commands(bot: Bot):
         BotCommand(command="bind", description="Привязать staff-группу (в группе)"),
         BotCommand(command="set_admin", description="👑 Назначить админа"),
         BotCommand(command="unset_admin", description="Сбросить override admin_id (superadmin)"),
-        BotCommand(command="wipe_cafe", description="⚠️ Полная очистка кафе"),
-        BotCommand(command="wipe_cafe_confirm", description="⚠️ Подтверждение очистки кафе"),
+        BotCommand(command="wipe_cafe", description="⚠️ Полная очистка кафе (superadmin)"),
+        BotCommand(command="wipe_cafe_confirm", description="⚠️ Подтверждение очистки кафе (superadmin)"),
+        BotCommand(command="set_cafe_subscription", description="Установить конец подписки кафе (superadmin)"),
     ]
     await bot.set_my_commands(cmds)
 
@@ -882,6 +883,7 @@ async def cmd_help_admin(message: Message, command: CommandObject):
     lines.append("👑 <b>SUPERADMIN команды</b>")
     lines.append("• <code>/set_admin cafe_001 123456789</code> — назначить админа")
     lines.append("• <code>/unset_admin cafe_001</code> — убрать админа")
+    lines.append("• <code>/set_cafe_subscription cafe_001 2026-12-31</code> — выставить конец подписки")
     lines.append("• <code>/wipe_cafe cafe_001</code> — показать, что будет очищено")
     lines.append("• <code>/wipe_cafe_confirm cafe_001 WIPE</code> — ПОЛНОСТЬЮ очистить кафе")
     lines.append("ℹ️ <code>/help_admin cafe_001</code> — справка по кафе")
@@ -965,6 +967,51 @@ async def cmd_unset_admin(message: Message, command: CommandObject):
     except Exception:
         pass
     await message.answer(f"✅ Override admin_id сброшен для <code>{html.quote(cafe_id)}</code>.")
+
+
+@router.message(Command("set_cafe_subscription"))
+async def cmd_set_cafe_subscription(message: Message, command: CommandObject):
+    if not is_superadmin(message.from_user.id):
+        await message.answer("🔒 Доступ запрещён.")
+        return
+
+    args = (command.args or "").strip().split()
+    if len(args) != 2:
+        await message.answer(
+            "Формат: <code>/set_cafe_subscription cafe_001 2026-12-31</code>\n"
+            "Дата в формате YYYY-MM-DD."
+        )
+        return
+
+    cafe_id, date_str = args
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+
+    try:
+        year, month, day = map(int, date_str.split("-"))
+        dt = datetime(year, month, day, 23, 59, 59, tzinfo=MSK_TZ)
+        until_ts = int(dt.timestamp())
+    except Exception:
+        await message.answer("Неверный формат даты. Ожидаю YYYY-MM-DD, например 2026-12-31.")
+        return
+
+    r: redis.Redis = message.bot._redis
+    sub_key = k_admin_subscription(cafe_id)
+
+    eff_admin = await get_effective_admin_id(r, cafe_id)
+
+    await r.hset(sub_key, mapping={
+        "cafebotify_valid_until": str(until_ts),
+        "cafebotify_paid": "1",
+        "admin_id": str(eff_admin or 0),
+    })
+
+    await message.answer(
+        "✅ Подписка обновлена\n\n"
+        f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
+        f"Новая дата окончания: <b>{dt.strftime('%d.%m.%Y')}</b>"
+    )
 
 
 # =========================================================
@@ -2706,6 +2753,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
