@@ -1414,7 +1414,7 @@ async def renew_sub_choose(message: Message):
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     uid = message.from_user.id
 
-    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+    if not await is_cafe_admin(r, uid, cafe_id):
         await message.answer("🔒 Доступно только администратору.")
         return
 
@@ -1425,19 +1425,36 @@ async def renew_sub_choose(message: Message):
     if message.text == BTN_RENEW_360:
         days = 360
         path = "pay-year"
+        btn_text = "💳 Оплатить 360 дней"
     else:
         days = 30
         path = "pay-month"
+        btn_text = "💳 Оплатить 30 дней"
 
     pay_base = DEMO_PAY_BASE.rstrip("/")
     pay_url = f"{pay_base}/{path}?cafe_id={cafe_id}&admin_id={uid}"
 
+    admin_link = await create_start_link(
+        message.bot,
+        payload=f"admin:{cafe_id}",
+        encode=True,
+    )
+
+    pay_kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=btn_text, url=pay_url)],
+            [InlineKeyboardButton(text="🛠 Открыть админ-панель", url=admin_link)],
+        ]
+    )
+
     await message.answer(
-        f"💳 Продление на <b>{days} дней</b>\n\n"
-        f"Ссылка для оплаты:\n{pay_url}\n\n"
-        "После оплаты подписка обновится автоматически.",
+        f"💳 <b>Продление подписки</b>\n\n"
+        f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
+        f"Тариф: <b>{days} дней</b>\n\n"
+        "1) Нажми кнопку оплаты.\n"
+        "2) После оплаты вернись в админ-панель по кнопке ниже.",
+        reply_markup=pay_kb,
         disable_web_page_preview=True,
-        reply_markup=kb_admin_main(is_super=is_superadmin(message.from_user.id)),
     )
 
 
@@ -2714,6 +2731,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
