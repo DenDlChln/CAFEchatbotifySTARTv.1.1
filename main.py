@@ -444,8 +444,8 @@ BTN_VIEW_CLIENT = "⬅️ В клиентский режим"
 BTN_VIEW_ADMIN = "🛠 В админ-режим"
 
 BTN_RENEW_SUB = "💳 Продлить подписку"
-BTN_RENEW_30 = "Продлить на 30 дней"
-BTN_RENEW_360 = "Продлить на 360 дней"
+BTN_RENEW_30 = "💳Продлить на 30 дней"
+BTN_RENEW_360 = "💳Продлить на 360 дней"
 
 BTN_SUB_INFO = "🗓️Подписка"     # для админа кафе
 BTN_HELP_ADMIN = "/help_admin"    # для супер-админа (именно команда)
@@ -2725,6 +2725,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
