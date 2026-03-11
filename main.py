@@ -961,61 +961,33 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
     admin_id = await get_effective_admin_id(message.bot._redis, cafe_id)
     admin_link = await create_start_link(message.bot, payload=f"adminid:{admin_id}", encode=True)
     staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
-    
+
     uid = message.from_user.id
-    is_super = is_superadmin(uid)  # ✅ СУПЕРАДМИН ОБХОДИТ ПОДПИСКУ
-    
-    # ✅ ПОДПИСКА ПО КАФЕ + МИГРАЦИЯ + СУПЕРАДМИН
-    subline = ""
-    if not is_super:  # суперадмин всегда видит "активную"
-        try:
-            r = message.bot._redis
-            sub_key = k_admin_subscription(cafe_id)
-            
-            # Пробуем новый ключ
-            raw_until = await r.hget(sub_key, "cafebotify_valid_until")
-            
-            # Fallback на старую подписку (миграция)
-            if not raw_until:
-                raw_until = await r.hget(f"user:{uid}", "cafebotify_valid_until")
-                if raw_until:
-                    # Автоматическая миграция при первом обращении
-                    until_ts = int(raw_until)
-                    await r.hset(sub_key, mapping={
-                        "cafebotify_valid_until": raw_until,
-                        "cafebotify_paid": "1", 
-                        "admin_id": str(uid),
-                    })
-                    logger.info(f"Автомиграция подписки user:{uid} → {sub_key}")
-            
+    is_super = is_superadmin(uid)
+
+    try:
+        r = message.bot._redis
+        sub_key = k_admin_subscription(cafe_id)
+        raw_until = await r.hget(sub_key, "cafebotify_valid_until")
+
+        if not raw_until and not is_super:
+            raw_until = await r.hget(f"user:{uid}", "cafebotify_valid_until")
+            if raw_until:
+                await r.hset(sub_key, mapping={
+                    "cafebotify_valid_until": raw_until,
+                    "cafebotify_paid": "1",
+                    "admin_id": str(uid),
+                })
+
+        if is_super:
+            subline = "\n<b>🛠 Суперадмин (без ограничений)</b>\n"
+        else:
             until_ts = int(raw_until) if raw_until else 0
-            
             if until_ts > 0 and until_ts > int(time.time()):
                 until_dt = datetime.fromtimestamp(until_ts, tz=MSK_TZ).strftime("%d.%m.%Y")
                 subline = f"\n<b>Подписка до:</b> <b>{until_dt}</b>\n"
             else:
                 subline = "\n<b>❌ Подписка просрочена</b>\n"
-        except Exception:
-            subline = "\n<b>❌ Ошибка проверки</b>\n"
-    else:
-        subline = "\n<b>🛠 Суперадмин (без ограничений)</b>\n"
-
-    eff_admin = admin_id
-    # ... остальной message.answer без изменений ...
-
-    # ✅ НОВЫЙ БЛОК: подписка ПО КАФЕ
-    subline = ""
-    try:
-        r = message.bot._redis
-        sub_key = k_admin_subscription(cafe_id)
-        raw_until = await r.hget(sub_key, "cafebotify_valid_until")
-        until_ts = int(raw_until) if raw_until else 0
-        
-        if until_ts > 0 and until_ts > int(time.time()):
-            until_dt = datetime.fromtimestamp(until_ts, tz=MSK_TZ).strftime("%d.%m.%Y")
-            subline = f"\n<b>Подписка до:</b> <b>{until_dt}</b>\n"
-        else:
-            subline = "\n<b>❌ Подписка просрочена</b>\n"
     except Exception:
         subline = "\n<b>❌ Ошибка проверки подписки</b>\n"
 
@@ -1023,7 +995,7 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         "🛠 <b>Админ-панель</b>\n\n"
         f"Кафе: <b>{html.quote(cafe_title(cafe))}</b>\n"
         f"ID: <code>{html.quote(cafe_id)}</code>\n"
-        f"admin_id (effective): <code>{eff_admin}</code>\n"
+        f"admin_id (effective): <code>{admin_id}</code>\n"
         f"{subline}"
         f"{work_status(cafe)}{address_line(cafe)}\n\n"
         "🔗 <b>Ссылки</b>\n"
@@ -1031,7 +1003,8 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         f"• Админу: {admin_link}\n"
         f"• В staff-группу: {staff_link}\n\n"
         "В staff-группе выполните:\n"
-        f"<code>/bind {html.quote(cafe_id)}</code>\n\n"
+        f"<code>/bind {html.quote(cafe_id)}</code>\n",
+        reply_markup=kb_admin_main(is_super=is_super),
     )
 
 from aiogram.enums import ChatType
@@ -1131,8 +1104,8 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
                 # Подписка просрочена — кнопка продления
                 renew_kb = ReplyKeyboardMarkup(
                     keyboard=[
-                        [KeyboardButton(text=BTN_RENEW30)],  # ✅ ИСПРАВЛЕНО: BTN_RENEW30
-                        [KeyboardButton(text=BTN_RENEW360)], # ✅ ИСПРАВЛЕНО: BTN_RENEW360
+                        [KeyboardButton(text=BTN_RENEW_30)],  # ✅ ИСПРАВЛЕНО: BTN_RENEW30
+                        [KeyboardButton(text=BTN_RENEW_360)], # ✅ ИСПРАВЛЕНО: BTN_RENEW360
                         [KeyboardButton(text=BTN_BACK)],
                     ],
                     resize_keyboard=True,
@@ -1260,6 +1233,7 @@ async def renew_sub_entry(message: Message):
 async def renew_sub_choose(message: Message):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+    uid = message.from_user.id
 
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
         await message.answer("🔒 Доступно только администратору.")
@@ -2560,6 +2534,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
