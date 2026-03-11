@@ -16,7 +16,7 @@ from aiogram import Bot, Dispatcher, F, Router, html
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BotCommand, ErrorEvent
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BotCommand, ErrorEvent, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import CommandStart, Command, StateFilter, CommandObject
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -1884,12 +1884,19 @@ async def admin_info_button_message(message: Message):
         return
 
     await message.answer(
-        "🧾 <b>Справка админа кафе</b>\n"
-        "• «Статистика» — покажет продажи и выручку.\n"
-        "• «Меню» — добавление/изменение/удаление позиций.\n"
-        "• «Группа персонала» — привязка staff-группы.\n"
-        "• «Ссылки» — ссылки для клиента/админа/staff.\n"
-        "• «Продлить» — продление подписки.\n"
+    "🧾 <b>Справка админа кафе</b>\n"
+    "• «Статистика» — покажет продажи и выручку.\n"
+    "• «Меню» — добавление/изменение/удаление позиций.\n"
+    "• «Группа персонала» — привязка staff-группы.\n"
+    "• «Ссылки» — ссылки для клиента/админа/staff.\n"
+    "• «Продлить» — продление подписки.\n\n"
+    "Подробнее о сервисе — на сайте:",
+    reply_markup=InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🌐 Открыть сайт CafeBotify", url="https://cafebotify.tilda.ws/")]
+        ]
+    ),
+    disable_web_page_preview=True,
     )
 
 
@@ -2553,6 +2560,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
