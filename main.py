@@ -2573,6 +2573,24 @@ async def support_inwork_callback(callback: CallbackQuery, state: FSMContext):
 
     ticket = await update_support_ticket(r, ticket_id, status=SUPPORT_STATUS_IN_WORK)
 
+    user_id_raw = ticket.get("user_id")
+    try:
+        user_id = int(user_id_raw)
+    except Exception:
+        user_id = 0
+
+    if user_id:
+        try:
+            topic_title = SUPPORT_TOPICS.get(str(ticket.get("topic") or ""), "Без темы")
+            await callback.bot.send_message(
+                user_id,
+                f"🛠 Обращение <b>{html.quote(ticket_id)}</b> взято в работу.\n"
+                f"Тема: <b>{html.quote(topic_title)}</b>",
+                reply_markup=kb_admin_main(is_super=False),
+            )
+        except Exception:
+            pass
+
     try:
         await callback.message.edit_text(
             render_support_ticket_text(ticket),
@@ -3261,6 +3279,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
