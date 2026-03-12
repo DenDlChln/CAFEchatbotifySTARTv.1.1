@@ -2399,6 +2399,153 @@ async def menu_edit_entry(message: Message, state: FSMContext):
     await message.answer("🛠 Управление меню: выберите действие", reply_markup=kb_menu_edit())
 
 
+@router.message(F.text == BTN_ADMIN_SUPPORT)
+async def admin_support_entry(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r = message.bot._redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await message.answer("Доступно только админу кафе.")
+        return
+
+    active_ticket_id = await r.get(k_support_active(cafe_id, uid))
+    if active_ticket_id:
+        ticket = await get_support_ticket(r, str(active_ticket_id))
+        status = support_status_label(str(ticket.get("status") or SUPPORT_STATUS_NEW))
+        await message.answer(
+            f"У вас уже есть активное обращение: <b>{html.quote(str(active_ticket_id))}</b>\n"
+            f"Статус: <b>{html.quote(status)}</b>\n\n"
+            "Сначала дождитесь ответа или закрытия текущего тикета.",
+            reply_markup=kb_admin_main(is_super=is_superadmin(uid)),
+        )
+        return
+
+    await state.clear()
+    await message.answer(
+        "Выберите тему обращения:",
+        reply_markup=support_topic_kb(),
+    )
+
+
+@router.callback_query(F.data.startswith(SUP_CB_TOPIC))
+async def admin_support_pick_topic(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+
+    if not callback.data:
+        return
+
+    topic = callback.data[len(SUP_CB_TOPIC):].strip()
+    if topic not in SUPPORT_TOPICS:
+        await callback.message.answer("Неизвестная тема обращения.")
+        return
+
+    r = callback.bot._redis
+    uid = callback.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await callback.message.answer("Доступно только админу кафе.")
+        return
+
+    await state.update_data(support_topic=topic)
+    await state.set_state(SupportStates.waiting_for_topic_message)
+
+    topic_title = SUPPORT_TOPICS.get(topic, topic)
+    await callback.message.answer(
+        f"Тема: <b>{html.quote(topic_title)}</b>\n\n"
+        "Теперь отправьте одним сообщением описание проблемы или вопроса.",
+        reply_markup=kb_admin_main(is_super=is_superadmin(uid)),
+    )
+
+
+@router.message(SupportStates.waiting_for_topic_message)
+async def admin_support_create_ticket(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r = message.bot._redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        await message.answer("Доступно только админу кафе.")
+        return
+
+    text = (message.text or "").strip()
+    if not text:
+        await message.answer("Отправьте текстовое описание обращения одним сообщением.")
+        return
+
+    data = await state.get_data()
+    topic = str(data.get("support_topic") or "").strip()
+    if topic not in SUPPORT_TOPICS:
+        await state.clear()
+        await message.answer("Тема обращения потерялась. Нажмите кнопку поддержки ещё раз.")
+        return
+
+    active_ticket_id = await r.get(k_support_active(cafe_id, uid))
+    if active_ticket_id:
+        ticket = await get_support_ticket(r, str(active_ticket_id))
+        status = support_status_label(str(ticket.get("status") or SUPPORT_STATUS_NEW))
+        await state.clear()
+        await message.answer(
+            f"У вас уже есть активное обращение: <b>{html.quote(str(active_ticket_id))}</b>\n"
+            f"Статус: <b>{html.quote(status)}</b>",
+            reply_markup=kb_admin_main(is_super=is_superadmin(uid)),
+        )
+        return
+
+    cafe = cafe_or_default(cafe_id)
+    ticket = await create_support_ticket(
+        r,
+        cafe_id=cafe_id,
+        cafe_title_text=cafe_title(cafe),
+        user_id=uid,
+        user_name=message.from_user.full_name or message.from_user.first_name or "",
+        username=message.from_user.username or "",
+        topic=topic,
+        text=text,
+    )
+
+    sent_to_admin = False
+    if SUPERADMIN_ID:
+        try:
+            admin_msg = await message.bot.send_message(
+                SUPERADMIN_ID,
+                render_support_ticket_text(ticket),
+                reply_markup=support_admin_ticket_kb(ticket["ticket_id"]),
+            )
+            await bind_support_admin_message(
+                r,
+                ticket["ticket_id"],
+                chat_id=admin_msg.chat.id,
+                message_id=admin_msg.message_id,
+            )
+            sent_to_admin = True
+        except Exception:
+            sent_to_admin = False
+
+    await state.clear()
+
+    if sent_to_admin:
+        await message.answer(
+            f"Обращение <b>{html.quote(ticket['ticket_id'])}</b> отправлено в поддержку.\n"
+            "Ожидайте ответа супер-админа.",
+            reply_markup=kb_admin_main(is_super=is_superadmin(uid)),
+        )
+    else:
+        await message.answer(
+            f"Обращение <b>{html.quote(ticket['ticket_id'])}</b> сохранено, "
+            "но отправка супер-админу не удалась.",
+            reply_markup=kb_admin_main(is_super=is_superadmin(uid)),
+        )
+
+
 @router.message(StateFilter(MenuEditStates.waiting_for_action))
 async def menu_edit_choose_action(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
@@ -2913,6 +3060,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
