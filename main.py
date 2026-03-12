@@ -2546,6 +2546,207 @@ async def admin_support_create_ticket(message: Message, state: FSMContext):
         )
 
 
+@router.callback_query(F.data.startswith(SUP_CB_INWORK))
+async def support_inwork_callback(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+
+    if not is_superadmin(callback.from_user.id):
+        await callback.answer("Недостаточно прав", show_alert=True)
+        return
+
+    if not callback.data:
+        return
+
+    ticket_id = callback.data[len(SUP_CB_INWORK):].strip()
+    if not ticket_id:
+        return
+
+    r = callback.bot._redis
+    ticket = await get_support_ticket(r, ticket_id)
+    if not ticket:
+        await callback.message.answer("Тикет не найден.")
+        return
+
+    if str(ticket.get("status")) == SUPPORT_STATUS_CLOSED:
+        await callback.answer("Тикет уже закрыт", show_alert=True)
+        return
+
+    ticket = await update_support_ticket(r, ticket_id, status=SUPPORT_STATUS_IN_WORK)
+
+    try:
+        await callback.message.edit_text(
+            render_support_ticket_text(ticket),
+            reply_markup=support_admin_ticket_kb(ticket_id),
+        )
+    except Exception:
+        pass
+
+
+@router.callback_query(F.data.startswith(SUP_CB_REPLY))
+async def support_reply_callback(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+
+    if not is_superadmin(callback.from_user.id):
+        await callback.answer("Недостаточно прав", show_alert=True)
+        return
+
+    if not callback.data:
+        return
+
+    ticket_id = callback.data[len(SUP_CB_REPLY):].strip()
+    if not ticket_id:
+        return
+
+    r = callback.bot._redis
+    ticket = await get_support_ticket(r, ticket_id)
+    if not ticket:
+        await callback.message.answer("Тикет не найден.")
+        return
+
+    if str(ticket.get("status")) == SUPPORT_STATUS_CLOSED:
+        await callback.answer("Тикет уже закрыт", show_alert=True)
+        return
+
+    await state.clear()
+    await state.update_data(support_reply_ticket_id=ticket_id)
+    await state.set_state(SupportStates.waiting_for_superadmin_reply)
+
+    await callback.message.answer(
+        f"Введите ответ для тикета <b>{html.quote(ticket_id)}</b> одним сообщением."
+    )
+
+
+@router.message(SupportStates.waiting_for_superadmin_reply)
+async def support_reply_message(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    if not is_superadmin(message.from_user.id):
+        await state.clear()
+        await message.answer("Недостаточно прав.")
+        return
+
+    text = (message.text or "").strip()
+    if not text:
+        await message.answer("Отправьте ответ текстовым сообщением.")
+        return
+
+    data = await state.get_data()
+    ticket_id = str(data.get("support_reply_ticket_id") or "").strip()
+    if not ticket_id:
+        await state.clear()
+        await message.answer("Тикет не найден в состоянии. Нажмите кнопку ответа заново.")
+        return
+
+    r = message.bot._redis
+    ticket = await get_support_ticket(r, ticket_id)
+    if not ticket:
+        await state.clear()
+        await message.answer("Тикет не найден.")
+        return
+
+    if str(ticket.get("status")) == SUPPORT_STATUS_CLOSED:
+        await state.clear()
+        await message.answer("Тикет уже закрыт.")
+        return
+
+    user_id_raw = ticket.get("user_id")
+    cafe_id = str(ticket.get("cafe_id") or "")
+    try:
+        user_id = int(user_id_raw)
+    except Exception:
+        await state.clear()
+        await message.answer("Не удалось определить получателя ответа.")
+        return
+
+    topic_title = SUPPORT_TOPICS.get(str(ticket.get("topic") or ""), "Без темы")
+
+    try:
+        await message.bot.send_message(
+            user_id,
+            f"✉️ <b>Ответ по обращению {html.quote(ticket_id)}</b>\n"
+            f"Тема: <b>{html.quote(topic_title)}</b>\n\n"
+            f"{html.quote(text)}",
+            reply_markup=kb_admin_main(is_super=False),
+        )
+    except Exception:
+        await message.answer("Не удалось отправить ответ админу кафе.")
+        return
+
+    ticket = await update_support_ticket(r, ticket_id, status=SUPPORT_STATUS_ANSWERED)
+
+    admin_chat_id = str(ticket.get("superadmin_chat_id") or "").strip()
+    admin_message_id = str(ticket.get("superadmin_message_id") or "").strip()
+    if admin_chat_id and admin_message_id:
+        try:
+            await message.bot.edit_message_text(
+                chat_id=int(admin_chat_id),
+                message_id=int(admin_message_id),
+                text=render_support_ticket_text(ticket),
+                reply_markup=support_admin_ticket_kb(ticket_id),
+            )
+        except Exception:
+            pass
+
+    await state.clear()
+    await message.answer(f"Ответ по тикету <b>{html.quote(ticket_id)}</b> отправлен админу кафе.")
+
+    if cafe_id:
+        await r.delete(k_support_active(cafe_id, user_id))
+
+
+@router.callback_query(F.data.startswith(SUP_CB_CLOSE))
+async def support_close_callback(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+
+    if not is_superadmin(callback.from_user.id):
+        await callback.answer("Недостаточно прав", show_alert=True)
+        return
+
+    if not callback.data:
+        return
+
+    ticket_id = callback.data[len(SUP_CB_CLOSE):].strip()
+    if not ticket_id:
+        return
+
+    r = callback.bot._redis
+    ticket = await get_support_ticket(r, ticket_id)
+    if not ticket:
+        await callback.message.answer("Тикет не найден.")
+        return
+
+    ticket = await update_support_ticket(r, ticket_id, status=SUPPORT_STATUS_CLOSED)
+
+    try:
+        await callback.message.edit_text(
+            render_support_ticket_text(ticket),
+            reply_markup=support_admin_ticket_kb(ticket_id, closed=True),
+        )
+    except Exception:
+        pass
+
+    cafe_id = str(ticket.get("cafe_id") or "")
+    user_id_raw = ticket.get("user_id")
+    try:
+        user_id = int(user_id_raw)
+    except Exception:
+        user_id = 0
+
+    if cafe_id and user_id:
+        await r.delete(k_support_active(cafe_id, user_id))
+
+    if user_id:
+        try:
+            await callback.bot.send_message(
+                user_id,
+                f"✅ Обращение <b>{html.quote(ticket_id)}</b> закрыто.",
+                reply_markup=kb_admin_main(is_super=False),
+            )
+        except Exception:
+            pass
+
+
 @router.message(StateFilter(MenuEditStates.waiting_for_action))
 async def menu_edit_choose_action(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
@@ -3060,6 +3261,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
