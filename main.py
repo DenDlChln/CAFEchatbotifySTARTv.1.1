@@ -16,7 +16,7 @@ from aiogram import Bot, Dispatcher, F, Router, html
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BotCommand, ErrorEvent, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BotCommand, ErrorEvent, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.filters import CommandStart, Command, StateFilter, CommandObject
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -161,6 +161,24 @@ def k_customer_drinks(cafe_id: str, user_id: int) -> str:
 
 def k_cafe_profile(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:profile"
+
+def k_support_ticket(ticket_id: str) -> str:
+    return f"support:ticket:{ticket_id}"
+
+def k_support_open() -> str:
+    return "support:open"
+
+def k_support_cafe(cafe_id: str) -> str:
+    return f"support:cafe:{cafe_id}"
+
+def k_support_user(user_id: int) -> str:
+    return f"support:user:{user_id}"
+
+def k_support_counter() -> str:
+    return "support:counter"
+
+def k_support_active(cafe_id: str, user_id: int) -> str:
+    return f"support:active:{cafe_id}:{user_id}"
 
 # После других def k_... 
 def k_admin_subscription(cafe_id: str) -> str:
@@ -450,6 +468,34 @@ BTN_RENEW_360 = "💳Продлить на 360 дней"
 BTN_SUB_INFO = "🗓️Подписка"     # для админа кафе
 BTN_HELP_ADMIN = "/help_admin"    # для супер-админа (именно команда)
 
+BTN_ADMIN_SUPPORT = "🛟 Поддержка"
+
+SUPPORT_TOPIC_SUB = "sub"
+SUPPORT_TOPIC_MENU = "menu"
+SUPPORT_TOPIC_ORDERS = "orders"
+SUPPORT_TOPIC_STAFF = "staff"
+SUPPORT_TOPIC_BUG = "bug"
+SUPPORT_TOPIC_OTHER = "other"
+
+SUPPORT_TOPICS = {
+    SUPPORT_TOPIC_SUB: "Подписка и оплата",
+    SUPPORT_TOPIC_MENU: "Меню и товары",
+    SUPPORT_TOPIC_ORDERS: "Заказы и клиенты",
+    SUPPORT_TOPIC_STAFF: "Персонал / staff-чат",
+    SUPPORT_TOPIC_BUG: "Техническая ошибка",
+    SUPPORT_TOPIC_OTHER: "Другое",
+}
+
+SUPPORT_STATUS_NEW = "new"
+SUPPORT_STATUS_IN_WORK = "in_work"
+SUPPORT_STATUS_ANSWERED = "answered"
+SUPPORT_STATUS_CLOSED = "closed"
+
+SUP_CB_TOPIC = "sup_topic:"
+SUP_CB_REPLY = "sup_reply:"
+SUP_CB_CLOSE = "sup_close:"
+SUP_CB_INWORK = "sup_inwork:"
+
 
 # =========================================================
 # Keyboards
@@ -637,6 +683,10 @@ class MenuEditStates(StatesGroup):
     pick_edit_item = State()
     waiting_for_edit_price = State()
     pick_remove_item = State()
+
+class SupportStates(StatesGroup):
+    waiting_for_topic_message = State()
+    waiting_for_superadmin_reply = State()
 
 
 # =========================================================
@@ -2725,6 +2775,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
