@@ -355,6 +355,147 @@ def closed_message(cafe: Dict[str, Any], menu: Dict[str, int]) -> str:
 def user_name(message: Message) -> str:
     return (message.from_user.first_name if message.from_user else None) or "друг"
 
+def support_topic_kb() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Подписка и оплата", callback_data=f"{SUP_CB_TOPIC}{SUPPORT_TOPIC_SUB}")],
+            [InlineKeyboardButton(text="Меню и товары", callback_data=f"{SUP_CB_TOPIC}{SUPPORT_TOPIC_MENU}")],
+            [InlineKeyboardButton(text="Заказы и клиенты", callback_data=f"{SUP_CB_TOPIC}{SUPPORT_TOPIC_ORDERS}")],
+            [InlineKeyboardButton(text="Персонал / staff-чат", callback_data=f"{SUP_CB_TOPIC}{SUPPORT_TOPIC_STAFF}")],
+            [InlineKeyboardButton(text="Техническая ошибка", callback_data=f"{SUP_CB_TOPIC}{SUPPORT_TOPIC_BUG}")],
+            [InlineKeyboardButton(text="Другое", callback_data=f"{SUP_CB_TOPIC}{SUPPORT_TOPIC_OTHER}")],
+        ]
+    )
+
+
+def support_admin_ticket_kb(ticket_id: str, closed: bool = False) -> InlineKeyboardMarkup:
+    if closed:
+        return InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="✅ Закрыто", callback_data=f"{SUP_CB_CLOSE}{ticket_id}")]
+            ]
+        )
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🛠 В работу", callback_data=f"{SUP_CB_INWORK}{ticket_id}"),
+                InlineKeyboardButton(text="✉️ Ответить", callback_data=f"{SUP_CB_REPLY}{ticket_id}"),
+            ],
+            [
+                InlineKeyboardButton(text="✅ Закрыть", callback_data=f"{SUP_CB_CLOSE}{ticket_id}")
+            ],
+        ]
+    )
+
+
+async def next_support_ticket_id(r: redis.Redis) -> str:
+    n = await r.incr(k_support_counter())
+    return f"T{int(n):06d}"
+
+
+def support_status_label(status: str) -> str:
+    return {
+        SUPPORT_STATUS_NEW: "🆕 Новый",
+        SUPPORT_STATUS_IN_WORK: "🛠 В работе",
+        SUPPORT_STATUS_ANSWERED: "✉️ Отвечен",
+        SUPPORT_STATUS_CLOSED: "✅ Закрыт",
+    }.get(status, status)
+
+
+def render_support_ticket_text(ticket: Dict[str, Any]) -> str:
+    cafe_title_text = str(ticket.get("cafe_title") or ticket.get("cafe_id") or "-")
+    topic_code = str(ticket.get("topic") or "")
+    topic_title = SUPPORT_TOPICS.get(topic_code, topic_code or "-")
+    user_name = str(ticket.get("user_name") or "—")
+    username = str(ticket.get("username") or "")
+    username_line = f"@{html.quote(username)}" if username else "—"
+    created_at = str(ticket.get("created_at") or "—")
+    status = support_status_label(str(ticket.get("status") or SUPPORT_STATUS_NEW))
+    text = str(ticket.get("text") or "")
+
+    return (
+        f"🎫 <b>Тикет {html.quote(str(ticket.get('ticket_id') or '-'))}</b>\n"
+        f"Статус: <b>{html.quote(status)}</b>\n"
+        f"Кафе: <b>{html.quote(cafe_title_text)}</b>\n"
+        f"Cafe ID: <code>{html.quote(str(ticket.get('cafe_id') or '-'))}</code>\n"
+        f"Тема: <b>{html.quote(topic_title)}</b>\n"
+        f"User ID: <code>{html.quote(str(ticket.get('user_id') or '-'))}</code>\n"
+        f"Имя: <b>{html.quote(user_name)}</b>\n"
+        f"Username: {username_line}\n"
+        f"Создан: <b>{html.quote(created_at)}</b>\n\n"
+        f"📝 <b>Сообщение:</b>\n{html.quote(text)}"
+    )
+
+
+async def create_support_ticket(
+    r: redis.Redis,
+    *,
+    cafe_id: str,
+    cafe_title_text: str,
+    user_id: int,
+    user_name: str,
+    username: str,
+    topic: str,
+    text: str,
+) -> Dict[str, Any]:
+    ticket_id = await next_support_ticket_id(r)
+    now_text = get_moscow_time().strftime("%d.%m.%Y %H:%M")
+
+    ticket = {
+        "ticket_id": ticket_id,
+        "status": SUPPORT_STATUS_NEW,
+        "cafe_id": cafe_id,
+        "cafe_title": cafe_title_text,
+        "user_id": str(user_id),
+        "user_name": user_name or "",
+        "username": username or "",
+        "topic": topic,
+        "text": text,
+        "created_at": now_text,
+        "updated_at": now_text,
+        "superadmin_chat_id": "",
+        "superadmin_message_id": "",
+    }
+
+    pipe = r.pipeline()
+    pipe.hset(k_support_ticket(ticket_id), mapping={k: str(v) for k, v in ticket.items()})
+    pipe.sadd(k_support_open(), ticket_id)
+    pipe.sadd(k_support_cafe(cafe_id), ticket_id)
+    pipe.sadd(k_support_user(user_id), ticket_id)
+    pipe.set(k_support_active(cafe_id, user_id), ticket_id)
+    await pipe.execute()
+
+    return ticket
+
+
+async def get_support_ticket(r: redis.Redis, ticket_id: str) -> Dict[str, Any]:
+    data = await r.hgetall(k_support_ticket(ticket_id))
+    return dict(data or {})
+
+
+async def update_support_ticket(r: redis.Redis, ticket_id: str, **fields) -> Dict[str, Any]:
+    if not fields:
+        return await get_support_ticket(r, ticket_id)
+
+    fields["updated_at"] = get_moscow_time().strftime("%d.%m.%Y %H:%M")
+    await r.hset(k_support_ticket(ticket_id), mapping={k: str(v) for k, v in fields.items()})
+    return await get_support_ticket(r, ticket_id)
+
+
+async def bind_support_admin_message(
+    r: redis.Redis,
+    ticket_id: str,
+    *,
+    chat_id: int,
+    message_id: int,
+) -> Dict[str, Any]:
+    return await update_support_ticket(
+        r,
+        ticket_id,
+        superadmin_chat_id=str(chat_id),
+        superadmin_message_id=str(message_id),
+    )
+
 
 # =========================================================
 # Menu per cafe (Redis)
@@ -596,8 +737,8 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
         [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)],
         [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_SUB_INFO)],
         [KeyboardButton(text=BTN_ADMIN_INFO)],
-        [KeyboardButton(text=BTN_ADMIN_SUPPORT)],
         [KeyboardButton(text=BTN_VIEW_CLIENT)],
+        [KeyboardButton(text=BTN_ADMIN_SUPPORT)],
     ]
     if is_super:
         kb.append([KeyboardButton(text=BTN_HELP_ADMIN)])
@@ -2772,6 +2913,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
