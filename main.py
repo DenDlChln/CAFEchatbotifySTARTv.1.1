@@ -16,7 +16,7 @@ from aiogram import Bot, Dispatcher, F, Router, html
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BotCommand, ErrorEvent, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardMarkup, KeyboardButton, BotCommand, ErrorEvent, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import CommandStart, Command, StateFilter, CommandObject
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -3261,6 +3261,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
