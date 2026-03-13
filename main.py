@@ -180,6 +180,9 @@ def k_support_counter() -> str:
 def k_support_active(cafe_id: str, user_id: int) -> str:
     return f"support:active:{cafe_id}:{user_id}"
 
+def k_cafe_sub_notify(cafe_id: str) -> str:
+    return f"cafe:{cafe_id}:sub_notify"
+
 # После других def k_... 
 def k_admin_subscription(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:admin_subscription"
@@ -3164,6 +3167,94 @@ async def smart_return_check_and_send(bot: Bot):
                 except Exception:
                     pass
 
+async def sub_renewal_check_and_send(bot: Bot):
+    r: redis.Redis = bot.redis  # если у тебя redis хранится как bot.redis
+    now_dt = get_moscow_time()
+    today = now_dt.date()
+
+    for cafe_id in CAFES.keys():
+        sub_key = k_admin_subscription(cafe_id)
+        try:
+            raw_until = await r.hget(sub_key, "cafebotify_valid_until")
+            until_ts = int(raw_until) if raw_until else 0
+            if until_ts <= 0:
+                continue
+
+            until_dt = datetime.fromtimestamp(until_ts, tz=MSK_TZ)
+            days_left = (until_dt.date() - today).days
+        except Exception:
+            continue
+
+        if days_left not in (7, 3, 1):
+            continue
+
+        flags_key = k_cafe_sub_notify(cafe_id)
+        flags = await r.hgetall(flags_key)
+        flag_field = f"d{days_left}"
+        if flags.get(flag_field) == "1":
+            continue
+
+        cafe = cafe_or_default(cafe_id)
+        admin_id = await get_effective_admin_id(r, cafe_id)
+        if not admin_id:
+            continue
+
+        until_str = until_dt.strftime("%d.%m.%Y")
+        cafe_name = cafe_title(cafe)
+
+        if days_left == 7:
+            text = (
+                "🗓️ <b>Подписка скоро закончится</b>\n\n"
+                f"Кафе: <b>{html.quote(cafe_name)}</b>\n"
+                f"Дата окончания: <b>{until_str}</b>\n\n"
+                "Всё будет работать до этой даты, но чтобы бот продолжал принимать заказы "
+                "и напоминать гостям о вас, продлите подписку заранее.\n\n"
+                "Сделать это можно в админ-панели кнопкой <b>«💳 Продлить подписку»</b>."
+            )
+        elif days_left == 3:
+            text = (
+                "⏰ <b>Осталось 3 дня подписки</b>\n\n"
+                f"Кафе: <b>{html.quote(cafe_name)}</b>\n"
+                f"До окончания: <b>{until_str}</b>\n\n"
+                "За это время бот уже помог:\n"
+                "• принимать заказы и брони без звонков\n"
+                "• напоминать гостям о вас\n"
+                "• собирать статистику по продажам\n\n"
+                "Если бот экономит вам время и приносит заказы, удобнее всего продлить подписку "
+                "сейчас, пока всё работает.\n\n"
+                "Откройте админ-панель и нажмите <b>«💳 Продлить подписку»</b> — это займёт меньше минуты."
+            )
+        else:  # days_left == 1
+            text = (
+                "⚠️ <b>Завтра доступ к боту будет отключён</b>\n\n"
+                f"Кафе: <b>{html.quote(cafe_name)}</b>\n"
+                f"Дата окончания: <b>{until_str}</b>\n\n"
+                "Очень не хочется, чтобы гости снова стояли в очереди или звонили, "
+                "а вы принимали заказы вручную.\n\n"
+                "Если вам удобно, продлите подписку прямо сейчас — бот продолжит:\n"
+                "• принимать заказы и брони\n"
+                "• напоминать постоянным гостям\n"
+                "• собирать статистику для вас\n\n"
+                "Если решили пока сделать паузу — спасибо, что пользовались ботом. "
+                "Мы будем рады, если вы вернётесь позже 🙌"
+            )
+
+        try:
+            await bot.send_message(admin_id, text)
+            await r.hset(flags_key, mapping={flag_field: "1"})
+        except Exception:
+            # не падаем из-за одного кафе
+            continue
+
+async def sub_renewal_loop(bot: Bot):
+    while True:
+        try:
+            await sub_renewal_check_and_send(bot)
+        except Exception as e:
+            logger.error("sub_renewal_loop error: %r", e, exc_info=True)
+        # достаточно раз в час (или раз в день, если хочешь)
+        await asyncio.sleep(3600)
+
 async def smart_return_loop(bot: Bot):
     while True:
         try:
@@ -3177,6 +3268,17 @@ async def smart_return_loop(bot: Bot):
 # Startup / Webhook
 # =========================================================
 _smart_task: Optional[asyncio.Task] = None
+
+async def on_startup(app: web.Application):
+    bot: Bot = app["bot"]
+    await set_commands(bot)
+
+    global smarttask
+    if smarttask is None or smarttask.done():
+        smarttask = asyncio.create_task(smartreturnloop(bot))
+
+    await bot.set_webhook(WEBHOOK_URL, secret_token=WEBHOOK_SECRET)
+    logger.info("Webhook set: %s", WEBHOOK_URL)
 
 async def on_startup(app: web.Application):
     bot: Bot = app["bot"]
@@ -3279,6 +3381,7 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
 
