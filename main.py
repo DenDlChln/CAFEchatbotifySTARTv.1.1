@@ -2072,6 +2072,9 @@ async def ready_time(message: Message, state: FSMContext):
 # =========================================================
 @router.message(F.text == BTN_BOOKING)
 async def booking_start(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     await state.clear()
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
@@ -2082,20 +2085,24 @@ async def booking_start(message: Message, state: FSMContext):
     if not cafe_open(cafe):
         ws, _ = cafe_hours(cafe)
         warn = (
-            "\n\n⚠️ <b>Сейчас нерабочее время.</b>\n"
-            f"Администратор ответит с началом рабочего дня (с {ws}:00 МСК)."
+            "\n\n⚠️ <b>Сейчас кафе закрыто.</b>\n"
+            f"Администратор увидит заявку и ответит с {ws}:00 по МСК."
         )
 
     await state.set_state(BookingStates.waiting_for_datetime)
     await message.answer(
-        "📅 <b>Бронирование</b>\n\n"
-        "Напишите дату и время: <code>15.02 19:00</code>\n"
-        "Или «Отмена»." + warn,
+        "📅 <b>Давайте забронируем столик</b>\n\n"
+        "Напишите дату и время в формате <code>15.02 19:00</code>.\n"
+        "Если планы поменялись — просто нажмите «Отмена»." + warn,
         reply_markup=kb_booking_cancel(),
     )
 
+
 @router.message(StateFilter(BookingStates.waiting_for_datetime))
 async def booking_datetime(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
@@ -2103,12 +2110,19 @@ async def booking_datetime(message: Message, state: FSMContext):
 
     if message.text == BTN_CANCEL:
         await state.clear()
-        await message.answer("Ок, отменил.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+        await message.answer(
+            "Окей, ничего не бронируем 😊",
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
 
     m = re.match(r"^\s*(\d{1,2})\.(\d{1,2})\s+(\d{1,2}):(\d{2})\s*$", message.text or "")
     if not m:
-        await message.answer("Формат: <code>15.02 19:00</code>", reply_markup=kb_booking_cancel())
+        await message.answer(
+            "Чуть-чуть не попали в формат 🙈\n"
+            "Пример: <code>15.02 19:00</code>",
+            reply_markup=kb_booking_cancel(),
+        )
         return
 
     day, month, hour, minute = map(int, m.groups())
@@ -2116,15 +2130,26 @@ async def booking_datetime(message: Message, state: FSMContext):
     try:
         dt = datetime(year, month, day, hour, minute, tzinfo=MSK_TZ)
     except Exception:
-        await message.answer("Дата/время некорректны.", reply_markup=kb_booking_cancel())
+        await message.answer(
+            "Похоже, такая дата/время невозможны.\n"
+            "Попробуйте ещё раз, например: <code>15.02 19:00</code>.",
+            reply_markup=kb_booking_cancel(),
+        )
         return
 
     await state.update_data(booking_dt=dt.strftime("%d.%m %H:%M"))
     await state.set_state(BookingStates.waiting_for_people)
-    await message.answer("Сколько гостей? (1–10)", reply_markup=kb_booking_people())
+    await message.answer(
+        "Супер! На сколько гостей готовим столик? (от 1 до 10)",
+        reply_markup=kb_booking_people(),
+    )
+
 
 @router.message(StateFilter(BookingStates.waiting_for_people))
 async def booking_people(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     menu = await get_menu(r, cafe_id)
@@ -2132,7 +2157,10 @@ async def booking_people(message: Message, state: FSMContext):
 
     if message.text == BTN_CANCEL:
         await state.clear()
-        await message.answer("Ок, отменил.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+        await message.answer(
+            "Окей, бронирование отменил.",
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
 
     try:
@@ -2140,15 +2168,28 @@ async def booking_people(message: Message, state: FSMContext):
         if not (1 <= people <= 10):
             raise ValueError
     except Exception:
-        await message.answer("Нужно число 1–10.", reply_markup=kb_booking_people())
+        await message.answer(
+            "Нужно число от 1 до 10.\n"
+            "Например: <code>2</code> или <code>6</code>.",
+            reply_markup=kb_booking_people(),
+        )
         return
 
     await state.update_data(booking_people=people)
     await state.set_state(BookingStates.waiting_for_comment)
-    await message.answer("Комментарий (или <code>-</code>):", reply_markup=kb_booking_cancel())
+    await message.answer(
+        "Если есть пожелания (окно, розетка, детский стул и т.п.) — напишите их.\n"
+        "Укажите номер телефона для связи.\n"
+        "Если без комментариев — отправьте <code>-</code>.",
+        reply_markup=kb_booking_cancel(),
+    )
+
 
 @router.message(StateFilter(BookingStates.waiting_for_comment))
 async def booking_finish(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
@@ -2157,7 +2198,10 @@ async def booking_finish(message: Message, state: FSMContext):
 
     if message.text == BTN_CANCEL:
         await state.clear()
-        await message.answer("Ок, отменил.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+        await message.answer(
+            "Окей, бронирование отменил.",
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
 
     data = await state.get_data()
@@ -2170,24 +2214,33 @@ async def booking_finish(message: Message, state: FSMContext):
 
     admin_msg = (
         f"📋 <b>НОВАЯ БРОНЬ #{booking_id}</b> | {html.quote(cafe_title(cafe))}\n\n"
-        f"<a href=\"tg://user?id={user_id}\">{html.quote(message.from_user.username or message.from_user.first_name or 'Клиент')}</a>\n"
+        f"<a href=\"tg://user?id={user_id}\">"
+        f"{html.quote(message.from_user.username or message.from_user.first_name or 'Клиент')}</a>\n"
         f"<code>{user_id}</code>\n\n"
-        f"✍️ <a href=\"tg://user?id={user_id}\">Написать клиенту</a>\n\n"
-        f"🗓 {html.quote(dt_str)}\n👥 {people} чел.\n💬 {html.quote(comment)}"
+        f"🗓 {html.quote(dt_str)}\n"
+        f"👥 {people} чел.\n"
+        f"💬 {html.quote(comment)}\n\n"
+        f"✍️ <a href=\"tg://user?id={user_id}\">Написать клиенту</a>"
     )
     await notify_admin(message.bot, r, cafe_id, admin_msg)
 
     if cafe_open(cafe):
-        user_text = "✅ Заявка на бронь отправлена администратору. Он свяжется с вами в Telegram."
+        user_text = (
+            "✅ Я передал вашу заявку администратору кафе.\n"
+            "Он свяжется с Вами, чтобы подтвердить бронь."
+        )
     else:
         ws, _ = cafe_hours(cafe)
         user_text = (
             "✅ Заявка на бронь принята.\n\n"
-            "⚠️ Сейчас кафе закрыто — администратор ответит в рабочее время "
-            f"(с {ws}:00 МСК)."
+            "⚠️ Сейчас кафе закрыто, поэтому администратор ответит уже в рабочее время "
+            f"(с {ws}:00 по МСК)."
         )
 
-    await message.answer(user_text, reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+    await message.answer(
+        user_text,
+        reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+    )
     await state.clear()
 
 
