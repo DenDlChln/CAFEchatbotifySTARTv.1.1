@@ -1157,9 +1157,9 @@ async def cmd_set_cafe_subscription(message: Message, command: CommandObject):
     args = (command.args or "").strip().split()
     if len(args) != 2:
         await message.answer(
-            "Формат:\n"
-            "<code>/set_cafe_subscription cafe_001 2026-12-31</code>\n"
-            "<code>/set_cafe_subscription cafe_001 +30</code>\n"
+            "Формат:\\n"
+            "<code>/set_cafe_subscription cafe_001 2026-12-31</code>\\n"
+            "<code>/set_cafe_subscription cafe_001 +30</code>\\n"
             "<code>/set_cafe_subscription cafe_001 +360</code>"
         )
         return
@@ -1193,10 +1193,10 @@ async def cmd_set_cafe_subscription(message: Message, command: CommandObject):
         until_ts = int(target_dt.timestamp())
     except Exception:
         await message.answer(
-            "Неверный формат.\n"
-            "Используй либо дату YYYY-MM-DD, либо +N дней.\n"
-            "Примеры:\n"
-            "<code>/set_cafe_subscription cafe_001 2026-12-31</code>\n"
+            "Неверный формат.\\n"
+            "Используй либо дату YYYY-MM-DD, либо +N дней.\\n"
+            "Примеры:\\n"
+            "<code>/set_cafe_subscription cafe_001 2026-12-31</code>\\n"
             "<code>/set_cafe_subscription cafe_001 +30</code>"
         )
         return
@@ -1209,9 +1209,11 @@ async def cmd_set_cafe_subscription(message: Message, command: CommandObject):
         "admin_id": str(eff_admin or 0),
     })
 
+    await r.delete(k_cafe_sub_notify(cafe_id))
+
     await message.answer(
-        "✅ Подписка обновлена\n\n"
-        f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
+        "✅ Подписка обновлена\\n\\n"
+        f"Кафе: <code>{html.quote(cafe_id)}</code>\\n"
         f"Новая дата окончания: <b>{target_dt.strftime('%d.%m.%Y')}</b>"
     )
 
@@ -3268,38 +3270,40 @@ async def smart_return_loop(bot: Bot):
 # Startup / Webhook
 # =========================================================
 _smart_task: Optional[asyncio.Task] = None
+_sub_task: Optional[asyncio.Task] = None
 
 async def on_startup(app: web.Application):
     bot: Bot = app["bot"]
     await set_commands(bot)
 
-    global smarttask
-    if smarttask is None or smarttask.done():
-        smarttask = asyncio.create_task(smartreturnloop(bot))
+    global _smart_task, _sub_task
+
+    if _smart_task is None or _smart_task.done():
+        _smart_task = asyncio.create_task(smart_return_loop(bot))
+
+    if _sub_task is None or _sub_task.done():
+        _sub_task = asyncio.create_task(sub_renewal_loop(bot))
 
     await bot.set_webhook(WEBHOOK_URL, secret_token=WEBHOOK_SECRET)
     logger.info("Webhook set: %s", WEBHOOK_URL)
 
-async def on_startup(app: web.Application):
-    bot: Bot = app["bot"]
-    await set_commands(bot)
 
-    global _smart_task
-    if _smart_task is None or _smart_task.done():
-        _smart_task = asyncio.create_task(smart_return_loop(bot))
-
-    await bot.set_webhook(WEBHOOK_URL, secret_token=WEBHOOK_SECRET)  # [web:1]
-    logger.info("Webhook set: %s", WEBHOOK_URL)
-    
 async def on_shutdown(app: web.Application):
     bot: Bot = app["bot"]
     storage: RedisStorage = app["storage"]
     r: redis.Redis = app["redis"]
 
-    global _smart_task
+    global _smart_task, _sub_task
+
     try:
         if _smart_task and not _smart_task.done():
             _smart_task.cancel()
+    except Exception:
+        pass
+
+    try:
+        if _sub_task and not _sub_task.done():
+            _sub_task.cancel()
     except Exception:
         pass
 
