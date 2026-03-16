@@ -1340,30 +1340,32 @@ async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
 # =========================================================
 WELCOME_VARIANTS = [
     "👋 Рад тебя видеть, {name}!",
-    "Хороший кофе начинается здесь! Что хотите заказать?",
+    "Хороший кофе начинается здесь. Что хотите заказать?",
     "{name}, добро пожаловать!",
     "👋 Привет, {name}! Заглянем за чем-то вкусным? ☕",
     "Добро пожаловать! Что будем готовить для вас сегодня?",
-    "{name}, рады видеть вас снова! Уже знаем, что вы любите.",
+    "{name}, рады видеть вас снова!",
     "👋 Здравствуйте, {name}! Сегодня больше про кофе или десерты?",
-    "Привет, {name}!",
+    "Привет, {name}! Я помогу быстро оформить заказ.",
 ]
+
 CHOICE_VARIANTS = [
     "Отличный выбор!",
     "Отличный выбор — <b>{drink}</b>! Сколько кружек готовим? 😊",
-    "👍Люблю {drink} не меньше вас. Сколько штук оформить?",
+    "👍 Люблю {drink} не меньше вас. Сколько штук оформить?",
     "Берём {drink}! Напишите количество — от 1 до 5.",
     "{drink} — классика. Сколько порций для вас сегодня?",
-    "Классика.",
     "Звучит вкусно!",
+    "Хороший выбор. Сколько добавить?",
 ]
+
 FINISH_VARIANTS = [
     "Спасибо за заказ, {name}!",
-    "👍Класс, {name}! Пока мы готовим, можете заглянуть в корзину или сделать ещё один заказ.",
-    "{name}, ваше кафе уже приняло заказ. Хорошего дня!",
-    "Ваш заказ принят ☕ Мы приготовим его к выбранному времени",
-    "Спасибо, что выбрали нас, {name}! Если что-то нужно — просто напишите тут.",
-    "Принято, {name}. Заглядывай ещё!",
+    "👍 Класс, {name}! Пока мы готовим, можно оформить ещё что-нибудь вкусное.",
+    "{name}, заказ принят. Хорошего дня!",
+    "Ваш заказ принят ☕ Мы приготовим его к выбранному времени.",
+    "Спасибо, что выбрали нас, {name}! Если что-то нужно — просто напишите сюда.",
+    "Принято, {name}. Заглядывайте ещё!",
 ]
 
 async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any], menu: Dict[str, int]):
@@ -1868,16 +1870,27 @@ async def start_add_item(message: Message, state: FSMContext, cafe_id: str, menu
     if price is None:
         r: redis.Redis = message.bot._redis
         is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
-
-        await message.answer("Этой позиции уже нет.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+        await message.answer(
+            "Не нашёл такую позицию в меню.",
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
 
     cart = get_cart(await state.get_data())
     await state.set_state(OrderStates.waiting_for_quantity)
     await state.update_data(current_drink=drink, cart=cart)
 
+    choice_text = random.choice(CHOICE_VARIANTS)
+    try:
+        choice_text = choice_text.format(drink=html.quote(drink))
+    except Exception:
+        pass
+
     await message.answer(
-        f"{random.choice(CHOICE_VARIANTS)}\n\n🥤 <b>{html.quote(drink)}</b>\n💰 <b>{price}₽</b>\n\nСколько добавить?",
+        f"{choice_text}\n\n"
+        f"🥤 <b>{html.quote(drink)}</b>\n"
+        f"💰 {int(price)}₽\n\n"
+        "Сколько добавить?",
         reply_markup=kb_qty(),
     )
 
@@ -2001,7 +2014,10 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     cart = get_cart(await state.get_data())
     if not cart:
         await state.clear()
-        await message.answer("Корзина пустая.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+        await message.answer(
+            "Корзина пока пустая.",
+            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+        )
         return
 
     rl = cafe_rate_limit_seconds(cafe)
@@ -2020,7 +2036,12 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     ready_at_str = (get_moscow_time() + timedelta(minutes=max(0, ready_in_min))).strftime("%H:%M")
     ready_line = "как можно скорее" if ready_in_min <= 0 else f"через {ready_in_min} мин (к {ready_at_str} МСК)"
 
-    await set_last_order_snapshot(r, cafe_id, user_id, {"cart": cart, "total": total, "ts": int(time.time())})
+    await set_last_order_snapshot(
+        r,
+        cafe_id,
+        user_id,
+        {"cart": cart, "total": total, "ts": int(time.time())},
+    )
 
     await r.incr(k_stats_total_orders(cafe_id))
     await r.incrby(k_stats_total_revenue(cafe_id), int(total))
@@ -2045,7 +2066,8 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
 
     admin_msg = (
         f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_num}</b> | {html.quote(cafe_title(cafe))}\n\n"
-        f"<a href=\"tg://user?id={user_id}\">{html.quote(message.from_user.username or message.from_user.first_name or 'Клиент')}</a>\n"
+        f"<a href=\"tg://user?id={user_id}\">"
+        f"{html.quote(message.from_user.username or message.from_user.first_name or 'Клиент')}</a>\n"
         f"<code>{user_id}</code>\n\n"
         f"✍️ <a href=\"tg://user?id={user_id}\">Написать клиенту</a>\n\n"
         + "\n".join(cart_lines(cart, menu))
@@ -2055,9 +2077,17 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     await notify_admin(message.bot, r, cafe_id, admin_msg)
     await send_admin_demo_to_user(message.bot, user_id, admin_msg)
 
-    finish = random.choice(FINISH_VARIANTS).format(name=html.quote(user_name(message)))
+    finish = random.choice(FINISH_VARIANTS)
+    try:
+        finish = finish.format(name=html.quote(user_name(message)))
+    except Exception:
+        pass
+
     await message.answer(
-        f"🎉 <b>Заказ принят!</b>\n\n{cart_text(cart, menu)}\n\n⏱ Готовность: {html.quote(ready_line)}\n\n{finish}",
+        "🎉 <b>Заказ принят!</b>\n\n"
+        f"{cart_text(cart, menu)}\n\n"
+        f"⏱ <b>Готовность:</b> {html.quote(ready_line)}\n\n"
+        f"{finish}",
         reply_markup=kb_client_main(menu, show_admin_button=is_admin),
     )
     await state.clear()
