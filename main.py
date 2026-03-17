@@ -2536,20 +2536,20 @@ async def admin_info_button_message(message: Message):
         return
 
     await message.answer(
-    "🧾 <b>Справка админа кафе</b>\n"
-    "• «Статистика» — покажет продажи и выручку.\n"
-    "• «Меню» — добавление/изменение/удаление позиций.\n"
-    "• «Группа персонала» — привязка staff-группы.\n"
-    "• «Ссылки» — ссылки для клиента/админа/staff.\n"
-    "• "Реклама" - возможность коммерческой рекламы или рекламы своего кафе" 
-    "• «Продлить» — продление подписки.\n\n"
-    "Подробнее о сервисе — на сайте:",
-    reply_markup=InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🌐 Открыть сайт CafeBotify", url="https://cafebotify.tilda.ws/")]
-        ]
-    ),
-    disable_web_page_preview=True,
+        "🧾 <b>Справка админа кафе</b>\n"
+        "• «Статистика» — покажет продажи и выручку.\n"
+        "• «Меню» — добавление/изменение/удаление позиций.\n"
+        "• «Группа персонала» — привязка staff-группы.\n"
+        "• «Ссылки» — ссылки для клиента/админа/staff.\n"
+        "• «Реклама» — возможность коммерческой рекламы или рекламы своего кафе.\n"
+        "• «Продлить» — продление подписки.\n\n"
+        "Подробнее о сервисе — на сайте:",
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="CafeBotify", url="https://cafebotify.tilda.ws")]
+            ]
+        ),
+        disable_web_page_preview=True,
     )
 
 
