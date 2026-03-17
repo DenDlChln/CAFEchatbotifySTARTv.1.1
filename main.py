@@ -1436,7 +1436,7 @@ async def show_broadcast_menu(message: Message, r: redis.Redis, cafe_id: str) ->
     last_id = str(await r.get(k_broadcast_last(cafe_id)) or "—")
     await message.answer(
         broadcast_summary_text(draft, last_id),
-        reply_markup=kbbroadcastmanage(),
+        reply_markup=kb_broadcast_manage(),
         disable_web_page_preview=True,
     )
 
