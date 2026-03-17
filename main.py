@@ -229,6 +229,36 @@ def normalize_promo(data: dict | None) -> dict:
         base["button_text"] = str(data.get("button_text") or "Подробнее").strip() or "Подробнее"
     return base
 
+def k_broadcast_counter(cafe_id: str) -> str:
+    return f"broadcast:{cafe_id}:counter"
+
+def k_broadcast_meta(cafe_id: str, broadcast_id: str) -> str:
+    return f"broadcast:{cafe_id}:{broadcast_id}:meta"
+
+def k_broadcast_stats(cafe_id: str, broadcast_id: str) -> str:
+    return f"broadcast:{cafe_id}:{broadcast_id}:stats"
+
+def k_broadcast_clicked_users(cafe_id: str, broadcast_id: str) -> str:
+    return f"broadcast:{cafe_id}:{broadcast_id}:clicked_users"
+
+def k_broadcast_ordered_users(cafe_id: str, broadcast_id: str) -> str:
+    return f"broadcast:{cafe_id}:{broadcast_id}:ordered_users"
+
+def k_broadcast_sent_users(cafe_id: str, broadcast_id: str) -> str:
+    return f"broadcast:{cafe_id}:{broadcast_id}:sent_users"
+
+def k_broadcast_failed_users(cafe_id: str, broadcast_id: str) -> str:
+    return f"broadcast:{cafe_id}:{broadcast_id}:failed_users"
+
+def k_broadcast_active(cafe_id: str) -> str:
+    return f"broadcast:{cafe_id}:active"
+
+def k_broadcast_last(cafe_id: str) -> str:
+    return f"broadcast:{cafe_id}:last"
+
+def k_broadcast_draft(cafe_id: str) -> str:
+    return f"broadcast:{cafe_id}:draft"
+
 # Функция миграции старых подписок (запускается ОДИН раз)
 async def migrate_old_subscriptions(r: redis.Redis):
     """Переносит user:{uid}.cafebotify_valid_until -> cafe:{cafe_id}:admin_subscription"""
@@ -696,6 +726,16 @@ PROMO_DELETE_PHOTO = "🗑 Удалить картинку"
 PROMO_DELETE_URL = "🗑 Удалить ссылку"
 PROMO_DELETE_TEXT = "🗑 Удалить текст"
 
+BTN_BROADCAST = "📣 Рассылка"
+
+BROADCAST_EDIT_TEXT = "✏️ Текст"
+BROADCAST_EDIT_URL = "🔗 Ссылка"
+BROADCAST_SEND = "🚀 Запустить"
+BROADCAST_STATS = "📊 Статистика"
+BROADCAST_BACK = "⬅️ Назад"
+BROADCAST_CANCEL = "❌ Отмена"
+
+
 
 # =========================================================
 # Keyboards
@@ -795,7 +835,8 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
         [KeyboardButton(text=BTN_STATS), KeyboardButton(text=BTN_MENU_EDIT)],
         [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)],
         [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_SUB_INFO)],
-        [KeyboardButton(text=BTN_PROMO)],[KeyboardButton(text=BTN_ADMIN_INFO)],
+        [KeyboardButton(text=BTN_PROMO)], [KeyboardButton(text=BTN_BROADCAST)],
+        [KeyboardButton(text=BTN_ADMIN_INFO)],
         [KeyboardButton(text=BTN_ADMIN_SUPPORT)],
         [KeyboardButton(text=BTN_VIEW_CLIENT)],
     ]
@@ -950,6 +991,11 @@ class PromoStates(StatesGroup):
     waiting_for_text = State()
     waiting_for_url = State()
     waiting_for_photo = State()
+
+class BroadcastStates(StatesGroup):
+    waiting_for_action = State()
+    waiting_for_text = State()
+    waiting_for_url = State()
 
 
 # =========================================================
@@ -1190,6 +1236,209 @@ async def send_promo_preview(message: Message, promo: dict) -> None:
         return
 
     await message.answer("Сейчас реклама пустая: нет ни текста, ни ссылки, ни картинки.")
+
+
+def broadcast_defaults() -> Dict[str, Any]:
+    return {
+        "text": "",
+        "url": "",
+    }
+
+
+def normalize_broadcast(data: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    base = broadcast_defaults()
+    if not isinstance(data, dict):
+        return base
+    base["text"] = str(data.get("text") or "").strip()
+    base["url"] = str(data.get("url") or "").strip()
+    return base
+
+
+async def next_broadcast_id(r: redis.Redis, cafe_id: str) -> str:
+    n = await r.incr(k_broadcast_counter(cafe_id))
+    return f"B{int(n):06d}"
+
+
+async def create_broadcast(
+    r: redis.Redis,
+    cafe_id: str,
+    created_by: int,
+    text: str,
+    url: str = "",
+) -> str:
+    broadcast_id = await next_broadcast_id(r, cafe_id)
+    now_ts = int(time.time())
+
+    await r.hset(
+        k_broadcast_meta(cafe_id, broadcast_id),
+        mapping={
+            "broadcast_id": broadcast_id,
+            "cafe_id": cafe_id,
+            "created_by": str(created_by),
+            "text": text.strip(),
+            "url": url.strip(),
+            "status": "draft",
+            "created_ts": str(now_ts),
+            "started_ts": "0",
+            "finished_ts": "0",
+        },
+    )
+
+    await r.hset(
+        k_broadcast_stats(cafe_id, broadcast_id),
+        mapping={
+            "planned": "0",
+            "sent": "0",
+            "failed": "0",
+            "clicked": "0",
+            "ordered": "0",
+            "ordered_revenue": "0",
+        },
+    )
+
+    await r.set(k_broadcast_last(cafe_id), broadcast_id)
+    return broadcast_id
+
+
+async def get_broadcast_meta(r: redis.Redis, cafe_id: str, broadcast_id: str) -> Dict[str, Any]:
+    return dict(await r.hgetall(k_broadcast_meta(cafe_id, broadcast_id)) or {})
+
+
+async def get_broadcast_stats(r: redis.Redis, cafe_id: str, broadcast_id: str) -> Dict[str, Any]:
+    return dict(await r.hgetall(k_broadcast_stats(cafe_id, broadcast_id)) or {})
+
+
+def broadcast_stats_text(
+    cafe_id: str,
+    broadcast_id: str,
+    meta: Dict[str, Any],
+    stats: Dict[str, Any],
+) -> str:
+    planned = int(stats.get("planned", 0) or 0)
+    sent = int(stats.get("sent", 0) or 0)
+    failed = int(stats.get("failed", 0) or 0)
+    clicked = int(stats.get("clicked", 0) or 0)
+    ordered = int(stats.get("ordered", 0) or 0)
+    ordered_revenue = int(stats.get("ordered_revenue", 0) or 0)
+    status = str(meta.get("status") or "draft")
+
+    ctr = round((clicked / sent) * 100, 1) if sent > 0 else 0.0
+    conv = round((ordered / clicked) * 100, 1) if clicked > 0 else 0.0
+
+    return (
+        f"📊 <b>Рассылка {html.quote(broadcast_id)}</b>\n"
+        f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
+        f"Статус: <b>{html.quote(status)}</b>\n\n"
+        f"👥 Запланировано: <b>{planned}</b>\n"
+        f"✅ Доставлено: <b>{sent}</b>\n"
+        f"⚠️ Ошибок: <b>{failed}</b>\n"
+        f"👆 Перешли: <b>{clicked}</b>\n"
+        f"🛒 Заказали: <b>{ordered}</b>\n"
+        f"💰 Выручка: <b>{ordered_revenue}₽</b>\n\n"
+        f"CTR: <b>{ctr}%</b>\n"
+        f"CR в заказ: <b>{conv}%</b>"
+    )
+
+
+async def run_broadcast_send(bot: Bot, cafe_id: str, broadcast_id: str):
+    r: redis.Redis = bot.redis
+    meta = await get_broadcast_meta(r, cafe_id, broadcast_id)
+
+    text = str(meta.get("text") or "").strip()
+    url = str(meta.get("url") or "").strip()
+
+    if not text:
+        return
+
+    await r.set(k_broadcast_active(cafe_id), broadcast_id)
+    await r.hset(
+        k_broadcast_meta(cafe_id, broadcast_id),
+        mapping={
+            "status": "running",
+            "started_ts": str(int(time.time())),
+        },
+    )
+
+    try:
+        ids = await r.smembers(k_customers_set(cafe_id))
+        user_ids = sorted({int(x) for x in ids}) if ids else []
+    except Exception:
+        user_ids = []
+
+    await r.hset(k_broadcast_stats(cafe_id, broadcast_id), "planned", str(len(user_ids)))
+
+    reply_markup = None
+    if url:
+        bot_link = await create_start_link(bot, payload=f"bc_{cafe_id}_{broadcast_id}", encode=True)
+        reply_markup = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="Перейти", url=bot_link)]
+            ]
+        )
+
+    for user_id in user_ids:
+        try:
+            await bot.send_message(
+                chat_id=user_id,
+                text=text,
+                reply_markup=reply_markup,
+                disable_web_page_preview=False,
+            )
+            await r.hincrby(k_broadcast_stats(cafe_id, broadcast_id), "sent", 1)
+            await r.sadd(k_broadcast_sent_users(cafe_id, broadcast_id), user_id)
+        except Exception:
+            await r.hincrby(k_broadcast_stats(cafe_id, broadcast_id), "failed", 1)
+            await r.sadd(k_broadcast_failed_users(cafe_id, broadcast_id), user_id)
+
+        await asyncio.sleep(0.06)
+
+    await r.hset(
+        k_broadcast_meta(cafe_id, broadcast_id),
+        mapping={
+            "status": "done",
+            "finished_ts": str(int(time.time())),
+        },
+    )
+
+
+def broadcast_summary_text(draft: Dict[str, Any], last_id: str = "") -> str:
+    d = normalize_broadcast(draft)
+    return (
+        "📣 <b>Рассылка по базе кафе</b>\n\n"
+        f"Текст: {'✅ задан' if d['text'] else '— не задан'}\n"
+        f"Ссылка: {'✅ задана' if d['url'] else '— не задана'}\n"
+        f"Последняя рассылка: <code>{html.quote(last_id)}</code>\n\n"
+        "Сначала заполните текст, затем при желании добавьте ссылку и запускайте рассылку."
+    )
+
+
+async def get_broadcast_draft(r: redis.Redis, cafe_id: str) -> Dict[str, Any]:
+    return normalize_broadcast(dict(await r.hgetall(k_broadcast_draft(cafe_id)) or {}))
+
+
+async def set_broadcast_draft(r: redis.Redis, cafe_id: str, data: Dict[str, Any]) -> None:
+    d = normalize_broadcast(data)
+    await r.hset(
+        k_broadcast_draft(cafe_id),
+        mapping={
+            "text": d["text"],
+            "url": d["url"],
+        },
+    )
+
+
+async def clear_broadcast_draft(r: redis.Redis, cafe_id: str) -> None:
+    await r.delete(k_broadcast_draft(cafe_id))
+
+
+async def show_broadcast_menu(message: Message, r: redis.Redis, cafe_id: str) -> None:
+    draft = await get_broadcast_draft(r, cafe_id)
+    last_id = str(await r.get(k_broadcast_last(cafe_id)) or "—")
+    await message.answer(
+        broadcast_summary_text(draft, last_id),
+        reply_markup=kbbroadcastmanage(),
+        disable_web_page_preview=True,
+    )
 
 
 # =========================================================
