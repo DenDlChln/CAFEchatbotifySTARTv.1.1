@@ -9,7 +9,7 @@
       "timezone": "Europe/Moscow",
       "address": "Стасова, 149",
       "phone": "+7(898)25-45-45 ",
-      "admin_id": 6070166803,
+      "admin_id": 0,
       "features": {
         "orders_enabled": true,
         "booking_enabled": true,
