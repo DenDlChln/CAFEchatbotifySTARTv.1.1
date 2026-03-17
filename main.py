@@ -945,6 +945,28 @@ def kb_promo_url(url: str | None, button_text: str | None = None) -> InlineKeybo
     )
 
 
+def kb_broadcast_manage() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BROADCAST_EDIT_TEXT), KeyboardButton(text=BROADCAST_EDIT_URL)],
+            [KeyboardButton(text=BROADCAST_SEND), KeyboardButton(text=BROADCAST_STATS)],
+            [KeyboardButton(text=BROADCAST_BACK), KeyboardButton(text=BROADCAST_CANCEL)],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
+def kb_broadcast_input() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BROADCAST_CANCEL), KeyboardButton(text=BROADCAST_BACK)],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
 def promo_summary_text(promo: dict) -> str:
     p = normalize_promo(promo)
     return (
