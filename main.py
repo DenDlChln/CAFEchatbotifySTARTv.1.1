@@ -2314,6 +2314,185 @@ async def cart_edit_action(message: Message, state: FSMContext):
     await show_cart(message, state)
 
 
+@router.message(F.text == BTN_BROADCAST)
+async def broadcast_entry_message(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+    r: redis.Redis = message.bot.redis
+    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await message.answer("Нет доступа.")
+        return
+
+    await state.clear()
+    await state.set_state(BroadcastStates.waitingforaction)
+    await show_broadcast_menu(message, r, cafe_id)
+
+
+@router.message(StateFilter(BroadcastStates.waitingforaction))
+async def broadcast_choose_action_message(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r: redis.Redis = message.bot.redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    text = (message.text or "").strip()
+    draft = await get_broadcast_draft(r, cafe_id)
+
+    if text in (BROADCAST_BACK, BTN_BACK):
+        await state.clear()
+        await clear_broadcast_draft(r, cafe_id)
+        await message.answer(".", reply_markup=kb_admin_main(is_super_admin(uid)))
+        return
+
+    if text == BROADCAST_EDIT_TEXT:
+        await state.set_state(BroadcastStates.waitingfortext)
+        await message.answer("Введите текст рассылки.", reply_markup=kb_broadcast_input())
+        return
+
+    if text == BROADCAST_EDIT_URL:
+        await state.set_state(BroadcastStates.waitingforurl)
+        await message.answer(
+            "Введите ссылку https://... или нажмите «Пропустить».",
+            reply_markup=kb_broadcast_input(),
+            disable_web_page_preview=True,
+        )
+        return
+
+    if text == BROADCAST_STATS:
+        last_id = str(await r.get(k_broadcast_last(cafe_id)) or "").strip()
+        if not last_id:
+            await message.answer("Рассылок пока не было.", reply_markup=kb_broadcast_manage())
+            return
+        meta = await get_broadcast_meta(r, cafe_id, last_id)
+        stats = await get_broadcast_stats(r, cafe_id, last_id)
+        await message.answer(
+            broadcast_stats_text(cafe_id, last_id, meta, stats),
+            reply_markup=kb_broadcast_manage(),
+        )
+        return
+
+    if text == BROADCAST_SEND:
+        if not draft.get("text"):
+            await message.answer("Сначала добавьте текст рассылки.", reply_markup=kb_broadcast_manage())
+            return
+
+        active_id = str(await r.get(k_broadcast_active(cafe_id)) or "").strip()
+        if active_id:
+            meta = await get_broadcast_meta(r, cafe_id, active_id)
+            if str(meta.get("status") or "") == "running":
+                await message.answer(
+                    f"Уже идёт рассылка <code>{html.quote(active_id)}</code>.",
+                    reply_markup=kb_broadcast_manage(),
+                )
+                return
+
+        broadcast_id = await create_broadcast(
+            r=r,
+            cafe_id=cafe_id,
+            created_by=uid,
+            text=str(draft.get("text") or ""),
+            url=str(draft.get("url") or ""),
+        )
+        await clear_broadcast_draft(r, cafe_id)
+
+        asyncio.create_task(run_broadcast_send(message.bot, cafe_id, broadcast_id))
+
+        await message.answer(
+            f"🚀 Рассылка <code>{html.quote(broadcast_id)}</code> запущена.",
+            reply_markup=kb_broadcast_manage(),
+        )
+        return
+
+    await message.answer("Выберите действие.", reply_markup=kb_broadcast_manage())
+
+
+@router.message(StateFilter(BroadcastStates.waitingfortext))
+async def broadcast_set_text_message(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r: redis.Redis = message.bot.redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    text = (message.text or "").strip()
+
+    if text in (BROADCAST_BACK, BTN_BACK):
+        await state.set_state(BroadcastStates.waitingforaction)
+        await show_broadcast_menu(message, r, cafe_id)
+        return
+
+    if not text:
+        await message.answer("Текст не должен быть пустым.", reply_markup=kb_broadcast_input())
+        return
+
+    if len(text) > 3000:
+        await message.answer("Слишком длинно. До 3000 символов.", reply_markup=kb_broadcast_input())
+        return
+
+    draft = await get_broadcast_draft(r, cafe_id)
+    draft["text"] = text
+    await set_broadcast_draft(r, cafe_id, draft)
+
+    await state.set_state(BroadcastStates.waitingforaction)
+    await show_broadcast_menu(message, r, cafe_id)
+
+
+@router.message(StateFilter(BroadcastStates.waitingforurl))
+async def broadcast_set_url_message(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r: redis.Redis = message.bot.redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    text = (message.text or "").strip()
+
+    if text in (BROADCAST_BACK, BTN_BACK):
+        await state.set_state(BroadcastStates.waitingforaction)
+        await show_broadcast_menu(message, r, cafe_id)
+        return
+
+    draft = await get_broadcast_draft(r, cafe_id)
+
+    if text == BROADCAST_CANCEL:
+        draft["url"] = ""
+        await set_broadcast_draft(r, cafe_id, draft)
+        await state.set_state(BroadcastStates.waitingforaction)
+        await show_broadcast_menu(message, r, cafe_id)
+        return
+
+    if not is_valid_http_url(text):
+        await message.answer(
+            "Нужна ссылка, начинающаяся с http:// или https://",
+            reply_markup=kb_broadcast_input(),
+        )
+        return
+
+    draft["url"] = text
+    await set_broadcast_draft(r, cafe_id, draft)
+
+    await state.set_state(BroadcastStates.waitingforaction)
+    await show_broadcast_menu(message, r, cafe_id)
+
+
 # =========================================================
 # Client: add item
 # =========================================================
