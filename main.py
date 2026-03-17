@@ -187,6 +187,48 @@ def k_cafe_sub_notify(cafe_id: str) -> str:
 def k_admin_subscription(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:admin_subscription"
 
+def k_cafe_promo(cafe_id: str) -> str:
+    return f"cafe:{cafe_id}:promo"
+
+async def get_cafe_promo(r: redis.Redis, cafe_id: str) -> dict | None:
+    raw = await r.get(k_cafe_promo(cafe_id))
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw)
+        return data if isinstance(data, dict) else None
+    except Exception:
+        return None
+
+
+async def set_cafe_promo(r: redis.Redis, cafe_id: str, promo: dict) -> None:
+    await r.set(k_cafe_promo(cafe_id), json.dumps(promo, ensure_ascii=False))
+
+
+async def clear_cafe_promo(r: redis.Redis, cafe_id: str) -> None:
+    await r.delete(k_cafe_promo(cafe_id))
+
+
+def promo_defaults() -> dict:
+    return {
+        "enabled": False,
+        "text": "",
+        "url": "",
+        "photo_file_id": "",
+        "button_text": "Подробнее",
+    }
+
+
+def normalize_promo(data: dict | None) -> dict:
+    base = promo_defaults()
+    if isinstance(data, dict):
+        base["enabled"] = bool(data.get("enabled"))
+        base["text"] = str(data.get("text") or "").strip()
+        base["url"] = str(data.get("url") or "").strip()
+        base["photo_file_id"] = str(data.get("photo_file_id") or "").strip()
+        base["button_text"] = str(data.get("button_text") or "Подробнее").strip() or "Подробнее"
+    return base
+
 # Функция миграции старых подписок (запускается ОДИН раз)
 async def migrate_old_subscriptions(r: redis.Redis):
     """Переносит user:{uid}.cafebotify_valid_until -> cafe:{cafe_id}:admin_subscription"""
@@ -640,6 +682,20 @@ SUP_CB_REPLY = "sup_reply:"
 SUP_CB_CLOSE = "sup_close:"
 SUP_CB_INWORK = "sup_inwork:"
 
+BTN_PROMO = "📢 Реклама"
+
+PROMO_EDIT_TEXT = "✏️ Текст"
+PROMO_EDIT_URL = "🔗 Ссылка"
+PROMO_EDIT_PHOTO = "🖼 Картинка"
+PROMO_TOGGLE = "🟢 Вкл/выкл"
+PROMO_CLEAR = "🧹 Очистить"
+PROMO_PREVIEW = "👀 Предпросмотр"
+PROMO_BACK = "⬅️ Назад"
+PROMO_SKIP = "⏭ Пропустить"
+PROMO_DELETE_PHOTO = "🗑 Удалить картинку"
+PROMO_DELETE_URL = "🗑 Удалить ссылку"
+PROMO_DELETE_TEXT = "🗑 Удалить текст"
+
 
 # =========================================================
 # Keyboards
@@ -739,9 +795,9 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
         [KeyboardButton(text=BTN_STATS), KeyboardButton(text=BTN_MENU_EDIT)],
         [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)],
         [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_SUB_INFO)],
-        [KeyboardButton(text=BTN_ADMIN_INFO)],
-        [KeyboardButton(text=BTN_VIEW_CLIENT)],
+        [KeyboardButton(text=BTN_PROMO)],[KeyboardButton(text=BTN_ADMIN_INFO)],
         [KeyboardButton(text=BTN_ADMIN_SUPPORT)],
+        [KeyboardButton(text=BTN_VIEW_CLIENT)],
     ]
     if is_super:
         kb.append([KeyboardButton(text=BTN_HELP_ADMIN)])
@@ -799,7 +855,67 @@ def kb_staff_main() -> ReplyKeyboardMarkup:
         resize_keyboard=True,
         is_persistent=True,
     )
+    
 
+def kb_promo_manage() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=PROMO_EDIT_TEXT), KeyboardButton(text=PROMO_EDIT_URL)],
+            [KeyboardButton(text=PROMO_EDIT_PHOTO), KeyboardButton(text=PROMO_TOGGLE)],
+            [KeyboardButton(text=PROMO_DELETE_TEXT), KeyboardButton(text=PROMO_DELETE_URL)],
+            [KeyboardButton(text=PROMO_DELETE_PHOTO), KeyboardButton(text=PROMO_CLEAR)],
+            [KeyboardButton(text=PROMO_PREVIEW)],
+            [KeyboardButton(text=PROMO_BACK)],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
+def kb_promo_input() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=PROMO_SKIP)],
+            [KeyboardButton(text=PROMO_BACK)],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
+def kb_promo_photo_input() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=PROMO_SKIP), KeyboardButton(text=PROMO_DELETE_PHOTO)],
+            [KeyboardButton(text=PROMO_BACK)],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
+def kb_promo_url(url: str | None, button_text: str | None = None) -> InlineKeyboardMarkup | None:
+    url = str(url or "").strip()
+    if not url:
+        return None
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=(button_text or "Подробнее"), url=url)]
+        ]
+    )
+
+
+def promo_summary_text(promo: dict) -> str:
+    p = normalize_promo(promo)
+    return (
+        "📢 <b>Реклама после заказа</b>\n\n"
+        f"Статус: {'🟢 включена' if p['enabled'] else '🔴 выключена'}\n"
+        f"Текст: {'✅ есть' if p['text'] else '— нет'}\n"
+        f"Ссылка: {'✅ есть' if p['url'] else '— нет'}\n"
+        f"Картинка: {'✅ есть' if p['photo_file_id'] else '— нет'}\n"
+        f"Кнопка: <b>{html.quote(p['button_text'])}</b>"
+    )
+    
 
 # =========================================================
 # FSM
@@ -828,6 +944,12 @@ class MenuEditStates(StatesGroup):
 class SupportStates(StatesGroup):
     waiting_for_topic_message = State()
     waiting_for_superadmin_reply = State()
+
+class PromoStates(StatesGroup):
+    waiting_for_action = State()
+    waiting_for_text = State()
+    waiting_for_url = State()
+    waiting_for_photo = State()
 
 
 # =========================================================
@@ -984,6 +1106,50 @@ async def send_admin_demo_to_user(bot: Bot, user_id: int, admin_like_text: str):
         await bot.send_message(user_id, demo_text, disable_web_page_preview=True)
     except Exception:
         pass
+
+
+def is_valid_http_url(value: str) -> bool:
+    value = (value or "").strip()
+    return bool(re.match(r"^https?://\S+$", value, flags=re.IGNORECASE))
+
+
+async def show_promo_menu(message: Message, r: redis.Redis, cafe_id: str) -> None:
+    promo = normalize_promo(await get_cafe_promo(r, cafe_id))
+    await message.answer(
+        promo_summary_text(promo),
+        reply_markup=kb_promo_manage(),
+    )
+
+
+async def send_promo_preview(message: Message, promo: dict) -> None:
+    p = normalize_promo(promo)
+    reply_markup = kb_promo_url(p["url"], p["button_text"])
+
+    if p["photo_file_id"]:
+        await message.answer_photo(
+            photo=p["photo_file_id"],
+            caption=p["text"] or "Пример рекламного сообщения",
+            reply_markup=reply_markup,
+        )
+        return
+
+    if p["text"]:
+        await message.answer(
+            p["text"],
+            reply_markup=reply_markup,
+            disable_web_page_preview=False,
+        )
+        return
+
+    if p["url"]:
+        await message.answer(
+            "Пример рекламного сообщения 👇",
+            reply_markup=reply_markup,
+            disable_web_page_preview=False,
+        )
+        return
+
+    await message.answer("Сейчас реклама пустая: нет ни текста, ни ссылки, ни картинки.")
 
 
 # =========================================================
@@ -2090,6 +2256,12 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
         f"{finish}",
         reply_markup=kb_client_main(menu, show_admin_button=is_admin),
     )
+    
+    try:
+        await send_promo_after_order(message, r)
+    except Exception as e:
+        logger.exception("promo after order failed: %s", e)
+        
     await state.clear()
 
 
@@ -2369,6 +2541,7 @@ async def admin_info_button_message(message: Message):
     "• «Меню» — добавление/изменение/удаление позиций.\n"
     "• «Группа персонала» — привязка staff-группы.\n"
     "• «Ссылки» — ссылки для клиента/админа/staff.\n"
+    "• "Реклама" - возможность коммерческой рекламы или рекламы своего кафе" 
     "• «Продлить» — продление подписки.\n\n"
     "Подробнее о сервисе — на сайте:",
     reply_markup=InlineKeyboardMarkup(
@@ -2498,6 +2671,249 @@ async def menu_edit_entry(message: Message, state: FSMContext):
     await state.clear()
     await state.set_state(MenuEditStates.waiting_for_action)
     await message.answer("🛠 Управление меню: выберите действие", reply_markup=kb_menu_edit())
+
+
+@router.message(F.text == BTN_PROMO)
+async def promo_entry(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r: redis.Redis = message.bot._redis
+    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await message.answer("🔒 Доступно только администратору.")
+        return
+
+    await state.clear()
+    await state.set_state(PromoStates.waiting_for_action)
+    await show_promo_menu(message, r, cafe_id)
+
+
+@router.message(StateFilter(PromoStates.waiting_for_action))
+async def promo_choose_action(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r: redis.Redis = message.bot._redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    text = (message.text or "").strip()
+    promo = normalize_promo(await get_cafe_promo(r, cafe_id))
+
+    if text in {PROMO_BACK, BTN_BACK}:
+        await state.clear()
+        await message.answer("Ок.", reply_markup=kb_admin_main(is_superadmin(uid)))
+        return
+
+    if text == PROMO_EDIT_TEXT:
+        await state.set_state(PromoStates.waiting_for_text)
+        await message.answer(
+            "Отправьте текст рекламы одним сообщением.\n"
+            "Можно без текста — тогда нажмите «Пропустить».",
+            reply_markup=kb_promo_input(),
+        )
+        return
+
+    if text == PROMO_EDIT_URL:
+        await state.set_state(PromoStates.waiting_for_url)
+        await message.answer(
+            "Отправьте ссылку в формате https://example.com\n"
+            "Или нажмите «Пропустить», чтобы убрать ссылку.",
+            reply_markup=kb_promo_input(),
+            disable_web_page_preview=True,
+        )
+        return
+
+    if text == PROMO_EDIT_PHOTO:
+        await state.set_state(PromoStates.waiting_for_photo)
+        await message.answer(
+            "Отправьте картинку одним сообщением.\n"
+            "Можно нажать «Пропустить» или «Удалить картинку».",
+            reply_markup=kb_promo_photo_input(),
+        )
+        return
+
+    if text == PROMO_TOGGLE:
+        has_content = bool(promo["text"] or promo["url"] or promo["photo_file_id"])
+        if not has_content and not promo["enabled"]:
+            await message.answer(
+                "Сначала добавьте хотя бы текст, ссылку или картинку.",
+                reply_markup=kb_promo_manage(),
+            )
+            return
+
+        promo["enabled"] = not promo["enabled"]
+        await set_cafe_promo(r, cafe_id, promo)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if text == PROMO_DELETE_TEXT:
+        promo["text"] = ""
+        await set_cafe_promo(r, cafe_id, promo)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if text == PROMO_DELETE_URL:
+        promo["url"] = ""
+        await set_cafe_promo(r, cafe_id, promo)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if text == PROMO_DELETE_PHOTO:
+        promo["photo_file_id"] = ""
+        await set_cafe_promo(r, cafe_id, promo)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if text == PROMO_CLEAR:
+        await clear_cafe_promo(r, cafe_id)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if text == PROMO_PREVIEW:
+        await send_promo_preview(message, promo)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    await message.answer("Выберите действие кнопкой.", reply_markup=kb_promo_manage())
+
+
+@router.message(StateFilter(PromoStates.waiting_for_text))
+async def promo_set_text(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r: redis.Redis = message.bot._redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    text = (message.text or "").strip()
+
+    if text in {PROMO_BACK, BTN_BACK}:
+        await state.set_state(PromoStates.waiting_for_action)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    promo = normalize_promo(await get_cafe_promo(r, cafe_id))
+
+    if text == PROMO_SKIP:
+        promo["text"] = ""
+        await set_cafe_promo(r, cafe_id, promo)
+        await state.set_state(PromoStates.waiting_for_action)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if not text:
+        await message.answer("Текст пустой. Отправьте сообщение или нажмите «Пропустить».", reply_markup=kb_promo_input())
+        return
+
+    if len(text) > 900:
+        await message.answer("Текст слишком длинный. Лучше до 900 символов.", reply_markup=kb_promo_input())
+        return
+
+    promo["text"] = text
+    await set_cafe_promo(r, cafe_id, promo)
+    await state.set_state(PromoStates.waiting_for_action)
+    await show_promo_menu(message, r, cafe_id)
+
+
+@router.message(StateFilter(PromoStates.waiting_for_url))
+async def promo_set_url(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r: redis.Redis = message.bot._redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    text = (message.text or "").strip()
+
+    if text in {PROMO_BACK, BTN_BACK}:
+        await state.set_state(PromoStates.waiting_for_action)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    promo = normalize_promo(await get_cafe_promo(r, cafe_id))
+
+    if text == PROMO_SKIP:
+        promo["url"] = ""
+        await set_cafe_promo(r, cafe_id, promo)
+        await state.set_state(PromoStates.waiting_for_action)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if not is_valid_http_url(text):
+        await message.answer(
+            "Ссылка должна начинаться с http:// или https://",
+            reply_markup=kb_promo_input(),
+            disable_web_page_preview=True,
+        )
+        return
+
+    promo["url"] = text
+    await set_cafe_promo(r, cafe_id, promo)
+    await state.set_state(PromoStates.waiting_for_action)
+    await show_promo_menu(message, r, cafe_id)
+
+
+@router.message(StateFilter(PromoStates.waiting_for_photo))
+async def promo_set_photo(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        return
+
+    r: redis.Redis = message.bot._redis
+    uid = message.from_user.id
+    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    text = (message.text or "").strip()
+    promo = normalize_promo(await get_cafe_promo(r, cafe_id))
+
+    if text in {PROMO_BACK, BTN_BACK}:
+        await state.set_state(PromoStates.waiting_for_action)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if text == PROMO_SKIP:
+        await state.set_state(PromoStates.waiting_for_action)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if text == PROMO_DELETE_PHOTO:
+        promo["photo_file_id"] = ""
+        await set_cafe_promo(r, cafe_id, promo)
+        await state.set_state(PromoStates.waiting_for_action)
+        await show_promo_menu(message, r, cafe_id)
+        return
+
+    if not message.photo:
+        await message.answer(
+            "Отправьте именно картинку или нажмите нужную кнопку.",
+            reply_markup=kb_promo_photo_input(),
+        )
+        return
+
+    promo["photo_file_id"] = message.photo[-1].file_id
+    await set_cafe_promo(r, cafe_id, promo)
+    await state.set_state(PromoStates.waiting_for_action)
+    await show_promo_menu(message, r, cafe_id)
 
 
 @router.message(F.text == BTN_ADMIN_SUPPORT)
