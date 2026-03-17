@@ -2405,6 +2405,7 @@ async def cart_edit_action(message: Message, state: FSMContext):
 async def broadcast_entry_message(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
+
     r: redis.Redis = message.bot.redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
 
@@ -2413,11 +2414,11 @@ async def broadcast_entry_message(message: Message, state: FSMContext):
         return
 
     await state.clear()
-    await state.set_state(BroadcastStates.waitingforaction)
+    await state.set_state(BroadcastStates.waiting_for_action)
     await show_broadcast_menu(message, r, cafe_id)
 
 
-@router.message(StateFilter(BroadcastStates.waitingforaction))
+@router.message(StateFilter(BroadcastStates.waiting_for_action))
 async def broadcast_choose_action_message(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
@@ -2440,12 +2441,12 @@ async def broadcast_choose_action_message(message: Message, state: FSMContext):
         return
 
     if text == BROADCAST_EDIT_TEXT:
-        await state.set_state(BroadcastStates.waitingfortext)
+        await state.set_state(BroadcastStates.waiting_for_text)
         await message.answer("Введите текст рассылки.", reply_markup=kb_broadcast_input())
         return
 
     if text == BROADCAST_EDIT_URL:
-        await state.set_state(BroadcastStates.waitingforurl)
+        await state.set_state(BroadcastStates.waiting_for_url)
         await message.answer(
             "Введите ссылку https://... или нажмите «Пропустить».",
             reply_markup=kb_broadcast_input(),
@@ -2458,6 +2459,7 @@ async def broadcast_choose_action_message(message: Message, state: FSMContext):
         if not last_id:
             await message.answer("Рассылок пока не было.", reply_markup=kb_broadcast_manage())
             return
+
         meta = await get_broadcast_meta(r, cafe_id, last_id)
         stats = await get_broadcast_stats(r, cafe_id, last_id)
         await message.answer(
@@ -2501,7 +2503,7 @@ async def broadcast_choose_action_message(message: Message, state: FSMContext):
     await message.answer("Выберите действие.", reply_markup=kb_broadcast_manage())
 
 
-@router.message(StateFilter(BroadcastStates.waitingfortext))
+@router.message(StateFilter(BroadcastStates.waiting_for_text))
 async def broadcast_set_text_message(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
@@ -2517,7 +2519,7 @@ async def broadcast_set_text_message(message: Message, state: FSMContext):
     text = (message.text or "").strip()
 
     if text in (BROADCAST_BACK, BTN_BACK):
-        await state.set_state(BroadcastStates.waitingforaction)
+        await state.set_state(BroadcastStates.waiting_for_action)
         await show_broadcast_menu(message, r, cafe_id)
         return
 
@@ -2533,11 +2535,11 @@ async def broadcast_set_text_message(message: Message, state: FSMContext):
     draft["text"] = text
     await set_broadcast_draft(r, cafe_id, draft)
 
-    await state.set_state(BroadcastStates.waitingforaction)
+    await state.set_state(BroadcastStates.waiting_for_action)
     await show_broadcast_menu(message, r, cafe_id)
 
 
-@router.message(StateFilter(BroadcastStates.waitingforurl))
+@router.message(StateFilter(BroadcastStates.waiting_for_url))
 async def broadcast_set_url_message(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
@@ -2553,7 +2555,7 @@ async def broadcast_set_url_message(message: Message, state: FSMContext):
     text = (message.text or "").strip()
 
     if text in (BROADCAST_BACK, BTN_BACK):
-        await state.set_state(BroadcastStates.waitingforaction)
+        await state.set_state(BroadcastStates.waiting_for_action)
         await show_broadcast_menu(message, r, cafe_id)
         return
 
@@ -2562,7 +2564,7 @@ async def broadcast_set_url_message(message: Message, state: FSMContext):
     if text == BROADCAST_CANCEL:
         draft["url"] = ""
         await set_broadcast_draft(r, cafe_id, draft)
-        await state.set_state(BroadcastStates.waitingforaction)
+        await state.set_state(BroadcastStates.waiting_for_action)
         await show_broadcast_menu(message, r, cafe_id)
         return
 
@@ -2576,7 +2578,7 @@ async def broadcast_set_url_message(message: Message, state: FSMContext):
     draft["url"] = text
     await set_broadcast_draft(r, cafe_id, draft)
 
-    await state.set_state(BroadcastStates.waitingforaction)
+    await state.set_state(BroadcastStates.waiting_for_action)
     await show_broadcast_menu(message, r, cafe_id)
 
 
