@@ -1098,6 +1098,46 @@ async def notify_admin(bot: Bot, r: redis.Redis, cafe_id: str, text: str):
     except Exception:
         pass
 
+async def send_promo_after_order(message: Message, r: redis.Redis):
+    if is_group_chat(message):
+        return
+
+    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+    promo = await get_cafe_promo(r, cafe_id)
+    promo = normalize_promo(promo)
+
+    if not promo.get("enabled"):
+        return
+
+    text = str(promo.get("text") or "").strip()
+    photo_file_id = str(promo.get("photo_file_id") or "").strip()
+    url = str(promo.get("url") or "").strip()
+
+    if not text and not photo_file_id:
+        return
+
+    reply_markup = None
+    if url:
+        reply_markup = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="Подробнее", url=url)]
+            ]
+        )
+
+    if photo_file_id:
+        await message.answer_photo(
+            photo=photo_file_id,
+            caption=text or "📢 Спецпредложение",
+            reply_markup=reply_markup,
+        )
+        return
+
+    await message.answer(
+        text,
+        reply_markup=reply_markup,
+        disable_web_page_preview=False,
+    )
+
 async def send_admin_demo_to_user(bot: Bot, user_id: int, admin_like_text: str):
     if not DEMO_MODE:
         return
