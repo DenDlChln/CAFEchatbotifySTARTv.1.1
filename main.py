@@ -1441,6 +1441,72 @@ async def show_broadcast_menu(message: Message, r: redis.Redis, cafe_id: str) ->
     )
 
 
+async def set_broadcast_click_attribution(
+    r: redis.Redis,
+    user_id: int,
+    cafe_id: str,
+    broadcast_id: str,
+) -> None:
+    await r.set(
+        f"user:{user_id}:broadcast_attribution",
+        json.dumps({
+            "cafe_id": str(cafe_id),
+            "broadcast_id": str(broadcast_id),
+            "ts": int(time.time()),
+        }, ensure_ascii=False),
+        ex=7 * 24 * 60 * 60,
+    )
+
+
+async def track_broadcast_click(
+    r: redis.Redis,
+    user_id: int,
+    cafe_id: str,
+    broadcast_id: str,
+) -> None:
+    if not cafe_id or not broadcast_id:
+        return
+
+    added = await r.sadd(k_broadcast_clicked_users(cafe_id, broadcast_id), user_id)
+    if added:
+        await r.hincrby(k_broadcast_stats(cafe_id, broadcast_id), "clicked", 1)
+
+    await set_broadcast_click_attribution(r, user_id, cafe_id, broadcast_id)
+
+
+async def track_broadcast_order(
+    r: redis.Redis,
+    user_id: int,
+    order_cafe_id: str,
+    total: int,
+) -> None:
+    raw = await r.get(f"user:{user_id}:broadcast_attribution")
+    if not raw:
+        return
+
+    try:
+        data = json.loads(raw)
+    except Exception:
+        return
+
+    attr_cafe_id = str(data.get("cafe_id") or "").strip()
+    broadcast_id = str(data.get("broadcast_id") or "").strip()
+
+    if not attr_cafe_id or not broadcast_id:
+        return
+
+    if attr_cafe_id != str(order_cafe_id):
+        return
+
+    pipe = r.pipeline()
+    added = await r.sadd(k_broadcast_ordered_users(attr_cafe_id, broadcast_id), user_id)
+    if added:
+        pipe.hincrby(k_broadcast_stats(attr_cafe_id, broadcast_id), "ordered", 1)
+    pipe.hincrby(k_broadcast_stats(attr_cafe_id, broadcast_id), "orderedrevenue", int(total))
+    pipe.expire(f"user:{user_id}:broadcast_attribution", 7 * 24 * 60 * 60)
+    await pipe.execute()
+
+
 # =========================================================
 # Router
 # =========================================================
@@ -1898,6 +1964,27 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
 
     uid = message.from_user.id
     cafe_id = await resolve_cafe_id(r, message, id_from_payload)
+
+    parts = (payload or "").split(":")
+    if len(parts) == 3 and parts[0] == "bc":
+        bc_cafe_id = parts[1].strip()
+        broadcast_id = parts[2].strip()
+
+        if bc_cafe_id and broadcast_id:
+            try:
+                await track_broadcast_click(
+                    r=r,
+                    user_id=uid,
+                    cafe_id=bc_cafe_id,
+                    broadcast_id=broadcast_id,
+                )
+            except Exception:
+                logger.exception(
+                    "broadcast click tracking failed user_id=%s cafe_id=%s broadcast_id=%s",
+                    uid,
+                    bc_cafe_id,
+                    broadcast_id,
+                )
 
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
@@ -2729,6 +2816,21 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
         price = int(menu.get(drink, 0))
         await r.incrby(k_stats_drink_cnt(cafe_id, drink), qty_i)
         await r.incrby(k_stats_drink_rev(cafe_id, drink), qty_i * price)
+
+    try:
+        await track_broadcast_order(
+            r=r,
+            user_id=user_id,
+            order_cafe_id=cafe_id,
+            total=int(total),
+        )
+    except Exception:
+        logger.exception(
+            "broadcast order attribution failed user_id=%s cafe_id=%s total=%s",
+            user_id,
+            cafe_id,
+            total,
+        )
 
     try:
         await customer_mark_order(
