@@ -2206,6 +2206,51 @@ async def confirm_order(message: Message, state: FSMContext):
     await message.answer("Когда забрать?", reply_markup=kb_ready_time())
 
 
+async def send_promo_after_delay(bot: Bot, user_id: int, cafe_id: str, delay_sec: int = 60):
+    try:
+        await asyncio.sleep(delay_sec)
+
+        r: redis.Redis = bot._redis
+        promo = await get_cafe_promo(r, cafe_id)
+        promo = normalize_promo(promo)
+
+        if not promo.get("enabled"):
+            return
+
+        text = str(promo.get("text") or "").strip()
+        photo_file_id = str(promo.get("photo_file_id") or "").strip()
+        url = str(promo.get("url") or "").strip()
+
+        if not text and not photo_file_id:
+            return
+
+        reply_markup = None
+        if url:
+            reply_markup = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(text="Подробнее", url=url)]
+                ]
+            )
+
+        if photo_file_id:
+            await bot.send_photo(
+                chat_id=user_id,
+                photo=photo_file_id,
+                caption=text or "📢 Спецпредложение",
+                reply_markup=reply_markup,
+            )
+            return
+
+        await bot.send_message(
+            chat_id=user_id,
+            text=text,
+            reply_markup=reply_markup,
+            disable_web_page_preview=False,
+        )
+    except Exception as e:
+        logger.exception("delayed promo failed: %s", e)
+
+
 async def finalize_order(message: Message, state: FSMContext, ready_in_min: int):
     if is_group_chat(message):
         return
@@ -2297,10 +2342,14 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
         reply_markup=kb_client_main(menu, show_admin_button=is_admin),
     )
     
-    try:
-        await send_promo_after_order(message, r)
-    except Exception as e:
-        logger.exception("promo after order failed: %s", e)
+    asyncio.create_task(
+        send_promo_after_delay(
+            bot=message.bot,
+            user_id=user_id,
+            cafe_id=cafe_id,
+            delay_sec=30,
+        )
+    )
         
     await state.clear()
 
