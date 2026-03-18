@@ -2549,7 +2549,7 @@ async def broadcast_choose_action_message(message: Message, state: FSMContext):
     if text in (BROADCAST_BACK, BTN_BACK):
         await state.clear()
         await clear_broadcast_draft(r, cafe_id)
-        await message.answer(".", reply_markup=kb_admin_main(is_super_admin(uid)))
+        await message.answer(".", reply_markup=kb_admin_main(is_superadmin(uid)))
         return
 
     if text == BROADCAST_EDIT_TEXT:
@@ -2580,7 +2580,7 @@ async def broadcast_choose_action_message(message: Message, state: FSMContext):
         )
         return
 
-     if text == BROADCAST_SEND:
+    if text == BROADCAST_SEND:
         if not draft.get("text"):
             await message.answer("Сначала добавьте текст рассылки.", reply_markup=kb_broadcast_manage())
             return
