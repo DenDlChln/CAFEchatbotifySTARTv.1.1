@@ -907,8 +907,8 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
         [KeyboardButton(text=BTN_STATS), KeyboardButton(text=BTN_MENU_EDIT)],
         [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)],
         [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_SUB_INFO)],
-        [KeyboardButton(text=BTN_PROMO)], KeyboardButton(text=BTN_BROADCAST)],
-        [KeyboardButton(text=BTN_ADMIN_INFO)], KeyboardButton(text=BTN_ADMIN_SUPPORT)],
+        [KeyboardButton(text=BTN_PROMO), KeyboardButton(text=BTN_BROADCAST)],
+        [KeyboardButton(text=BTN_ADMIN_INFO), KeyboardButton(text=BTN_ADMIN_SUPPORT)],
         [KeyboardButton(text=BTN_VIEW_CLIENT)],
     ]
     if is_super:
