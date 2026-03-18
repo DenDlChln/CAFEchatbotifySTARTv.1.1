@@ -391,6 +391,39 @@ async def is_cafe_admin(r: redis.Redis, user_id: int, cafe_id: str) -> bool:
     admin_id = await get_effective_admin_id(r, cafe_id)
     return admin_id != 0 and admin_id == user_id
 
+async def is_subscription_active(r: redis.Redis, user_id: int, cafe_id: str) -> bool:
+    if is_superadmin(user_id):
+        return True
+
+    raw_until = await r.hget(k_admin_subscription(cafe_id), "cafebotify_valid_until")
+    until_ts = int(raw_until) if raw_until else 0
+    return until_ts > int(time.time())
+
+
+async def ensure_subscription_active(message: Message, r: redis.Redis, cafe_id: str) -> bool:
+    uid = message.from_user.id
+
+    if await is_subscription_active(r, uid, cafe_id):
+        return True
+
+    renew_kb = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BTN_RENEW_30)],
+            [KeyboardButton(text=BTN_RENEW_360)],
+            [KeyboardButton(text=BTN_BACK)],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+    await message.answer(
+        f"🔒 <b>{html.quote(cafe_title(cafe_or_default(cafe_id)))}</b>\n\n"
+        "❌ Подписка просрочена.\n"
+        "Оплатите для доступа к админ-функциям:",
+        reply_markup=renew_kb,
+    )
+    return False
+
 def cafe_hours(cafe: Dict[str, Any]) -> Tuple[int, int]:
     feat = cafe.get("features") or {}
     ws = int(feat.get("work_start", cafe.get("work_start", 9)))
@@ -1911,6 +1944,14 @@ FINISH_VARIANTS = [
 ]
 
 async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any], menu: Dict[str, int]):
+    r: redis.Redis = message.bot._redis
+    uid = message.from_user.id
+    is_super = is_superadmin(uid)
+
+    if not is_super and not await is_subscription_active(r, uid, cafe_id):
+        await ensure_subscription_active(message, r, cafe_id)
+        return
+        
     client_link = await create_start_link(message.bot, payload=cafe_id, encode=True)
     admin_id = await get_effective_admin_id(message.bot._redis, cafe_id)
     admin_link = await create_start_link(message.bot, payload=f"admin:{cafe_id}", encode=True)
@@ -2427,11 +2468,14 @@ async def broadcast_entry_message(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
 
-    r: redis.Redis = message.bot.redis
+    r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
         await message.answer("Нет доступа.")
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         return
 
     await state.clear()
@@ -2444,11 +2488,15 @@ async def broadcast_choose_action_message(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
 
-    r: redis.Redis = message.bot.redis
+    r: redis.Redis = message.bot._redis
     uid = message.from_user.id
     cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -2529,11 +2577,15 @@ async def broadcast_set_text_message(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
 
-    r: redis.Redis = message.bot.redis
+    r: redis.Redis = message.bot._redis
     uid = message.from_user.id
     cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -2565,11 +2617,15 @@ async def broadcast_set_url_message(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
 
-    r: redis.Redis = message.bot.redis
+    r: redis.Redis = message.bot._redis
     uid = message.from_user.id
     cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -3157,9 +3213,14 @@ async def admin_links_button(message: Message):
 
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
         await message.answer("🔒 Доступно только администратору.")
         return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
+        return
+
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
     await send_admin_panel(message, cafe_id, cafe, menu)
@@ -3170,11 +3231,14 @@ async def admin_info_button_message(message: Message):
     if is_group_chat(message):
         return
 
-    r: redis.Redis = message.bot.redis
-    cafe_id: str = await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID
+    r: redis.Redis = message.bot._redis
+    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
         await message.answer("Нет доступа.")
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         return
 
     await message.answer(
@@ -3206,6 +3270,9 @@ async def sub_info_button_message(message: Message):
     cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
     if not await is_cafe_admin(r, uid, cafe_id):
         await message.answer("Эта информация доступна только админам кафе.")
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         return
 
     sub_key = k_admin_subscription(cafe_id)
@@ -3240,13 +3307,18 @@ async def admin_staff_group_button(message: Message):
 
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
         await message.answer("🔒 Доступно только администратору.")
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         return
 
     staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
     gid = await r.get(k_staff_group(cafe_id))
     gid_line = f"Текущая группа: <code>{gid}</code>\n\n" if gid else "Группа ещё не привязана.\n\n"
+
     await message.answer(
         "👥 <b>Группа персонала</b>\n\n"
         f"{gid_line}"
@@ -3258,7 +3330,7 @@ async def admin_staff_group_button(message: Message):
     )
 
 
-@router.message(F.text == BTN_STATS)
+@@router.message(F.text == BTN_STATS)
 async def stats_button(message: Message):
     if is_group_chat(message):
         return
@@ -3271,6 +3343,9 @@ async def stats_button(message: Message):
             await message.answer(demo_stats_preview_text())
         else:
             await message.answer("📊 Статистика доступна администратору.")
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         return
 
     menu = await get_menu(r, cafe_id)
@@ -3310,6 +3385,9 @@ async def menu_edit_entry(message: Message, state: FSMContext):
             await message.answer("🔒 Редактирование доступно только администратору.")
         return
 
+    if not await ensure_subscription_active(message, r, cafe_id):
+        return
+
     await state.clear()
     await state.set_state(MenuEditStates.waiting_for_action)
     await message.answer("🛠 Управление меню: выберите действие", reply_markup=kb_menu_edit())
@@ -3327,6 +3405,9 @@ async def promo_entry(message: Message, state: FSMContext):
         await message.answer("🔒 Доступно только администратору.")
         return
 
+    if not await ensure_subscription_active(message, r, cafe_id):
+        return
+
     await state.clear()
     await state.set_state(PromoStates.waiting_for_action)
     await show_promo_menu(message, r, cafe_id)
@@ -3342,6 +3423,10 @@ async def promo_choose_action(message: Message, state: FSMContext):
     cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -3439,6 +3524,10 @@ async def promo_set_text(message: Message, state: FSMContext):
         await state.clear()
         return
 
+    if not await ensure_subscription_active(message, r, cafe_id):
+        await state.clear()
+        return
+
     text = (message.text or "").strip()
 
     if text in {PROMO_BACK, BTN_BACK}:
@@ -3456,11 +3545,17 @@ async def promo_set_text(message: Message, state: FSMContext):
         return
 
     if not text:
-        await message.answer("Текст пустой. Отправьте сообщение или нажмите «Пропустить».", reply_markup=kb_promo_input())
+        await message.answer(
+            "Текст пустой. Отправьте сообщение или нажмите «Пропустить».",
+            reply_markup=kb_promo_input(),
+        )
         return
 
     if len(text) > 900:
-        await message.answer("Текст слишком длинный. Лучше до 900 символов.", reply_markup=kb_promo_input())
+        await message.answer(
+            "Текст слишком длинный. Лучше до 900 символов.",
+            reply_markup=kb_promo_input(),
+        )
         return
 
     promo["text"] = text
@@ -3479,6 +3574,10 @@ async def promo_set_url(message: Message, state: FSMContext):
     cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -3522,6 +3621,10 @@ async def promo_set_photo(message: Message, state: FSMContext):
     cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, uid, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -3569,6 +3672,10 @@ async def admin_support_entry(message: Message, state: FSMContext):
 
     if not await is_cafe_admin(r, uid, cafe_id):
         await message.answer("Доступно только админу кафе.")
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
+        await state.clear()
         return
 
     active_ticket_id = await r.get(k_support_active(cafe_id, uid))
@@ -3928,7 +4035,12 @@ async def support_close_callback(callback: CallbackQuery, state: FSMContext):
 async def menu_edit_choose_action(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -3956,11 +4068,17 @@ async def menu_edit_choose_action(message: Message, state: FSMContext):
 
     await message.answer("Выберите действие кнопкой.", reply_markup=kb_menu_edit())
 
+
 @router.message(StateFilter(MenuEditStates.waiting_for_add_name))
 async def menu_edit_add_name(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -3978,11 +4096,17 @@ async def menu_edit_add_name(message: Message, state: FSMContext):
     await state.set_state(MenuEditStates.waiting_for_add_price)
     await message.answer("Введите цену числом:", reply_markup=kb_menu_edit_cancel())
 
+
 @router.message(StateFilter(MenuEditStates.waiting_for_add_price))
 async def menu_edit_add_price(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -4005,11 +4129,17 @@ async def menu_edit_add_price(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("✅ Добавлено.", reply_markup=kb_admin_main(is_superadmin(message.from_user.id)))
 
+
 @router.message(StateFilter(MenuEditStates.pick_edit_item))
 async def menu_pick_edit_item(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -4029,11 +4159,17 @@ async def menu_pick_edit_item(message: Message, state: FSMContext):
     await state.set_state(MenuEditStates.waiting_for_edit_price)
     await message.answer(f"Новая цена для <b>{html.quote(picked)}</b>:", reply_markup=kb_menu_edit_cancel())
 
+
 @router.message(StateFilter(MenuEditStates.waiting_for_edit_price))
 async def menu_edit_price(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -4056,11 +4192,17 @@ async def menu_edit_price(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("✅ Цена изменена.", reply_markup=kb_admin_main(is_superadmin(message.from_user.id)))
 
+
 @router.message(StateFilter(MenuEditStates.pick_remove_item))
 async def menu_pick_remove_item(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await state.clear()
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
         await state.clear()
         return
 
@@ -4111,6 +4253,10 @@ async def staff_menu_edit_entry(message: Message, state: FSMContext):
             await message.answer("🔒 Редактирование доступно только администратору.")
         else:
             await message.answer("🔒 Редактирование доступно только администратору.")
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
+        await state.clear()
         return
 
     await state.clear()
