@@ -1154,16 +1154,24 @@ async def set_last_order_snapshot(r: redis.Redis, cafe_id: str, user_id: int, sn
 # =========================================================
 # Smart return
 # =========================================================
-DEFAULT_RETURN_CYCLE_DAYS = 7
-RETURN_COOLDOWN_DAYS = 14
+RETURN_REMINDER_DAYS = 7
+RETURN_OFFER_DAYS = 14
 RETURN_CHECK_EVERY_SECONDS = 6 * 60 * 60
 RETURN_SEND_FROM_HOUR = 10
 RETURN_SEND_TO_HOUR = 20
-RETURN_DISCOUNT_PERCENT = 10
+RETURN_OFFER_DISCOUNT_PERCENT = 20
 
 def in_send_window_msk() -> bool:
     h = get_moscow_time().hour
     return RETURN_SEND_FROM_HOUR <= h < RETURN_SEND_TO_HOUR
+
+async def kb_return_to_menu(bot: Bot, cafe_id: str) -> InlineKeyboardMarkup:
+    start_link = await create_start_link(bot, payload=cafe_id, encode=True)
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Открыть меню", url=start_link)]
+        ]
+    )
 
 def promo_code(user_id: int) -> str:
     return f"CB{user_id % 10000:04d}{int(time.time()) % 10000:04d}"
@@ -1188,13 +1196,18 @@ async def customer_mark_order(
     pipe.hsetnx(customer_key, "first_order_ts", now_ts)
     pipe.hsetnx(customer_key, "offers_opt_out", 0)
     pipe.hsetnx(customer_key, "last_trigger_ts", 0)
-    pipe.hset(customer_key, mapping={
-        "first_name": first_name or "",
-        "username": username or "",
-        "last_order_ts": now_ts,
-        "last_order_sum": int(total_sum),
-        "last_drink": last_drink,
-    })
+    pipe.hset(
+        customer_key,
+        mapping={
+            "firstname": firstname or "",
+            "username": username or "",
+            "last_order_ts": now_ts,
+            "last_order_sum": int(total_sum),
+            "last_drink": last_drink,
+            "return_stage_7_sent_at": 0,
+            "return_stage_14_sent_at": 0,
+        },
+    )
     pipe.hincrby(customer_key, "total_orders", 1)
     pipe.hincrby(customer_key, "total_spent", int(total_sum))
     for drink, qty in cart.items():
@@ -2153,6 +2166,19 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
     # дальше клиентский сценарий (без изменений)
     offer_repeat = await should_offer_repeat(r, cafe_id, uid)
     await set_last_seen(r, cafe_id, uid)
+
+    customer_key = k_customer_profile(cafe_id, uid)
+    if await r.exists(customer_key):
+        try:
+            await r.hset(
+                customer_key,
+                mapping={
+                    "return_stage_7_sent_at": 0,
+                    "return_stage_14_sent_at": 0,
+                },
+            )
+        except Exception:
+            pass
 
     if not cafe_open(cafe):
         await message.answer(
@@ -4464,7 +4490,7 @@ async def smart_return_check_and_send(bot: Bot):
     if not in_send_window_msk():
         return
 
-    r: redis.Redis = bot._redis
+    r: redis.Redis = bot.redis
     now_ts = int(time.time())
 
     for cafe_id in CAFES.keys():
@@ -4476,50 +4502,94 @@ async def smart_return_check_and_send(bot: Bot):
 
         for user_id in user_ids:
             customer_key = k_customer_profile(cafe_id, user_id)
+
             try:
                 profile = await r.hgetall(customer_key)
             except Exception:
                 profile = {}
 
-            if not profile or str(profile.get("offers_opt_out", "0")) == "1":
+            if not profile:
+                continue
+
+            if str(profile.get("offers_optout", "0")) == "1":
+                continue
+
+            raw_last_seen = await r.get(k_last_seen(cafe_id, user_id))
+            if not raw_last_seen:
                 continue
 
             try:
-                last_order_ts = int(float(profile.get("last_order_ts", "0") or 0))
+                last_seen_ts = int(float(raw_last_seen))
             except Exception:
                 continue
 
-            days_since = (now_ts - last_order_ts) // 86400
-            if days_since < DEFAULT_RETURN_CYCLE_DAYS:
-                continue
+            days_since_seen = (now_ts - last_seen_ts) / 86400.0
 
             try:
-                last_trigger_ts = int(float(profile.get("last_trigger_ts", "0") or 0))
+                stage_7_sent_at = int(float(profile.get("return_stage_7_sent_at", "0") or 0))
             except Exception:
-                last_trigger_ts = 0
-
-            if last_trigger_ts and (now_ts - last_trigger_ts) < (RETURN_COOLDOWN_DAYS * 86400):
-                continue
-
-            first_name = profile.get("first_name") or "друг"
-            favorite = await get_favorite_drink(r, cafe_id, user_id) or profile.get("last_drink") or "напиток"
-            promo = promo_code(user_id)
-
-            text = (
-                f"{html.quote(str(first_name))}, давно не виделись ☕\n\n"
-                f"Ваш любимый <b>{html.quote(str(favorite))}</b> сегодня со скидкой <b>{RETURN_DISCOUNT_PERCENT}%</b>.\n"
-                f"Промокод: <code>{promo}</code>\n\n"
-                "Сделаем заказ? Нажмите /start."
-            )
+                stage_7_sent_at = 0
 
             try:
-                await bot.send_message(user_id, text)
-                await r.hset(customer_key, mapping={"last_trigger_ts": str(now_ts)})
+                stage_14_sent_at = int(float(profile.get("return_stage_14_sent_at", "0") or 0))
             except Exception:
+                stage_14_sent_at = 0
+
+            reply_markup = await kb_return_to_menu(bot, cafe_id)
+
+            if days_since_seen >= RETURN_OFFER_DAYS and stage_14_sent_at == 0:
+                text = (
+                    "Сегодня для вас:\n"
+                    f"-{RETURN_OFFER_DISCOUNT_PERCENT}% на любой напиток\n\n"
+                    "Будем рады вас видеть!"
+                )
                 try:
-                    await r.srem(k_customers_set(cafe_id), user_id)
-                except Exception:
-                    pass
+                    await bot.send_message(
+                        chat_id=user_id,
+                        text=text,
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True,
+                    )
+                    await r.hset(
+                        customer_key,
+                        mapping={
+                            "return_stage_14_sent_at": str(now_ts),
+                        },
+                    )
+                except Exception as e:
+                    logger.exception(
+                        "return offer send failed user_id=%s cafe_id=%s err=%r",
+                        user_id,
+                        cafe_id,
+                        e,
+                    )
+                continue
+
+            if days_since_seen >= RETURN_REMINDER_DAYS and stage_7_sent_at == 0:
+                text = (
+                    "Мы давно не виделись ☕\n\n"
+                    "Загляните на чашку кофе."
+                )
+                try:
+                    await bot.send_message(
+                        chat_id=user_id,
+                        text=text,
+                        reply_markup=reply_markup,
+                        disable_web_page_preview=True,
+                    )
+                    await r.hset(
+                        customer_key,
+                        mapping={
+                            "return_stage_7_sent_at": str(now_ts),
+                        },
+                    )
+                except Exception as e:
+                    logger.exception(
+                        "return reminder send failed user_id=%s cafe_id=%s err=%r",
+                        user_id,
+                        cafe_id,
+                        e,
+                    )
 
 async def sub_renewal_check_and_send(bot: Bot):
     r: redis.Redis = bot.redis  # если у тебя redis хранится как bot.redis
