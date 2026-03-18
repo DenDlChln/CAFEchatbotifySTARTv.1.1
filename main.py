@@ -259,6 +259,45 @@ def k_broadcast_last(cafe_id: str) -> str:
 def k_broadcast_draft(cafe_id: str) -> str:
     return f"broadcast:{cafe_id}:draft"
 
+
+BROADCAST_WEEK_SECONDS = 7 * 24 * 60 * 60
+
+
+def k_broadcast_last_run_at(cafe_id: str) -> str:
+    return f"broadcast:{cafe_id}:last_run_at"
+
+
+async def get_broadcast_weekly_left(r: redis.Redis, cafe_id: str) -> int:
+    raw = await r.get(k_broadcast_last_run_at(cafe_id))
+    if not raw:
+        return 0
+
+    try:
+        last_ts = int(raw)
+    except Exception:
+        return 0
+
+    left = (last_ts + BROADCAST_WEEK_SECONDS) - int(time.time())
+    return max(0, left)
+
+
+def format_broadcast_wait(seconds: int) -> str:
+    seconds = max(0, int(seconds))
+    days = seconds // 86400
+    hours = (seconds % 86400) // 3600
+    minutes = (seconds % 3600) // 60
+
+    parts = []
+    if days:
+        parts.append(f"{days} д.")
+    if hours:
+        parts.append(f"{hours} ч.")
+    if minutes and days == 0:
+        parts.append(f"{minutes} мин.")
+
+    return " ".join(parts) if parts else "меньше минуты"
+    
+
 # Функция миграции старых подписок (запускается ОДИН раз)
 async def migrate_old_subscriptions(r: redis.Redis):
     """Переносит user:{uid}.cafebotify_valid_until -> cafe:{cafe_id}:admin_subscription"""
@@ -1395,27 +1434,29 @@ def broadcast_stats_text(
 
 
 async def run_broadcast_send(bot: Bot, cafe_id: str, broadcast_id: str):
-    r: redis.Redis = bot.redis
-    meta = await get_broadcast_meta(r, cafe_id, broadcast_id)
+    r: redis.Redis = bot._redis
 
+    meta = await get_broadcast_meta(r, cafe_id, broadcast_id)
     text = str(meta.get("text") or "").strip()
     url = str(meta.get("url") or "").strip()
-
     if not text:
         return
 
+    now_ts = int(time.time())
+
     await r.set(k_broadcast_active(cafe_id), broadcast_id)
+    await r.set(k_broadcast_last_run_at(cafe_id), str(now_ts))
     await r.hset(
         k_broadcast_meta(cafe_id, broadcast_id),
         mapping={
             "status": "running",
-            "started_ts": str(int(time.time())),
+            "started_ts": str(now_ts),
         },
     )
 
     try:
         ids = await r.smembers(k_customers_set(cafe_id))
-        user_ids = sorted({int(x) for x in ids}) if ids else []
+        user_ids = sorted(int(x) for x in ids) if ids else []
     except Exception:
         user_ids = []
 
@@ -1423,36 +1464,38 @@ async def run_broadcast_send(bot: Bot, cafe_id: str, broadcast_id: str):
 
     reply_markup = None
     if url:
-        bot_link = await create_start_link(bot, payload=f"bc_{cafe_id}_{broadcast_id}", encode=True)
+        bot_link = await create_start_link(bot, payload=f"bc:{cafe_id}:{broadcast_id}", encode=True)
         reply_markup = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [InlineKeyboardButton(text="Перейти", url=bot_link)]
-            ]
+            inline_keyboard=[[InlineKeyboardButton(text="Открыть", url=bot_link)]]
         )
 
-    for user_id in user_ids:
-        try:
-            await bot.send_message(
-                chat_id=user_id,
-                text=text,
-                reply_markup=reply_markup,
-                disable_web_page_preview=False,
-            )
-            await r.hincrby(k_broadcast_stats(cafe_id, broadcast_id), "sent", 1)
-            await r.sadd(k_broadcast_sent_users(cafe_id, broadcast_id), user_id)
-        except Exception:
-            await r.hincrby(k_broadcast_stats(cafe_id, broadcast_id), "failed", 1)
-            await r.sadd(k_broadcast_failed_users(cafe_id, broadcast_id), user_id)
+    try:
+        for user_id in user_ids:
+            try:
+                await bot.send_message(
+                    chat_id=user_id,
+                    text=text,
+                    reply_markup=reply_markup,
+                    disable_web_page_preview=False,
+                )
+                await r.hincrby(k_broadcast_stats(cafe_id, broadcast_id), "sent", 1)
+                await r.sadd(k_broadcast_sent_users(cafe_id, broadcast_id), user_id)
+            except Exception:
+                await r.hincrby(k_broadcast_stats(cafe_id, broadcast_id), "failed", 1)
+                await r.sadd(k_broadcast_failed_users(cafe_id, broadcast_id), user_id)
 
-        await asyncio.sleep(0.06)
+            await asyncio.sleep(0.06)
 
-    await r.hset(
-        k_broadcast_meta(cafe_id, broadcast_id),
-        mapping={
-            "status": "done",
-            "finished_ts": str(int(time.time())),
-        },
-    )
+        await r.hset(
+            k_broadcast_meta(cafe_id, broadcast_id),
+            mapping={
+                "status": "done",
+                "finished_ts": str(int(time.time())),
+            },
+        )
+    finally:
+        await r.delete(k_broadcast_active(cafe_id))
+
 
 
 def broadcast_summary_text(draft: Dict[str, Any], last_id: str = "") -> str:
@@ -2537,7 +2580,7 @@ async def broadcast_choose_action_message(message: Message, state: FSMContext):
         )
         return
 
-    if text == BROADCAST_SEND:
+     if text == BROADCAST_SEND:
         if not draft.get("text"):
             await message.answer("Сначала добавьте текст рассылки.", reply_markup=kb_broadcast_manage())
             return
@@ -2551,6 +2594,15 @@ async def broadcast_choose_action_message(message: Message, state: FSMContext):
                     reply_markup=kb_broadcast_manage(),
                 )
                 return
+
+        left = await get_broadcast_weekly_left(r, cafe_id)
+        if left > 0:
+            await message.answer(
+                "Рассылку можно запускать только 1 раз в 7 дней.\n"
+                f"До следующего запуска осталось: <b>{html.quote(format_broadcast_wait(left))}</b>.",
+                reply_markup=kb_broadcast_manage(),
+            )
+            return
 
         broadcast_id = await create_broadcast(
             r=r,
