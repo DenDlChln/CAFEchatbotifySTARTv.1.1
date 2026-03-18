@@ -3330,7 +3330,7 @@ async def admin_staff_group_button(message: Message):
     )
 
 
-@@router.message(F.text == BTN_STATS)
+@router.message(F.text == BTN_STATS)
 async def stats_button(message: Message):
     if is_group_chat(message):
         return
