@@ -4592,6 +4592,10 @@ async def smart_return_check_and_send(bot: Bot):
                     )
 
 async def sub_renewal_check_and_send(bot: Bot):
+    # не дёргаем админов ночью, шлём только 10:00–20:00 МСК
+    if not in_send_window_msk():
+        return
+        
     r: redis.Redis = bot.redis  # если у тебя redis хранится как bot.redis
     now_dt = get_moscow_time()
     today = now_dt.date()
