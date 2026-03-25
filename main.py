@@ -362,6 +362,7 @@ async def collect_cafe_wipe_keys(r: redis.Redis, cafe_id: str) -> List[str]:
         f"broadcast:{cafe_id}:*:ordered_users",
         f"broadcast:{cafe_id}:*:sent_users",
         f"broadcast:{cafe_id}:*:failed_users",
+        f"support:active:{cafe_id}:*",
     ]
 
     for pattern in patterns:
@@ -1939,7 +1940,7 @@ async def cmd_wipe_cafe(message: Message, command: CommandObject):
         f"Для подтверждения отправьте:\n<code>/wipe_cafe_confirm {html.quote(cafe_id)} WIPE</code>"
     )
 
-
+@router.message(Command("wipe_cafe_confirm"))
 async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
     if not is_superadmin(message.from_user.id):
         await message.answer("🔒 Доступ запрещён.")
@@ -1959,7 +1960,6 @@ async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
         return
 
     r: redis.Redis = message.bot._redis
-
     keys = await collect_cafe_wipe_keys(r, cafe_id)
     linked_users = await collect_linked_users_for_cafe(r, cafe_id)
 
@@ -1967,6 +1967,21 @@ async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
 
     if keys:
         pipe.delete(*keys)
+
+    # Явно фиксируем "пустое кафе" после wipe,
+    # чтобы никакая логика не трактовала отсутствие ключей двусмысленно.
+    pipe.hset(k_cafe_profile(cafe_id), mapping={
+        "admin_id": "",
+    })
+
+    pipe.hset(k_admin_subscription(cafe_id), mapping={
+        "cafebotify_paid": "0",
+        "cafebotify_valid_until": "0",
+        "admin_id": "0",
+    })
+
+    pipe.delete(k_staff_group(cafe_id))
+    pipe.delete(k_cafe_sub_notify(cafe_id))
 
     fixed_users = 0
     cleared_legacy_sub = 0
