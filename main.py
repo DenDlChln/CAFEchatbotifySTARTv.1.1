@@ -431,11 +431,17 @@ def cafe_admin_id_from_json(cafe: Dict[str, Any]) -> int:
 async def get_effective_admin_id(r: redis.Redis, cafe_id: str) -> int:
     try:
         raw = await r.hget(k_cafe_profile(cafe_id), "admin_id")
-        if raw is not None and str(raw).strip() != "":
-            return int(raw)
+        if raw is None:
+            return 0
+
+        raw_s = str(raw).strip()
+        if raw_s in ("", "0", "None", "none", "null"):
+            return 0
+
+        admin_id = int(raw_s)
+        return admin_id if admin_id > 0 else 0
     except Exception:
-        pass
-    return cafe_admin_id_from_json(cafe_or_default(cafe_id))
+        return 0
 
 async def is_cafe_admin(r: redis.Redis, user_id: int, cafe_id: str) -> bool:
     if is_superadmin(user_id):
@@ -1785,11 +1791,15 @@ async def cmd_unset_admin(message: Message, command: CommandObject):
         return
 
     r: redis.Redis = message.bot._redis
-    try:
-        await r.hdel(k_cafe_profile(cafe_id), "admin_id")
-    except Exception:
-        pass
-    await message.answer(f"✅ Override admin_id сброшен для <code>{html.quote(cafe_id)}</code>.")
+
+    await r.hset(k_cafe_profile(cafe_id), mapping={"admin_id": ""})
+    await r.delete(k_staff_group(cafe_id))
+    await r.delete(k_cafe_sub_notify(cafe_id))
+
+    await message.answer(
+        f"✅ Для <code>{html.quote(cafe_id)}</code> admin_id очищен.\n"
+        "Кафе переведено в состояние без привязанного админа."
+    )
 
 
 @router.message(Command("set_cafe_subscription"))
