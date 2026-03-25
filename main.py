@@ -340,6 +340,14 @@ async def collect_cafe_wipe_keys(r: redis.Redis, cafe_id: str) -> List[str]:
         k_stats_total_orders(cafe_id),
         k_stats_total_revenue(cafe_id),
         k_customers_set(cafe_id),
+        k_cafe_promo(cafe_id),
+        k_cafe_sub_notify(cafe_id),
+        k_broadcast_counter(cafe_id),
+        k_broadcast_last(cafe_id),
+        k_broadcast_draft(cafe_id),
+        k_broadcast_active(cafe_id),
+        k_broadcast_last_run_at(cafe_id),
+        k_support_cafe(cafe_id),
     ]
 
     patterns = [
@@ -348,6 +356,12 @@ async def collect_cafe_wipe_keys(r: redis.Redis, cafe_id: str) -> List[str]:
         f"customer:{cafe_id}:*:drinks",
         f"last_seen:{cafe_id}:*",
         f"last_order:{cafe_id}:*",
+        f"broadcast:{cafe_id}:*:meta",
+        f"broadcast:{cafe_id}:*:stats",
+        f"broadcast:{cafe_id}:*:clicked_users",
+        f"broadcast:{cafe_id}:*:ordered_users",
+        f"broadcast:{cafe_id}:*:sent_users",
+        f"broadcast:{cafe_id}:*:failed_users",
     ]
 
     for pattern in patterns:
@@ -363,7 +377,6 @@ async def collect_cafe_wipe_keys(r: redis.Redis, cafe_id: str) -> List[str]:
             out.append(k)
 
     return out
-
 
 async def collect_linked_users_for_cafe(r: redis.Redis, cafe_id: str) -> List[Tuple[int, str]]:
     linked: List[Tuple[int, str]] = []
@@ -1880,33 +1893,44 @@ async def cmd_wipe_cafe(message: Message, command: CommandObject):
 
     cafe_id = (command.args or "").strip()
     if not cafe_id or cafe_id not in CAFES:
-        await message.answer("Формат: <code>/wipe_cafe cafe_001</code>")
+        await message.answer("Формат: <code>/wipe_cafe cafe001</code>")
         return
 
     r: redis.Redis = message.bot._redis
+
     keys = await collect_cafe_wipe_keys(r, cafe_id)
     linked_users = await collect_linked_users_for_cafe(r, cafe_id)
 
     await message.answer(
-        "⚠️ <b>Полная очистка кафе</b>\n\n"
+        "⚠️ <b>Подтверждение очистки кафе</b>\n\n"
         f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
         f"Будет удалено Redis-ключей: <b>{len(keys)}</b>\n"
-        f"Пользователей с привязкой к этому кафе: <b>{len(linked_users)}</b>\n\n"
-        "Что очистится:\n"
-        "• меню\n"
-        "• статистика\n"
-        "• staff-группа\n"
-        "• override admin_id\n"
-        "• подписка кафе\n"
-        "• клиенты и их история\n"
-        "• last_seen / last_order\n"
-        "• привязки user -> cafe_id\n\n"
-        "Для подтверждения отправьте:\n"
-        f"<code>/wipe_cafe_confirm {html.quote(cafe_id)} WIPE</code>"
+        f"Найдено пользовательских привязок: <b>{len(linked_users)}</b>\n\n"
+        "Что будет очищено:\n"
+        "• Меню кафе\n"
+        "• Staff group bind\n"
+        "• Override admin_id профиля кафе\n"
+        "• Подписка кафе\n"
+        "• Статистика заказов и выручки\n"
+        "• Профили клиентов и их напитки\n"
+        "• Last seen / last order\n"
+        "• Promo-данные кафе\n"
+        "• Draft/active/history-ключи рассылок\n"
+        "• Support active / support set кафе\n"
+        "• user -> cafe_id привязки для связанных пользователей\n"
+        "• user view_mode для связанных пользователей\n"
+        "• Legacy user.cafebotify_valid_until для связанных пользователей\n"
+        "• user broadcast attribution для связанных пользователей\n\n"
+        "Что НЕ будет очищено:\n"
+        "• config.json\n"
+        "• Глобальные user hash целиком\n"
+        "• Общие support:user:* наборы\n"
+        "• support:ticket:* записи\n\n"
+        f"Для подтверждения отправьте:\n<code>/wipe_cafe_confirm {html.quote(cafe_id)} WIPE</code>"
     )
 
 
-@router.message(Command("wipe_cafe_confirm"))
+))
 async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
     if not is_superadmin(message.from_user.id):
         await message.answer("🔒 Доступ запрещён.")
@@ -1936,6 +1960,9 @@ async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
         pipe.delete(*keys)
 
     fixed_users = 0
+    cleared_legacy_sub = 0
+    cleared_broadcast_attr = 0
+
     for uid, user_cafe_key in linked_users:
         fixed_users += 1
 
@@ -1945,22 +1972,46 @@ async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
             pipe.set(user_cafe_key, DEFAULT_CAFE_ID)
 
         pipe.delete(k_view_mode(uid))
+        pipe.delete(k_support_active(cafe_id, uid))
+
+        try:
+            had_legacy = await r.hget(f"user:{uid}", "cafebotify_valid_until")
+            if had_legacy is not None:
+                pipe.hdel(f"user:{uid}", "cafebotify_valid_until")
+                cleared_legacy_sub += 1
+        except Exception:
+            pass
+
+        try:
+            attr_key = f"user:{uid}:broadcast_attribution"
+            raw_attr = await r.get(attr_key)
+            if raw_attr:
+                data = json.loads(raw_attr)
+                if str(data.get("cafe_id") or "").strip() == cafe_id:
+                    pipe.delete(attr_key)
+                    cleared_broadcast_attr += 1
+        except Exception:
+            pass
 
     await pipe.execute()
 
     logger.warning(
-        "SUPERADMIN WIPE_CAFE by user_id=%s cafe_id=%s deleted_keys=%s fixed_users=%s",
+        "SUPERADMIN WIPE_CAFE by user_id=%s cafe_id=%s deleted_keys=%s fixed_users=%s cleared_legacy_sub=%s cleared_broadcast_attr=%s",
         message.from_user.id,
         cafe_id,
         len(keys),
         fixed_users,
+        cleared_legacy_sub,
+        cleared_broadcast_attr,
     )
 
     await message.answer(
         "✅ <b>Очистка завершена</b>\n\n"
         f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
         f"Удалено Redis-ключей: <b>{len(keys)}</b>\n"
-        f"Исправлено пользовательских привязок: <b>{fixed_users}</b>\n\n"
+        f"Исправлено пользовательских привязок: <b>{fixed_users}</b>\n"
+        f"Очищено legacy-подписок user hash: <b>{cleared_legacy_sub}</b>\n"
+        f"Очищено broadcast attribution: <b>{cleared_broadcast_attr}</b>\n\n"
         "Важно: само кафе не удалено из config.json.\n"
         "Если в конфиге есть базовое меню, оно может появиться снова после /start."
     )
