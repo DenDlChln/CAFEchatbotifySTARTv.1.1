@@ -1930,7 +1930,6 @@ async def cmd_wipe_cafe(message: Message, command: CommandObject):
     )
 
 
-))
 async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
     if not is_superadmin(message.from_user.id):
         await message.answer("🔒 Доступ запрещён.")
