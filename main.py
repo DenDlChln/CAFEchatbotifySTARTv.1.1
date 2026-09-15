@@ -1219,7 +1219,7 @@ async def customer_mark_order(
     pipe.hset(
         customer_key,
         mapping={
-            "firstname": firstname or "",
+            "first_name": first_name or "",
             "username": username or "",
             "last_order_ts": now_ts,
             "last_order_sum": int(total_sum),
