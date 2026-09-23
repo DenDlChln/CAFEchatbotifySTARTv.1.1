@@ -2504,7 +2504,10 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
             return
 
     await message.answer(
-        f"{welcome}\n\n🏪 {work_status(cafe)}{address_line(cafe)}\n\n"
+        f"{welcome}\n\n"
+        f"🏪 <b>{html.quote(cafe_title(cafe))}</b>\n"
+        f"{work_status(cafe)}"
+        f"{address_line(cafe)}\n\n"
         "Чтобы добавить в корзину: нажмите напиток → выберите количество.\n"
         "Корзина — «🛒 Корзина».",
         reply_markup=kb_client_main(menu, show_admin_button=is_admin),
@@ -3382,6 +3385,8 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
 
     await message.answer(
         "🎉 <b>Заказ принят!</b>\n\n"
+        f"🏪 <b>{html.quote(cafe_title(cafe))}</b>\n"
+        f"{address_line(cafe)}\n\n"
         f"{cart_text(cart, menu)}\n\n"
         f"⏱ <b>Готовность:</b> {html.quote(ready_line)}\n\n"
         f"{finish}",
