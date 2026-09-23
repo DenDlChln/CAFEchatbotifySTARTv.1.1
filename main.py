@@ -3364,15 +3364,41 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     except Exception:
         pass
 
-    admin_msg = (
-        f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_num}</b> | {html.quote(cafe_title(cafe))}\n\n"
-        f"<a href=\"tg://user?id={user_id}\">"
-        f"{html.quote(message.from_user.username or message.from_user.first_name or 'Клиент')}</a>\n"
-        f"<code>{user_id}</code>\n\n"
-        f"✍️ <a href=\"tg://user?id={user_id}\">Написать клиенту</a>\n\n"
-        + "\n".join(cart_lines(cart, menu))
-        + f"\n\n💰 Итого: <b>{total}₽</b>\n⏱ Готовность: <b>{html.quote(ready_line)}</b>"
+    username = (message.from_user.username or "").strip()
+    client_name = (
+        message.from_user.full_name
+        or message.from_user.first_name
+        or "Клиент"
     )
+
+    if username:
+        client_link = f"https://t.me/{username}"
+        client_label = f"@{html.quote(username)}"
+    else:
+    # Запасной вариант для пользователей без username.
+        client_link = f"tg://user?id={user_id}"
+        client_label = html.quote(client_name)
+
+    admin_msg = (
+        f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_num}</b> | "
+        f"{html.quote(cafe_title(cafe))}\n\n"
+        f"👤 <a href=\"{client_link}\">{client_label}</a>\n"
+        f"<code>{user_id}</code>\n\n"
+        f"✍️ <a href=\"{client_link}\">Написать клиенту</a>\n\n"
+        + "\n".join(cart_lines(cart, menu))
+        + (
+            f"\n\n💰 Итого: <b>{total}₽</b>"
+            f"\n⏱ Готовность: <b>{html.quote(ready_line)}</b>"
+        )
+    )
+
+    # ВСТАВИТЬ ЭТО СРАЗУ ПОСЛЕ admin_msg
+    if not username:
+        admin_msg += (
+            "\n\n<i>У клиента нет @username. "
+            "Нажмите «Ответить» на это сообщение — "
+            "бот перешлёт текст клиенту.</i>"
+        )
 
     await notify_admin(message.bot, r, cafe_id, admin_msg)
     await send_admin_demo_to_user(message.bot, user_id, admin_msg)
