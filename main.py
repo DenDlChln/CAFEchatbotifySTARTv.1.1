@@ -187,6 +187,12 @@ def k_cafe_sub_notify(cafe_id: str) -> str:
 def k_admin_subscription(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:admin_subscription"
 
+# Draft первой оплаты, создаётся DEMO-ботом в общем Redis.
+PAY_DRAFT_PREFIX = "paydraft:"
+
+def _pay_draft_key(draft_id: str) -> str:
+    return f"{PAY_DRAFT_PREFIX}{draft_id}"
+
 def k_cafe_promo(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:promo"
 
@@ -1711,6 +1717,7 @@ async def cmd_help_admin(message: Message, command: CommandObject):
     # ⭐ Супер-админ команды
     lines.append("👑 <b>SUPERADMIN команды</b>")
     lines.append("• <code>/set_admin cafe_001 123456789</code> — назначить админа")
+    lines.append("• <code>/bind_paid_draft cafe_001 88da376df710</code> — привязать первую оплаченную подписку к кафе")
     lines.append("• <code>/unset_admin cafe_001</code> — убрать админа")
     lines.append("• <code>/set_cafe_subscription cafe_001 2026-12-31</code> — выставить конец подписки")
     lines.append("• <code>/set_cafe_subscription cafe_001 +30</code> — продлить на 30 дней от текущего срока/сегодня")
@@ -1801,6 +1808,224 @@ async def cmd_unset_admin(message: Message, command: CommandObject):
         f"✅ Для <code>{html.quote(cafe_id)}</code> admin_id очищен.\n"
         "Кафе переведено в состояние без привязанного админа."
     )
+
+
+@router.message(Command("bind_paid_draft"))
+async def cmd_bind_paid_draft(
+    message: Message,
+    command: CommandObject,
+):
+    if not is_superadmin(message.from_user.id):
+        await message.answer("🔒 Доступ запрещён.")
+        return
+
+    args = (command.args or "").strip().split()
+
+    if len(args) != 2:
+        await message.answer(
+            "Формат:\n"
+            "<code>/bind_paid_draft cafe_023 88da376df710</code>\n\n"
+            "Где второй аргумент — Draft ID из уведомления DEMO "
+            "о подтверждённой оплате."
+        )
+        return
+
+    cafe_id = args[0].strip()
+    draft_id = args[1].strip()
+
+    if cafe_id not in CAFES:
+        await message.answer("❌ Неизвестный cafe_id.")
+        return
+
+    if not draft_id:
+        await message.answer("❌ Не указан Draft ID.")
+        return
+
+    r: Optional[redis.Redis] = None
+
+    try:
+        r = message.bot._redis
+
+        raw = await r.get(_pay_draft_key(draft_id))
+
+        if not raw:
+            await message.answer(
+                "❌ Draft не найден или истёк.\n\n"
+                "DEMO хранит payment draft в Redis 7 дней после оплаты."
+            )
+            return
+
+        try:
+            payload = json.loads(raw)
+        except (TypeError, json.JSONDecodeError):
+            await message.answer("❌ Draft повреждён: не удалось прочитать JSON.")
+            return
+
+        if not isinstance(payload, dict):
+            await message.answer("❌ Draft имеет неверный формат.")
+            return
+
+        draft_status = str(payload.get("status") or "").strip()
+
+        if draft_status in {"bound", "links_sent"}:
+            bound_cafe_id = str(payload.get("cafe_id") or "").strip()
+
+            await message.answer(
+                "⚠️ Этот Draft уже был обработан.\n\n"
+                f"Draft ID: <code>{html.quote(draft_id)}</code>\n"
+                f"Статус: <code>{html.quote(draft_status)}</code>\n"
+                f"Кафе: <code>{html.quote(bound_cafe_id or '-')}</code>"
+            )
+            return
+
+        try:
+            client_id = int(payload.get("tgid"))
+            valid_until = int(payload.get("valid_until") or 0)
+        except (TypeError, ValueError):
+            await message.answer(
+                "❌ В Draft нет корректного Telegram ID или срока подписки."
+            )
+            return
+
+        now_ts = int(time.time())
+
+        if valid_until <= now_ts:
+            await message.answer(
+                "❌ Срок этой оплаченной подписки уже истёк."
+            )
+            return
+
+        # Не даём новой оплате случайно перезаписать уже занятое кафе.
+        existing_admin_raw = await r.hget(
+            k_cafe_profile(cafe_id),
+            "admin_id",
+        )
+
+        existing_sub = await r.hgetall(
+            k_admin_subscription(cafe_id)
+        )
+
+        try:
+            existing_until = int(
+                existing_sub.get("cafebotify_valid_until", "0") or 0
+            )
+        except (TypeError, ValueError):
+            existing_until = 0
+
+        existing_admin_id = str(existing_admin_raw or "").strip()
+
+        if (
+            existing_admin_id not in {"", "0", str(client_id)}
+            or existing_until > now_ts
+        ):
+            until_text = (
+                datetime.fromtimestamp(
+                    existing_until,
+                    tz=MSK_TZ,
+                ).strftime("%d.%m.%Y %H:%M")
+                if existing_until > now_ts
+                else "нет"
+            )
+
+            await message.answer(
+                "⚠️ Привязка отменена: кафе уже занято "
+                "или у него есть активная подписка.\n\n"
+                f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
+                f"Текущий admin_id: "
+                f"<code>{html.quote(existing_admin_id or '-')}</code>\n"
+                f"Подписка до: <b>{until_text}</b>\n\n"
+                "Выберите другое свободное кафе."
+            )
+            return
+
+        payment_id = str(payload.get("payment_id") or "")
+        product = str(
+            payload.get("product") or "cafebotify_start_month"
+        )
+        amount_value = str(payload.get("amount_value") or "")
+        amount_currency = str(payload.get("amount_currency") or "")
+
+        # Сохраняем факт привязки непосредственно в draft, чтобы одна
+        # успешная оплата не могла быть применена к двум разным кафе.
+        payload.update(
+            {
+                "cafe_id": cafe_id,
+                "status": "bound",
+                "bound_at": now_ts,
+                "bound_by": message.from_user.id,
+            }
+        )
+
+        pipe = r.pipeline(transaction=True)
+
+        # Тот же ключ, который использует START-команда /set_admin.
+        pipe.hset(
+            k_cafe_profile(cafe_id),
+            mapping={
+                "admin_id": str(client_id),
+            },
+        )
+
+        # Тот же ключ и поля, которые читает is_subscription_active().
+        pipe.hset(
+            k_admin_subscription(cafe_id),
+            mapping={
+                "cafebotify_paid": "1",
+                "cafebotify_valid_until": str(valid_until),
+                "admin_id": str(client_id),
+                "last_payment_id": payment_id,
+                "last_product": product,
+                "last_amount_value": amount_value,
+                "last_amount_currency": amount_currency,
+                "last_paid_at": str(now_ts),
+                "source_draft_id": draft_id,
+            },
+        )
+
+        # В DEMO draft живёт 7 дней — после привязки сохраняем его
+        # ещё на 7 дней как журнал операции.
+        pipe.setex(
+            _pay_draft_key(draft_id),
+            7 * 86400,
+            json.dumps(payload, ensure_ascii=False),
+        )
+
+        await pipe.execute()
+
+        until_text = datetime.fromtimestamp(
+            valid_until,
+            tz=MSK_TZ,
+        ).strftime("%d.%m.%Y %H:%M")
+
+        logger.info(
+            "SUPERADMIN bind_paid_draft: by=%s draft_id=%s "
+            "cafe_id=%s client_id=%s valid_until=%s",
+            message.from_user.id,
+            draft_id,
+            cafe_id,
+            client_id,
+            valid_until,
+        )
+
+        await message.answer(
+            "✅ <b>Оплата привязана к кафе</b>\n\n"
+            f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
+            f"Администратор: <code>{client_id}</code>\n"
+            f"Подписка до: <b>{until_text}</b>\n"
+            f"Draft ID: <code>{html.quote(draft_id)}</code>\n\n"
+            "Теперь пользователь может открыть START "
+            "и получить доступ к админ-панели."
+        )
+
+    except Exception:
+        logger.exception(
+            "bind_paid_draft failed: draft_id=%s",
+            draft_id if "draft_id" in locals() else "?",
+        )
+        await message.answer(
+            "❌ Не удалось привязать оплату. "
+            "Проверьте runtime-логи START."
+        )
 
 
 @router.message(Command("set_cafe_subscription"))
