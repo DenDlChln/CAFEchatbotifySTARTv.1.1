@@ -3178,29 +3178,78 @@ async def confirm_order(message: Message, state: FSMContext):
     await message.answer("Когда забрать?", reply_markup=kb_ready_time())
 
 
-async def send_promo_after_delay(bot: Bot, user_id: int, cafe_id: str, delay_sec: int = 60):
+async def send_promo_after_delay(
+    bot: Bot,
+    user_id: int,
+    cafe_id: str,
+    delay_sec: int = 60,
+):
+    logger.info(
+        "PROMO task started: cafe_id=%s user_id=%s delay_sec=%s",
+        cafe_id,
+        user_id,
+        delay_sec,
+    )
+
     try:
         await asyncio.sleep(delay_sec)
 
-        r: redis.Redis = bot._redis
-        promo = await get_cafe_promo(r, cafe_id)
-        promo = normalize_promo(promo)
+        logger.info(
+            "PROMO delay finished: cafe_id=%s user_id=%s",
+            cafe_id,
+            user_id,
+        )
 
-        if not promo.get("enabled"):
-            return
+        r: redis.Redis = bot._redis
+        promo = normalize_promo(await get_cafe_promo(r, cafe_id))
 
         text = str(promo.get("text") or "").strip()
         photo_file_id = str(promo.get("photo_file_id") or "").strip()
         url = str(promo.get("url") or "").strip()
+        button_text = (
+            str(promo.get("button_text") or "").strip()
+            or "Подробнее"
+        )
+
+        logger.info(
+            "PROMO check: cafe_id=%s user_id=%s enabled=%s "
+            "has_text=%s has_photo=%s has_url=%s",
+            cafe_id,
+            user_id,
+            promo.get("enabled"),
+            bool(text),
+            bool(photo_file_id),
+            bool(url),
+        )
+
+        if not promo.get("enabled"):
+            logger.info(
+                "PROMO skipped: disabled cafe_id=%s user_id=%s",
+                cafe_id,
+                user_id,
+            )
+            return
 
         if not text and not photo_file_id:
+            logger.warning(
+                "PROMO skipped: no text or photo "
+                "cafe_id=%s user_id=%s",
+                cafe_id,
+                user_id,
+            )
             return
 
         reply_markup = None
+
         if url:
             reply_markup = InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [InlineKeyboardButton(text="Подробнее", url=url)]
+                    [
+                        InlineKeyboardButton(
+                            text=button_text,
+                            url=url,
+                        )
+                    ]
                 ]
             )
 
@@ -3208,19 +3257,29 @@ async def send_promo_after_delay(bot: Bot, user_id: int, cafe_id: str, delay_sec
             await bot.send_photo(
                 chat_id=user_id,
                 photo=photo_file_id,
-                caption=text or "📢 Спецпредложение",
+                caption=text or None,
                 reply_markup=reply_markup,
             )
-            return
+        else:
+            await bot.send_message(
+                chat_id=user_id,
+                text=text,
+                reply_markup=reply_markup,
+                disable_web_page_preview=True,
+            )
 
-        await bot.send_message(
-            chat_id=user_id,
-            text=text,
-            reply_markup=reply_markup,
-            disable_web_page_preview=False,
+        logger.info(
+            "PROMO sent: cafe_id=%s user_id=%s",
+            cafe_id,
+            user_id,
         )
-    except Exception as e:
-        logger.exception("delayed promo failed: %s", e)
+
+    except Exception:
+        logger.exception(
+            "PROMO failed: cafe_id=%s user_id=%s",
+            cafe_id,
+            user_id,
+        )
 
 
 async def finalize_order(message: Message, state: FSMContext, ready_in_min: int):
@@ -3327,6 +3386,12 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
         f"⏱ <b>Готовность:</b> {html.quote(ready_line)}\n\n"
         f"{finish}",
         reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+    )
+
+    logger.info(
+        "PROMO scheduling: cafe_id=%s user_id=%s delay_sec=30",
+        cafe_id,
+        user_id,
     )
     
     asyncio.create_task(
