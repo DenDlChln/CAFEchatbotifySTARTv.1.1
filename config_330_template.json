@@ -4,7 +4,7 @@
   "default_cafe_id": "cafe_001",
   "cafes": {
     "cafe_001": {
-      "title": "Кафе Бариста",
+      "title": "Кафе Борюсик",
       "city": "Краснодар",
       "timezone": "Europe/Moscow",
       "address": "Стасова, 149",
@@ -15,14 +15,15 @@
         "booking_enabled": true,
         "staff_group_enabled": true,
         "rate_limit_seconds": 60,
-        "work_start": 9,
-        "work_end": 21
+        "work_start": 10,
+        "work_end": 20
       },
       "menu": {
         "Капучино": 250,
         "Пивасик": 230,
         "Бомбастик": 250,
-        "Латте": 270
+        "Латте": 270,
+        "Жопки": 5000
       }
     },
     "cafe_002": {
