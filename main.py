@@ -2684,7 +2684,7 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
                         user_id=uid,
                         cafe_id=cafe_id,
                     )
-               except Exception:
+                except Exception:
                     logger.exception(
                         "Не удалось отправить стартовые ссылки админу: "
                         "cafe_id=%s user_id=%s",
