@@ -2168,25 +2168,22 @@ async def send_cafe_links(
 
     cafe = cafe_or_default(cafe_id)
 
-    # payload короткие и состоят только из допустимых символов:
-    # cafe_023 и admin:cafe_023.
-    # Поэтому encode=False: ссылки остаются читаемыми.
     client_link = await create_start_link(
         bot,
         payload=cafe_id,
-        encode=False,
+        encode=True,
     )
 
     admin_link = await create_start_link(
         bot,
-        payload=f"admin:{cafe_id}",
-        encode=False,
+        payload=f"admin_{cafe_id}",
+        encode=True,
     )
 
     staff_link = await create_startgroup_link(
         bot,
         payload=cafe_id,
-        encode=False,
+        encode=True,
     )
 
     await bot.send_message(
