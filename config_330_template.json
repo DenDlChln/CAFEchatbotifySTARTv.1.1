@@ -16,7 +16,7 @@
         "staff_group_enabled": true,
         "rate_limit_seconds": 60,
         "work_start": 5,
-        "work_end": 23
+        "work_end": 1
       },
       "menu": {
         "Капучино": 250,
@@ -39,7 +39,7 @@
         "staff_group_enabled": true,
         "rate_limit_seconds": 60,
         "work_start": 9,
-        "work_end": 21
+        "work_end": 1
       },
       "menu": {
         "Капучино": 250,
