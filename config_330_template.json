@@ -15,8 +15,8 @@
         "booking_enabled": true,
         "staff_group_enabled": true,
         "rate_limit_seconds": 60,
-        "work_start": 10,
-        "work_end": 20
+        "work_start": 5,
+        "work_end": 23
       },
       "menu": {
         "Капучино": 250,
