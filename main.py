@@ -2129,17 +2129,72 @@ async def cmd_bind(message: Message, command: CommandObject):
         return
 
     cafe_id = (command.args or "").strip()
+
     if not cafe_id or cafe_id not in CAFES:
-        await message.answer("Формат: <code>/bind cafe_001</code>")
+        await message.answer(
+            "Формат: <code>/bind cafe_001</code>"
+        )
         return
 
     r: redis.Redis = message.bot._redis
-    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
-        await message.answer("Только администратор этого кафе может привязать группу.")
+    user_id = message.from_user.id
+
+    # Привязать staff-группу может только администратор этого кафе.
+    if not await is_cafe_admin(r, user_id, cafe_id):
+        await message.answer(
+            "🔒 Только администратор этого кафе может привязать staff-группу."
+        )
         return
 
+    # Суперадмин имеет доступ всегда.
+    # Обычному админу нужна активная подписка.
+    if not is_superadmin(user_id):
+        if not await is_subscription_active(r, user_id, cafe_id):
+            await message.answer(
+                "🔒 <b>Подписка кафе не активна.</b>\n\n"
+                "Сначала продлите подписку в админ-панели, "
+                "после этого повторите команду /bind."
+            )
+            return
+
+    # Сохраняем Telegram chat_id staff-группы именно для выбранного кафе.
     await r.set(k_staff_group(cafe_id), str(message.chat.id))
-    await message.answer(f"✅ Группа привязана к кафе <code>{html.quote(cafe_id)}</code>.")
+
+    # Ссылки формируются из cafe_id команды /bind — не из DEFAULT_CAFE_ID.
+    # encode=False делает payload коротким и читаемым.
+    client_link = await create_start_link(
+        message.bot,
+        payload=cafe_id,
+        encode=False,
+    )
+
+    admin_link = await create_start_link(
+        message.bot,
+        payload=f"admin:{cafe_id}",
+        encode=False,
+    )
+
+    staff_link = await create_startgroup_link(
+        message.bot,
+        payload=cafe_id,
+        encode=False,
+    )
+
+    cafe = cafe_or_default(cafe_id)
+    cafe_name = html.quote(cafe_title(cafe))
+
+    await message.answer(
+        "✅ <b>Staff-группа успешно привязана</b>\n\n"
+        f"Кафе: <b>{cafe_name}</b>\n"
+        f"ID: <code>{html.quote(cafe_id)}</code>\n"
+        f"Группа: <code>{message.chat.id}</code>\n\n"
+        "🔗 <b>Ссылки кафе</b>\n"
+        f"• <a href=\"{html.quote(client_link)}\">👥 Клиентам — открыть меню</a>\n"
+        f"• <a href=\"{html.quote(admin_link)}\">🛠 Администратору — открыть админ-панель</a>\n"
+        f"• <a href=\"{html.quote(staff_link)}\">👨‍🍳 Добавить бота в staff-группу</a>\n\n"
+        "Клиентскую ссылку можно использовать для QR-кода и соцсетей. "
+        "Админскую ссылку не публикуйте — отправляйте её только владельцу кафе."
+    )
     
 
 @router.message(Command("wipe_cafe"))
@@ -2329,11 +2384,26 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         await ensure_subscription_active(message, r, cafe_id)
         return
         
-    client_link = await create_start_link(message.bot, payload=cafe_id, encode=True)
     admin_id = await get_effective_admin_id(message.bot._redis, cafe_id)
-    admin_link = await create_start_link(message.bot, payload=f"admin:{cafe_id}", encode=True)
-    staff_link = await create_startgroup_link(message.bot, payload=cafe_id, encode=True)
+    
+    client_link = await create_start_link(
+        message.bot,
+        payload=cafe_id,
+        encode=False,
+    )
 
+    admin_link = await create_start_link(
+        message.bot,
+        payload=f"admin:{cafe_id}",
+        encode=False,
+    )
+
+    staff_link = await create_startgroup_link(
+        message.bot,
+        payload=cafe_id,
+        encode=False,
+    )
+    
     uid = message.from_user.id
     is_super = is_superadmin(uid)
 
@@ -2362,10 +2432,9 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         f"{subline}"
         f"{work_status(cafe)}{address_line(cafe)}\n\n"
         "🔗 <b>Ссылки</b>\n"
-        f"• Клиентам: {client_link}\n"
-        f"• Админу: {admin_link}\n"
-        f"• В staff-группу: {staff_link}\n\n"
-        "В staff-группе выполните:\n"
+        f"• <a href=\"{html.quote(client_link)}\">👥 Клиентам — открыть меню</a>\n"
+        f"• <a href=\"{html.quote(admin_link)}\">🛠 Администратору — открыть админ-панель</a>\n"
+        f"• <a href=\"{html.quote(staff_link)}\">👨‍🍳 Добавить бота в staff-группу</a>\n"
         f"<code>/bind {html.quote(cafe_id)}</code>\n",
         reply_markup=kb_admin_main(is_super=is_super),
     )
