@@ -5786,6 +5786,7 @@ async def smart_return_loop(bot: Bot):
 # =========================================================
 _smart_task: Optional[asyncio.Task] = None
 _sub_task: Optional[asyncio.Task] = None
+_order_reminder_task: Optional[asyncio.Task] = None
 
 async def on_startup(app: web.Application):
     bot: Bot = app["bot"]
