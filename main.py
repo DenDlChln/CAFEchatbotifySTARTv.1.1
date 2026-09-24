@@ -2040,7 +2040,7 @@ async def cmd_bind_paid_draft(
             "Ссылки отправлены владельцу кафе."
         )
 
-# Показываем ссылки суперадмину в текущем чате:
+        # Показываем ссылки суперадмину в текущем чате:
         await send_cafe_links(
             bot=message.bot,
             chat_id=message.chat.id,
@@ -2048,8 +2048,8 @@ async def cmd_bind_paid_draft(
             heading="🔗 <b>Ссылки для нового кафе</b>",
         )
 
-# И дублируем их новому владельцу в личный чат с ботом.
-# Ошибка отправки владельцу не должна отменять уже готовую привязку.
+        # И дублируем их новому владельцу в личный чат с ботом.
+        # Ошибка отправки владельцу не должна отменять уже готовую привязку.
         try:
             await send_cafe_links(
                 bot=message.bot,
@@ -2676,7 +2676,7 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
             until_ts = int(raw_until) if raw_until else 0
             
             if until_ts > 0 and until_ts > int(time.time()):
-    # Подписка активна.
+            # Подписка активна.
                 try:
                     await send_cafe_links_once(
                         bot=message.bot,
