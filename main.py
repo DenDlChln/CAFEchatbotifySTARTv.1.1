@@ -187,6 +187,9 @@ def k_cafe_sub_notify(cafe_id: str) -> str:
 def k_admin_subscription(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:admin_subscription"
 
+def k_cafe_links_sent(cafe_id: str, user_id: int) -> str:
+    return f"cafe:{cafe_id}:links_sent:{user_id}"
+    
 # Draft первой оплаты, создаётся DEMO-ботом в общем Redis.
 PAY_DRAFT_PREFIX = "paydraft:"
 
@@ -2034,9 +2037,38 @@ async def cmd_bind_paid_draft(
             f"Администратор: <code>{client_id}</code>\n"
             f"Подписка до: <b>{until_text}</b>\n"
             f"Draft ID: <code>{html.quote(draft_id)}</code>\n\n"
-            "Теперь пользователь может открыть START "
-            "и получить доступ к админ-панели."
+            "Ссылки отправлены владельцу кафе."
         )
+
+# Показываем ссылки суперадмину в текущем чате:
+        await send_cafe_links(
+            bot=message.bot,
+            chat_id=message.chat.id,
+            cafe_id=cafe_id,
+            heading="🔗 <b>Ссылки для нового кафе</b>",
+        )
+
+# И дублируем их новому владельцу в личный чат с ботом.
+# Ошибка отправки владельцу не должна отменять уже готовую привязку.
+        try:
+            await send_cafe_links(
+                bot=message.bot,
+                chat_id=client_id,
+                cafe_id=cafe_id,
+                heading=(
+                    "✅ <b>Оплата подтверждена — кафе подключено</b>\n\n"
+                    f"Подписка активна до: <b>{until_text}</b>\n\n"
+                    "🔗 <b>Ваши рабочие ссылки</b>"
+                ),
+            )
+        except Exception:
+            logger.warning(
+                "Не удалось отправить ссылки владельцу после bind_paid_draft: "
+                "cafe_id=%s client_id=%s. Возможно, пользователь ещё не запускал бота.",
+                cafe_id,
+                client_id,
+                exc_info=True,
+            )
 
     except Exception:
         logger.exception(
@@ -2122,6 +2154,90 @@ async def cmd_set_cafe_subscription(message: Message, command: CommandObject):
 # =========================================================
 # /bind staff group
 # =========================================================
+async def send_cafe_links(
+    bot: Bot,
+    chat_id: int,
+    cafe_id: str,
+    *,
+    heading: str = "🔗 <b>Ссылки кафе</b>",
+) -> None:
+    """
+    Отправляет компактный набор deep-link ссылок конкретного кафе.
+    chat_id — Telegram ID личного чата или группы, куда надо отправить блок.
+    """
+
+    cafe = cafe_or_default(cafe_id)
+
+    # payload короткие и состоят только из допустимых символов:
+    # cafe_023 и admin:cafe_023.
+    # Поэтому encode=False: ссылки остаются читаемыми.
+    client_link = await create_start_link(
+        bot,
+        payload=cafe_id,
+        encode=False,
+    )
+
+    admin_link = await create_start_link(
+        bot,
+        payload=f"admin:{cafe_id}",
+        encode=False,
+    )
+
+    staff_link = await create_startgroup_link(
+        bot,
+        payload=cafe_id,
+        encode=False,
+    )
+
+    await bot.send_message(
+        chat_id=chat_id,
+        text=(
+            f"{heading}\n\n"
+            f"Кафе: <b>{html.quote(cafe_title(cafe))}</b>\n"
+            f"ID: <code>{html.quote(cafe_id)}</code>\n\n"
+            f"• <a href=\"{html.quote(client_link)}\">👥 Клиентам — открыть меню</a>\n"
+            f"• <a href=\"{html.quote(admin_link)}\">🛠 Админу — открыть админ-панель</a>\n"
+            f"• <a href=\"{html.quote(staff_link)}\">👨‍🍳 Добавить бота в staff-группу</a>\n\n"
+            "Клиентскую ссылку используйте для QR-кода, сайта и соцсетей. "
+            "Админскую ссылку не публикуйте — она предназначена владельцу кафе."
+        ),
+    )
+
+async def send_cafe_links_once(
+    bot: Bot,
+    r: redis.Redis,
+    user_id: int,
+    cafe_id: str,
+) -> None:
+    """
+    Отправляет набор стартовых ссылок владельцу только один раз
+    для конкретной пары cafe_id + Telegram user_id.
+    """
+
+    sent_key = k_cafe_links_sent(cafe_id, user_id)
+
+    # Уже показывали ссылки этому админу этого кафе.
+    if await r.get(sent_key):
+        return
+
+    await send_cafe_links(
+        bot=bot,
+        chat_id=user_id,
+        cafe_id=cafe_id,
+        heading=(
+            "🎉 <b>Кафе подключено</b>\n\n"
+            "🔗 <b>Ваши рабочие ссылки</b>"
+        ),
+    )
+
+    # Флаг на 400 дней: ссылка будет показана только один раз.
+    await r.set(
+        sent_key,
+        "1",
+        ex=400 * 24 * 60 * 60,
+    )
+
+
 @router.message(Command("bind"))
 async def cmd_bind(message: Message, command: CommandObject):
     if message.chat.type not in ("group", "supergroup"):
@@ -2508,14 +2624,47 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
         if not is_admin:
             await message.answer("🔒 Админ-доступ запрещён.")
             return
+
+    # Обычный админ не должен получать админ-ссылку
+    # при просроченной подписке. Суперадмин проходит всегда.
+        if is_superadmin(uid) or await is_subscription_active(r, uid, cafe_id):
+            try:
+                await send_cafe_links_once(
+                    bot=message.bot,
+                    r=r,
+                    user_id=uid,
+                    cafe_id=cafe_id,
+                )
+            except Exception:
+                logger.exception(
+                    "Не удалось отправить стартовые ссылки: "
+                    "cafe_id=%s user_id=%s",
+                    cafe_id,
+                    uid,
+                )
+
         await r.set(k_view_mode(uid), "admin")
         await send_admin_panel(message, cafe_id, cafe, menu)
         return
 
     # ✅ НОВАЯ ЛОГИКА с проверкой подписки + СУПЕРАДМИН
     if is_admin:
-        # ✅ СУПЕРАДМИН ВСЕГДА ПРОХОДИТ
         if is_superadmin(uid):
+            try:
+                await send_cafe_links_once(
+                    bot=message.bot,
+                    r=r,
+                    user_id=uid,
+                    cafe_id=cafe_id,
+                )
+            except Exception:
+                logger.exception(
+                    "Не удалось отправить стартовые ссылки суперадмину: "
+                    "cafe_id=%s user_id=%s",
+                    cafe_id,
+                    uid,
+                )
+
             await r.set(k_view_mode(uid), "admin")
             await send_admin_panel(message, cafe_id, cafe, menu)
             return
@@ -2527,7 +2676,22 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
             until_ts = int(raw_until) if raw_until else 0
             
             if until_ts > 0 and until_ts > int(time.time()):
-                # Подписка активна
+    # Подписка активна.
+                try:
+                    await send_cafe_links_once(
+                        bot=message.bot,
+                        r=r,
+                        user_id=uid,
+                        cafe_id=cafe_id,
+                    )
+               except Exception:
+                    logger.exception(
+                        "Не удалось отправить стартовые ссылки админу: "
+                        "cafe_id=%s user_id=%s",
+                        cafe_id,
+                        uid,
+                    )
+
                 await r.set(k_view_mode(uid), "admin")
                 await send_admin_panel(message, cafe_id, cafe, menu)
                 return
