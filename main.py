@@ -1,5 +1,6 @@
 import os
 import json
+import secrets
 import time
 import asyncio
 import random
@@ -1278,9 +1279,317 @@ async def get_favorite_drink(r: redis.Redis, cafe_id: str, user_id: int) -> str:
     return best_name
 
 
+# ============================================================
+# ЗАКАЗЫ: карточка, статус «выполнен», одно напоминание
+# ============================================================
+
+ORDER_REMINDER_DELAY_SEC = 15 * 60
+
+def k_active_order(cafe_id: str, order_id: str) -> str:
+    return f"cafebotify:order:{cafe_id}:{order_id}"
+
+def k_active_order_messages(cafe_id: str, order_id: str) -> str:
+    return f"cafebotify:order_messages:{cafe_id}:{order_id}"
+
+def k_order_reminders() -> str:
+    return "cafebotify:order_reminders"
+
+def make_active_order_id() -> str:
+    """
+    Короткий ID для карточки и callback_data.
+    6 символов: например 4FA1B9.
+    """
+    return secrets.token_hex(3).upper()
+
+def _as_text(value: object) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", "ignore")
+    return str(value)
+
+def kb_order_done(cafe_id: str, order_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Выполнен",
+                    callback_data=f"order_done:{cafe_id}:{order_id}",
+                )
+            ]
+        ]
+    )
+
+async def create_active_order(
+    r: redis.Redis,
+    *,
+    cafe_id: str,
+    order_id: str,
+    created_at: int,
+    ready_at: int,
+    order_text: str,
+) -> None:
+    """
+    Сохраняет статус заказа и ставит единственное напоминание:
+    ready_at + 15 минут.
+    """
+    order_key = k_active_order(cafe_id, order_id)
+    reminder_at = ready_at + ORDER_REMINDER_DELAY_SEC
+    reminder_token = f"{cafe_id}|{order_id}"
+
+    await r.hset(
+        order_key,
+        mapping={
+            "cafe_id": cafe_id,
+            "order_id": order_id,
+            "status": "new",
+            "created_at": created_at,
+            "ready_at": ready_at,
+            "reminder_at": reminder_at,
+            "reminder_sent": 0,
+            "order_text": order_text,
+            "done_at": 0,
+            "done_by_id": 0,
+            "done_by_name": "",
+        },
+    )
+
+    # Храним заказ 7 дней — это удобно для разбора спорных ситуаций,
+    # после чего Redis сам очистит его.
+    await r.expire(order_key, 7 * 24 * 60 * 60)
+
+    # ZSET: score — точное время единственного напоминания.
+    await r.zadd(
+        k_order_reminders(),
+        {reminder_token: reminder_at},
+    )
+
+async def send_order_card(
+    bot: Bot,
+    r: redis.Redis,
+    *,
+    cafe_id: str,
+    order_id: str,
+    text: str,
+) -> None:
+    """
+    Посылает одну и ту же карточку заказа админу и в staff-группу.
+    Сохраняет chat_id/message_id всех отправленных копий,
+    чтобы позже обновить их одновременно.
+    """
+    message_key = k_active_order_messages(cafe_id, order_id)
+    markup = kb_order_done(cafe_id, order_id)
+
+    admin_id = await get_effective_admin_id(r, cafe_id)
+    if admin_id:
+        try:
+            sent = await bot.send_message(
+                chat_id=int(admin_id),
+                text=text,
+                disable_web_page_preview=True,
+                reply_markup=markup,
+            )
+            await r.rpush(
+                message_key,
+                json.dumps(
+                    {
+                        "chat_id": sent.chat.id,
+                        "message_id": sent.message_id,
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+        except Exception:
+            logger.exception(
+                "Не удалось отправить карточку заказа админу: "
+                "cafe_id=%s order_id=%s",
+                cafe_id,
+                order_id,
+            )
+
+    try:
+        group_id = await r.get(k_staff_group(cafe_id))
+        if group_id:
+            sent = await bot.send_message(
+                chat_id=int(group_id),
+                text=text,
+                disable_web_page_preview=True,
+                reply_markup=markup,
+            )
+            await r.rpush(
+                message_key,
+                json.dumps(
+                    {
+                        "chat_id": sent.chat.id,
+                        "message_id": sent.message_id,
+                    },
+                    ensure_ascii=False,
+                ),
+            )
+    except Exception:
+        logger.exception(
+            "Не удалось отправить карточку заказа в staff-группу: "
+            "cafe_id=%s order_id=%s",
+            cafe_id,
+            order_id,
+        )
+
+    await r.expire(message_key, 7 * 24 * 60 * 60)
+
+async def update_order_cards_as_done(
+    bot: Bot,
+    r: redis.Redis,
+    *,
+    cafe_id: str,
+    order_id: str,
+    done_by_name: str,
+    done_at: int,
+) -> None:
+    """
+    Убирает кнопку у всех копий карточки и показывает,
+    кто и когда отметил выдачу.
+    """
+    order_key = k_active_order(cafe_id, order_id)
+    base_text = _as_text(await r.hget(order_key, "order_text"))
+
+    done_time = datetime.fromtimestamp(
+        done_at,
+        tz=get_moscow_time().tzinfo,
+    ).strftime("%H:%M")
+
+    final_text = (
+        f"{base_text}\n\n"
+        "✅ <b>ВЫПОЛНЕН</b>\n"
+        f"👤 Отметил: {html.quote(done_by_name)}\n"
+        f"🕒 Время: {done_time} МСК"
+    )
+
+    raw_items = await r.lrange(
+        k_active_order_messages(cafe_id, order_id),
+        0,
+        -1,
+    )
+
+    for raw_item in raw_items:
+        try:
+            item = json.loads(_as_text(raw_item))
+            await bot.edit_message_text(
+                chat_id=int(item["chat_id"]),
+                message_id=int(item["message_id"]),
+                text=final_text,
+                reply_markup=None,
+                disable_web_page_preview=True,
+            )
+        except Exception:
+            logger.exception(
+                "Не удалось обновить карточку выполненного заказа: "
+                "cafe_id=%s order_id=%s",
+                cafe_id,
+                order_id,
+            )
+
+async def send_unfinished_order_reminder(
+    bot: Bot,
+    r: redis.Redis,
+    *,
+    cafe_id: str,
+    order_id: str,
+) -> None:
+    """
+    Отправляет одно напоминание через 15 минут после готовности
+    и только если заказ всё ещё имеет статус new.
+    """
+    order_key = k_active_order(cafe_id, order_id)
+    order = await r.hgetall(order_key)
+
+    if not order:
+        return
+
+    status = _as_text(order.get(b"status") or order.get("status"))
+    reminder_sent = _as_text(
+        order.get(b"reminder_sent") or order.get("reminder_sent")
+    )
+
+    if status == "done" or reminder_sent == "1":
+        return
+
+    base_text = _as_text(
+        order.get(b"order_text") or order.get("order_text")
+    )
+
+    reminder_text = (
+        f"⚠️ <b>Заказ #{html.quote(order_id)} не отмечен как выполненный</b>\n\n"
+        "Прошло 15 минут после указанного времени готовности. "
+        "Проверьте выдачу и нажмите кнопку после выполнения.\n\n"
+        f"{base_text}"
+    )
+
+    await send_order_card(
+        bot,
+        r,
+        cafe_id=cafe_id,
+        order_id=order_id,
+        text=reminder_text,
+    )
+
+    await r.hset(order_key, mapping={"reminder_sent": 1})
+
+async def unfinished_orders_reminder_worker(bot: Bot) -> None:
+    """
+    Один раз в минуту проверяет Redis ZSET с заказами,
+    для которых наступило время единственного напоминания.
+    """
+    logger.info("Unfinished orders reminder worker started")
+
+    while True:
+        try:
+            r: redis.Redis = bot._redis
+            now_ts = int(time.time())
+
+            due_tokens = await r.zrangebyscore(
+                k_order_reminders(),
+                min="-inf",
+                max=now_ts,
+                start=0,
+                num=100,
+            )
+
+            for raw_token in due_tokens:
+                token = _as_text(raw_token)
+
+                # Удаляем из очереди ДО отправки: это гарантирует,
+                # что повторного автонапоминания не будет даже при ошибке.
+                await r.zrem(k_order_reminders(), raw_token)
+
+                if "|" not in token:
+                    continue
+
+                cafe_id, order_id = token.split("|", 1)
+
+                try:
+                    await send_unfinished_order_reminder(
+                        bot,
+                        r,
+                        cafe_id=cafe_id,
+                        order_id=order_id,
+                    )
+                except Exception:
+                    logger.exception(
+                        "Ошибка напоминания о неотмеченном заказе: "
+                        "cafe_id=%s order_id=%s",
+                        cafe_id,
+                        order_id,
+                    )
+
+        except Exception:
+            logger.exception("Ошибка фонового воркера напоминаний по заказам")
+
+        await asyncio.sleep(60)
+        
+
 # =========================================================
 # Admin notify
-# =========================================================
+# =======================================================
 async def notify_admin(bot: Bot, r: redis.Redis, cafe_id: str, text: str):
     admin_id = await get_effective_admin_id(r, cafe_id)
     if admin_id:
@@ -2482,8 +2791,8 @@ CHOICE_VARIANTS = [
 FINISH_VARIANTS = [
     "Спасибо за заказ, {name}!",
     "👍 Класс, {name}! Пока мы готовим, можно оформить ещё что-нибудь вкусное.",
-    "{name}, заказ принят. Хорошего дня!",
-    "Ваш заказ принят ☕ Мы приготовим его к выбранному времени.",
+    "{name}, Хорошего дня!",
+    "☕ Мы приготовим заказ к выбранному времени.",
     "Спасибо, что выбрали нас, {name}! Если что-то нужно — просто напишите сюда.",
     "Принято, {name}. Заглядывайте ещё!",
 ]
@@ -3651,7 +3960,43 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
             "бот перешлёт текст клиенту.</i>"
         )
 
-    await notify_admin(message.bot, r, cafe_id, admin_msg)
+    created_at_ts = int(time.time())
+
+    # Для «как можно скорее» считаем целевую готовность через 15 минут.
+    # Для «через N минут» используем выбранное клиентом время.
+    effective_ready_in_min = ready_in_min if ready_in_min > 0 else 15
+    ready_at_ts = created_at_ts + effective_ready_in_min * 60
+
+    # Более удобный случайный идентификатор — не только последние цифры времени.
+    order_id = make_active_order_id()
+
+    # Переписываем заголовок в уже сформированном сообщении:
+    # клиент и персонал будут видеть единый ID заказа.
+    admin_msg = admin_msg.replace(
+        f"НОВЫЙ ЗАКАЗ #{order_num}",
+        f"НОВЫЙ ЗАКАЗ #{order_id}",
+        1,
+    )
+
+    await create_active_order(
+        r,
+        cafe_id=cafe_id,
+        order_id=order_id,
+        created_at=created_at_ts,
+        ready_at=ready_at_ts,
+        order_text=admin_msg,
+    )
+
+    await send_order_card(
+        message.bot,
+        r,
+        cafe_id=cafe_id,
+        order_id=order_id,
+        text=admin_msg,
+    )
+
+    # Демонстрационный режим для клиента оставляем прежним:
+    # это не рабочая staff-карточка и не должен иметь кнопку «Выполнен».
     await send_admin_demo_to_user(message.bot, user_id, admin_msg)
 
     finish = random.choice(FINISH_VARIANTS)
@@ -4420,6 +4765,103 @@ async def admin_support_entry(message: Message, state: FSMContext):
         "Выберите тему обращения:",
         reply_markup=support_topic_kb(),
     )
+
+
+@router.callback_query(F.data.startswith("order_done:"))
+async def order_done_callback(callback: CallbackQuery) -> None:
+    raw_data = (callback.data or "").strip()
+    parts = raw_data.split(":", 2)
+
+    if len(parts) != 3:
+        await callback.answer("Некорректные данные заказа.", show_alert=True)
+        return
+
+    _, cafe_id, order_id = parts
+    cafe_id = cafe_id.strip()
+    order_id = order_id.strip()
+
+    if not cafe_id or not order_id:
+        await callback.answer("Не удалось определить заказ.", show_alert=True)
+        return
+
+    r: redis.Redis = callback.bot._redis
+    order_key = k_active_order(cafe_id, order_id)
+    order = await r.hgetall(order_key)
+
+    if not order:
+        await callback.answer(
+            "Заказ не найден или срок его хранения уже истёк.",
+            show_alert=True,
+        )
+        return
+
+    status = _as_text(order.get(b"status") or order.get("status"))
+    if status == "done":
+        await callback.answer("Заказ уже отмечен как выполненный ✅")
+        return
+
+    uid = callback.from_user.id
+    superadmin = is_superadmin(uid)
+    is_admin = await is_cafe_admin(r, uid, cafe_id)
+
+    # В staff-группе кнопку может нажать любой участник этой
+    # привязанной группы — именно там готовят и выдают заказы.
+    staff_group_id = await r.get(k_staff_group(cafe_id))
+    current_chat_id = callback.message.chat.id if callback.message else 0
+
+    in_bound_staff_group = False
+    if staff_group_id:
+        try:
+            in_bound_staff_group = int(staff_group_id) == int(current_chat_id)
+        except (TypeError, ValueError):
+            in_bound_staff_group = False
+
+    if not (superadmin or is_admin or in_bound_staff_group):
+        await callback.answer(
+            "Нет прав, чтобы отметить этот заказ.",
+            show_alert=True,
+        )
+        return
+
+    done_at = int(time.time())
+    done_by_name = (
+        callback.from_user.full_name
+        or callback.from_user.first_name
+        or "Сотрудник"
+    )
+
+    # Сначала меняем статус: после этого воркер уже не отправит напоминание.
+    await r.hset(
+        order_key,
+        mapping={
+            "status": "done",
+            "done_at": done_at,
+            "done_by_id": uid,
+            "done_by_name": done_by_name,
+        },
+    )
+
+    # Удаляем из очереди, если заказ выполнили раньше ready_at + 15 минут.
+    await r.zrem(k_order_reminders(), f"{cafe_id}|{order_id}")
+
+    await callback.answer("Заказ отмечен как выполненный ✅")
+
+    try:
+        await update_order_cards_as_done(
+            callback.bot,
+            r,
+            cafe_id=cafe_id,
+            order_id=order_id,
+            done_by_name=done_by_name,
+            done_at=done_at,
+        )
+    except Exception:
+        logger.exception(
+            "Не удалось обновить карточки заказа после отметки: "
+            "cafe_id=%s order_id=%s",
+            cafe_id,
+            order_id,
+        )
 
 
 @router.callback_query(F.data.startswith(SUP_CB_TOPIC))
@@ -5347,19 +5789,32 @@ _sub_task: Optional[asyncio.Task] = None
 
 async def on_startup(app: web.Application):
     bot: Bot = app["bot"]
+
     await set_commands(bot)
 
-    global _smart_task, _sub_task
+    global _smart_task, _sub_task, _order_reminder_task
 
     if _smart_task is None or _smart_task.done():
-        _smart_task = asyncio.create_task(smart_return_loop(bot))
+        _smart_task = asyncio.create_task(
+            smart_return_loop(bot)
+        )
 
     if _sub_task is None or _sub_task.done():
-        _sub_task = asyncio.create_task(sub_renewal_loop(bot))
+        _sub_task = asyncio.create_task(
+            sub_renewal_loop(bot)
+        )
 
-    await bot.set_webhook(WEBHOOK_URL, secret_token=WEBHOOK_SECRET)
+    if _order_reminder_task is None or _order_reminder_task.done():
+        _order_reminder_task = asyncio.create_task(
+            unfinished_orders_reminder_worker(bot)
+        )
+
+    await bot.set_webhook(
+        WEBHOOK_URL,
+        secret_token=WEBHOOK_SECRET,
+    )
+
     logger.info("Webhook set: %s", WEBHOOK_URL)
-
 
 async def on_shutdown(app: web.Application):
     bot: Bot = app["bot"]
