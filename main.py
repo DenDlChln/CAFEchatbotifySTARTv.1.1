@@ -2507,7 +2507,7 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
 
     admin_link = await create_start_link(
         message.bot,
-        payload=f"admin:{cafe_id}",
+        payload=f"admin_{cafe_id}",
         encode=False,
     )
 
