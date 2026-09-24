@@ -1153,16 +1153,37 @@ def cart_text(cart: Dict[str, int], menu: Dict[str, int]) -> str:
 async def set_last_seen(r: redis.Redis, cafe_id: str, user_id: int):
     await r.set(k_last_seen(cafe_id, user_id), str(time.time()))
 
-async def should_offer_repeat(r: redis.Redis, cafe_id: str, user_id: int) -> bool:
-    last_seen = await r.get(k_last_seen(cafe_id, user_id))
-    last_order = await r.get(k_last_order(cafe_id, user_id))
-    if not last_order or not last_seen:
+async def should_offer_repeat(
+    r: redis.Redis,
+    cafe_id: str,
+    user_id: int,
+) -> bool:
+    snapshot = await get_last_order_snapshot(r, cafe_id, user_id)
+
+    if not snapshot:
         return False
+
+    cart = snapshot.get("cart")
+
+    if not isinstance(cart, dict) or not cart:
+        return False
+
     try:
-        last_seen_dt = datetime.fromtimestamp(float(last_seen), tz=MSK_TZ)
-    except Exception:
+        order_ts = int(snapshot.get("ts") or 0)
+    except (TypeError, ValueError):
         return False
-    return last_seen_dt.date() != get_moscow_time().date()
+
+    if order_ts <= 0:
+        return False
+
+    last_order_date = datetime.fromtimestamp(
+        order_ts,
+        tz=MSK_TZ,
+    ).date()
+
+    # Не навязываем повтор в день оформления.
+    # Начиная со следующего календарного дня — предлагаем.
+    return last_order_date < get_moscow_time().date()
 
 async def get_last_order_snapshot(r: redis.Redis, cafe_id: str, user_id: int) -> Optional[dict]:
     raw = await r.get(k_last_order(cafe_id, user_id))
@@ -2498,7 +2519,7 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
                     continue
             await state.update_data(repeat_offer_snapshot=snap, cafe_id=cafe_id)
             await message.answer(
-                f"{welcome}\n\nВы давно не заходили. Повторить последний заказ?\n\n" + "\n".join(lines),
+                f"{welcome}\n\nХотите повторить ваш прошлый заказ?\n\n" + "\n".join(lines),
                 reply_markup=kb_repeat_offer(),
             )
             return
@@ -2655,7 +2676,7 @@ async def back_from_renew_sub(message: Message):
         await send_admin_panel(message, cafe_id, cafe, menu)
         return
 
-    await message.answer("Ок.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+    await message.answer("Хорошо 😊 Выберите что-нибудь из меню.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
 
 
 # =========================================================
