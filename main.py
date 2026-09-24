@@ -5013,7 +5013,7 @@ async def sub_renewal_check_and_send(bot: Bot):
     if not in_send_window_msk():
         return
         
-    r: redis.Redis = bot.redis  # если у тебя redis хранится как bot.redis
+    r: redis.Redis = bot._redis  # если у тебя redis хранится как bot.redis
     now_dt = get_moscow_time()
     today = now_dt.date()
 
