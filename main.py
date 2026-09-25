@@ -992,6 +992,7 @@ BTN_MENU_EDIT = "🛠 Меню"
 BTN_STAFF_GROUP = "👥 Группа персонала"
 BTN_LINKS = "🔗 Ссылки"
 BTN_CAFE_PROFILE = "🏪 Профиль кафе"
+BTN_CANCEL_CAFE_PROFILE = "❌ Отменить заполнение"
 BTN_ADMIN_INFO = "ℹ️ Справка админа"
 BTN_BACK = "⬅️ Назад"
 
@@ -5101,7 +5102,40 @@ async def cafe_profile_entry(message: Message, state: FSMContext):
             "\nОтправьте новое название."
         )
 
-    await message.answer(prompt)
+    await message.answer(
+        prompt,
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text=BTN_CANCEL_CAFE_PROFILE)]],
+            resize_keyboard=True,
+        ),
+    )
+
+
+@router.message(
+    CafeProfileStates.waiting_for_title,
+    F.text == BTN_CANCEL_CAFE_PROFILE,
+)
+@router.message(
+    CafeProfileStates.waiting_for_address,
+    F.text == BTN_CANCEL_CAFE_PROFILE,
+)
+@router.message(
+    CafeProfileStates.waiting_for_work_start,
+    F.text == BTN_CANCEL_CAFE_PROFILE,
+)
+@router.message(
+    CafeProfileStates.waiting_for_work_end,
+    F.text == BTN_CANCEL_CAFE_PROFILE,
+)
+async def cafe_profile_cancel(message: Message, state: FSMContext):
+    await state.clear()
+
+    await message.answer(
+        "Ввод профиля отменён. Ранее сохранённые данные кафе не изменились.",
+        reply_markup=kb_admin_main(
+            is_super=is_superadmin(message.from_user.id),
+        ),
+    )
 
 
 @router.message(CafeProfileStates.waiting_for_title)
@@ -5227,7 +5261,10 @@ async def cafe_profile_work_end(message: Message, state: FSMContext):
         f"🏪 <b>{html.quote(title)}</b>\n"
         f"📍 {html.quote(address)}\n"
         f"🕒 {work_start_hour:02d}:00–{work_end_hour:02d}:00\n\n"
-        "Изменения сохранены."
+        "Изменения сохранены.",
+        reply_markup=kb_admin_main(
+            is_super=is_superadmin(message.from_user.id),
+        ),
     )
 
 
