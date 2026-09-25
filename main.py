@@ -160,7 +160,7 @@ def k_customer_profile(cafe_id: str, user_id: int) -> str:
 def k_customer_drinks(cafe_id: str, user_id: int) -> str:
     return f"customer:{cafe_id}:{user_id}:drinks"
 
-(cafe_id: str) -> str:
+def k_cafe_profile(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:profile"
 
 def redis_text(value: Any) -> str:
