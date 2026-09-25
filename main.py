@@ -4884,14 +4884,30 @@ async def back_to_client(message: Message, state: FSMContext):
     )
 
 @router.message(F.text == BTN_VIEW_ADMIN)
-async def back_to_admin(message: Message):
+async def back_to_admin(message: Message, state: FSMContext):
     if is_group_chat(message):
         return
 
     r: redis.Redis = message.bot._redis
-    await r.set(k_view_mode(message.from_user.id), "admin")
-    await message.answer("Ок. Переключил в админ-режим.\nНажмите /start, чтобы открыть админ-панель.")
+    uid = message.from_user.id
 
+    raw_cafe_id = await r.get(k_user_cafe(uid))
+    if isinstance(raw_cafe_id, bytes):
+        raw_cafe_id = raw_cafe_id.decode("utf-8", "ignore")
+
+    cafe_id = str(raw_cafe_id or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
+        await message.answer("🔒 Админ-доступ запрещён.")
+        return
+
+    await state.clear()
+    await r.set(k_view_mode(uid), "admin")
+
+    cafe = cafe_or_default(cafe_id)
+    menu = await get_menu(r, cafe_id)
+
+    await send_admin_panel(message, cafe_id, cafe, menu)
 
 @router.message(F.text == BTN_LINKS)
 async def admin_links_button(message: Message):
