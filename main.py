@@ -187,7 +187,51 @@ def k_cafe_sub_notify(cafe_id: str) -> str:
 # После других def k_... 
 def k_admin_subscription(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:admin_subscription"
+# ============================================================
+# START -> DEMO: очередь onboarding после /bind_paid_draft
+# ============================================================
 
+DEMO_ONBOARDING_STREAM = "cafebotify:demo_onboarding"
+DEMO_ONBOARDING_STREAM_MAXLEN = 1000
+
+
+def k_demo_onboarding_stream() -> str:
+    return DEMO_ONBOARDING_STREAM
+
+
+async def enqueue_demo_start_onboarding(
+    r: redis.Redis,
+    *,
+    client_id: int,
+    cafe_id: str,
+    draft_id: str,
+) -> str:
+    """
+    После успешного bind_paid_draft просит DEMO отправить клиенту
+    кнопку перехода в START в админ-режиме нужного кафе.
+
+    В событии только технические идентификаторы — без ФИО,
+    username, текста заказа, текста оплаты или платёжных данных.
+    """
+    stream_id = await r.xadd(
+        k_demo_onboarding_stream(),
+        {
+            "event": "send_start_onboarding",
+            "client_id": str(client_id),
+            "cafe_id": str(cafe_id),
+            "draft_id": str(draft_id),
+            "created_at": str(int(time.time())),
+        },
+        maxlen=DEMO_ONBOARDING_STREAM_MAXLEN,
+        approximate=True,
+    )
+
+    return (
+        stream_id.decode("utf-8", "ignore")
+        if isinstance(stream_id, bytes)
+        else str(stream_id)
+    )
+    
 def k_cafe_links_sent(cafe_id: str, user_id: int) -> str:
     return f"cafe:{cafe_id}:links_sent:{user_id}"
     
@@ -2422,6 +2466,31 @@ async def cmd_bind_paid_draft(
 
         await pipe.execute()
 
+        try:
+            onboarding_event_id = await enqueue_demo_start_onboarding(
+                r,
+                client_id=client_id,
+                cafe_id=cafe_id,
+                draft_id=draft_id,
+            )
+
+            logger.info(
+                "DEMO onboarding queued: event_id=%s draft_id=%s "
+                "cafe_id=%s client_id=%s",
+                onboarding_event_id,
+                draft_id,
+                cafe_id,
+                client_id,
+            )
+        except Exception:
+            logger.exception(
+                "Не удалось поставить DEMO onboarding в очередь: "
+                "draft_id=%s cafe_id=%s client_id=%s",
+                draft_id,
+                cafe_id,
+                client_id,
+            )
+
         until_text = datetime.fromtimestamp(
             valid_until,
             tz=MSK_TZ,
@@ -2443,7 +2512,7 @@ async def cmd_bind_paid_draft(
             f"Администратор: <code>{client_id}</code>\n"
             f"Подписка до: <b>{until_text}</b>\n"
             f"Draft ID: <code>{html.quote(draft_id)}</code>\n\n"
-            "Ссылки отправлены владельцу кафе."
+            "Клиенту поставлена задача на отправку кнопки перехода в START."
         )
 
         # Показываем ссылки суперадмину в текущем чате:
@@ -2453,28 +2522,6 @@ async def cmd_bind_paid_draft(
             cafe_id=cafe_id,
             heading="🔗 <b>Ссылки для нового кафе</b>",
         )
-
-        # И дублируем их новому владельцу в личный чат с ботом.
-        # Ошибка отправки владельцу не должна отменять уже готовую привязку.
-        try:
-            await send_cafe_links(
-                bot=message.bot,
-                chat_id=client_id,
-                cafe_id=cafe_id,
-                heading=(
-                    "✅ <b>Оплата подтверждена — кафе подключено</b>\n\n"
-                    f"Подписка активна до: <b>{until_text}</b>\n\n"
-                    "🔗 <b>Ваши рабочие ссылки</b>"
-                ),
-            )
-        except Exception:
-            logger.warning(
-                "Не удалось отправить ссылки владельцу после bind_paid_draft: "
-                "cafe_id=%s client_id=%s. Возможно, пользователь ещё не запускал бота.",
-                cafe_id,
-                client_id,
-                exc_info=True,
-            )
 
     except Exception:
         logger.exception(
