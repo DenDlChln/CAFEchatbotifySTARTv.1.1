@@ -2964,6 +2964,125 @@ async def wipe_cafe_runtime_data(
     }
 
 
+async def auto_wipe_expired_cafes(bot: Bot) -> int:
+    """
+    Находит кафе, у которых активная подписка закончилась
+    более трёх суток назад, и освобождает их Redis-данные.
+
+    Использует текущую модель подписок:
+    k_admin_subscription(cafe_id) +
+    cafebotify_valid_until / cafebotify_paid / admin_id.
+    """
+    r: redis.Redis = bot._redis
+
+    now_ts = int(time.time())
+    wipe_before_ts = now_ts - CAFE_AUTO_WIPE_AFTER_EXPIRY_SEC
+
+    wiped_count = 0
+
+    # CAFES остаётся списком 330 постоянных слотов из JSON.
+    for cafe_id in CAFES:
+        try:
+            sub = await r.hgetall(
+                k_admin_subscription(cafe_id)
+            )
+
+            raw_until = sub.get(
+                "cafebotify_valid_until",
+                "0",
+            )
+            raw_paid = sub.get(
+                "cafebotify_paid",
+                "0",
+            )
+            raw_admin_id = sub.get(
+                "admin_id",
+                "0",
+            )
+
+            try:
+                valid_until = int(raw_until or 0)
+            except (TypeError, ValueError):
+                valid_until = 0
+
+            paid = str(raw_paid or "0").strip()
+            admin_id = str(raw_admin_id or "0").strip()
+
+            # Свободный слот или уже очищенное кафе не трогаем.
+            if paid != "1":
+                continue
+
+            if admin_id in {"", "0"}:
+                continue
+
+            # Подписка ещё действует.
+            if valid_until > now_ts:
+                continue
+
+            # Истекла меньше 3 суток назад:
+            # ещё не освобождаем, оставляем время на продление.
+            if valid_until > wipe_before_ts:
+                continue
+
+            result = await wipe_cafe_runtime_data(
+                r,
+                cafe_id=cafe_id,
+                actor_id=None,
+                reason="subscription_expired_3d",
+            )
+
+            wiped_count += 1
+
+            logger.warning(
+                "AUTO_WIPE expired cafe: cafe_id=%s valid_until=%s "
+                "deleted_keys=%s fixed_users=%s",
+                cafe_id,
+                valid_until,
+                result["deleted_keys"],
+                result["fixed_users"],
+            )
+
+        except Exception:
+            # Ошибка проверки одного слота не должна остановить
+            # проверку остальных 329 кафе.
+            logger.exception(
+                "AUTO_WIPE check failed: cafe_id=%s",
+                cafe_id,
+            )
+
+    return wiped_count
+
+
+async def expired_cafes_auto_wipe_loop(bot: Bot) -> None:
+    """
+    Раз в час проверяет все 330 слотов и освобождает только те кафе,
+    где подписка истекла более 3 суток назад.
+
+    Функция auto_wipe_expired_cafes() содержит все условия и сам wipe.
+    Этот loop только запускает её по расписанию.
+    """
+    logger.info("Expired cafes auto-wipe worker started")
+
+    while True:
+        try:
+            wiped_count = await auto_wipe_expired_cafes(bot)
+
+            if wiped_count:
+                logger.warning(
+                    "Expired cafes auto-wipe completed: wiped_count=%s",
+                    wiped_count,
+                )
+
+        except asyncio.CancelledError:
+            # Нужен для корректной остановки задачи на deploy/restart.
+            raise
+
+        except Exception:
+            logger.exception("Expired cafes auto-wipe worker failed")
+
+        await asyncio.sleep(CAFE_AUTO_WIPE_CHECK_EVERY_SEC)
+
+
 @router.message(Command("wipe_cafe_confirm"))
 async def cmd_wipe_cafe_confirm(
     message: Message,
@@ -6139,13 +6258,14 @@ async def smart_return_loop(bot: Bot):
 _smart_task: Optional[asyncio.Task] = None
 _sub_task: Optional[asyncio.Task] = None
 _order_reminder_task: Optional[asyncio.Task] = None
+_expired_cafe_wipe_task: Optional[asyncio.Task] = None
 
 async def on_startup(app: web.Application):
     bot: Bot = app["bot"]
 
     await set_commands(bot)
 
-    global _smart_task, _sub_task, _order_reminder_task
+    global _smart_task, _sub_task, _order_reminder_task, _expired_cafe_wipe_task
 
     if _smart_task is None or _smart_task.done():
         _smart_task = asyncio.create_task(
@@ -6162,6 +6282,14 @@ async def on_startup(app: web.Application):
             unfinished_orders_reminder_worker(bot)
         )
 
+    if (
+        _expired_cafe_wipe_task is None
+        or _expired_cafe_wipe_task.done()
+    ):
+        _expired_cafe_wipe_task = asyncio.create_task(
+            expired_cafes_auto_wipe_loop(bot)
+        )
+
     await bot.set_webhook(
         WEBHOOK_URL,
         secret_token=WEBHOOK_SECRET,
@@ -6174,12 +6302,13 @@ async def on_shutdown(app: web.Application):
     storage: RedisStorage = app["storage"]
     r: redis.Redis = app["redis"]
 
-    global _smart_task, _sub_task, _order_reminder_task
+    global _smart_task, _sub_task, _order_reminder_task, _expired_cafe_wipe_task
 
     tasks_to_stop = [
         ("smart_return_loop", _smart_task),
         ("sub_renewal_loop", _sub_task),
         ("unfinished_orders_reminder_worker", _order_reminder_task),
+        ("expired_cafes_auto_wipe_loop", _expired_cafe_wipe_task),
     ]
 
     for task_name, task in tasks_to_stop:
@@ -6202,6 +6331,7 @@ async def on_shutdown(app: web.Application):
     _smart_task = None
     _sub_task = None
     _order_reminder_task = None
+    _expired_cafe_wipe_task = None
 
     try:
         await bot.delete_webhook()
