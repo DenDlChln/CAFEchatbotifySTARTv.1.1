@@ -756,6 +756,12 @@ BTN_CANCEL = "🔙 Отмена"
 BTN_CONFIRM = "Подтвердить"
 BTN_READY_NOW = "🚶 Сейчас"
 BTN_READY_20 = "⏱ Через 20 мин"
+# ПЕРСОНАЛЬНЫЕ ДАННЫЕ: согласие перед оформлением заказа
+PRIVACY_POLICY_URL = "https://cafebotify.tilda.ws/politica"
+PRIVACY_POLICY_VERSION = "2026-09-25"
+
+PD_CONSENT_CB_PREFIX = "pd_consent:"
+PD_CONSENT_ORDER = "pd_consent:order"
 
 BTN_REPEAT_LAST = "🔁 Повторить последний заказ"
 BTN_REPEAT_NO = "❌ Нет, спасибо"
@@ -842,6 +848,97 @@ BROADCAST_CANCEL = "❌ Отмена"
 # =========================================================
 # Keyboards
 # =========================================================
+def k_pd_consent(cafe_id: str, user_id: int) -> str:
+    """
+    Согласие пользователя на обработку данных для оформления заказа
+    в конкретном кафе.
+    """
+    return f"cafebotify:pd_consent:{cafe_id}:{user_id}"
+
+async def has_order_pd_consent(
+    r: redis.Redis,
+    cafe_id: str,
+    user_id: int,
+) -> bool:
+    return bool(await r.exists(k_pd_consent(cafe_id, user_id)))
+
+async def save_order_pd_consent(
+    r: redis.Redis,
+    cafe_id: str,
+    user_id: int,
+) -> None:
+    """
+    Фиксируем минимальный журнал согласия:
+    кафе, пользователь, время и версия опубликованной политики.
+
+    13 месяцев — стартовый срок. Его затем согласуем с окончательной
+    политикой и правилами хранения в сервисе.
+    """
+    consent_key = k_pd_consent(cafe_id, user_id)
+
+    await r.hset(
+        consent_key,
+        mapping={
+            "cafe_id": cafe_id,
+            "user_id": user_id,
+            "policy_url": PRIVACY_POLICY_URL,
+            "policy_version": PRIVACY_POLICY_VERSION,
+            "consented_at": int(time.time()),
+            "source": "telegram_order_checkout",
+        },
+    )
+
+    await r.expire(
+        consent_key,
+        13 * 30 * 24 * 60 * 60,
+    )
+
+def kb_pd_consent() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Согласен(на)",
+                    callback_data=PD_CONSENT_ORDER,
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📄 Политика",
+                    url=PRIVACY_POLICY_URL,
+                ),
+            ],
+        ]
+    )
+
+async def show_order_confirmation_after_consent(
+    message: Message,
+    state: FSMContext,
+    *,
+    cafe_id: str,
+) -> None:
+    """
+    Единая функция показа подтверждения заказа.
+    Её вызываем и после обычной проверки consent,
+    и после нажатия «Согласен(на)».
+    """
+    menu = await get_menu(message.bot._redis, cafe_id)
+    cart = get_cart(await state.get_data())
+
+    if not cart:
+        await message.answer(
+            "Корзина пуста. Добавьте позиции и попробуйте снова."
+        )
+        return
+
+    await state.set_state(OrderStates.waiting_for_confirmation)
+
+    await message.answer(
+        "✅ <b>Подтвердите заказ</b>\n\n"
+        + cart_text(cart, menu),
+        reply_markup=kb_confirm(),
+    )
+
 def kb_client_main(menu: Dict[str, int], show_admin_button: bool = False) -> ReplyKeyboardMarkup:
     kb: List[List[KeyboardButton]] = []
     for drink in menu.keys():
@@ -3690,27 +3787,58 @@ async def checkout(message: Message, state: FSMContext):
         return
 
     r: redis.Redis = message.bot._redis
-    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+    user_id = message.from_user.id
+
+    cafe_id = str(
+        await r.get(k_user_cafe(user_id))
+        or DEFAULT_CAFE_ID
+    )
     cafe = cafe_or_default(cafe_id)
     menu = await get_menu(r, cafe_id)
-    is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
+    is_admin = await is_cafe_admin(r, user_id, cafe_id)
 
     if not cafe_open(cafe):
         await message.answer(
             closed_message(cafe, menu),
-            reply_markup=kb_client_main(menu, show_admin_button=is_admin),
+            reply_markup=kb_client_main(
+                menu,
+                show_admin_button=is_admin,
+            ),
         )
         return
 
     cart = get_cart(await state.get_data())
     if not cart:
-        await message.answer("Корзина пустая.", reply_markup=kb_client_main(menu, show_admin_button=is_admin))
+        await message.answer(
+            "Корзина пустая.",
+            reply_markup=kb_client_main(
+                menu,
+                show_admin_button=is_admin,
+            ),
+        )
         return
 
-    await state.set_state(OrderStates.waiting_for_confirmation)
-    await message.answer(
-        "✅ <b>Подтвердите заказ</b>\n\n" + cart_text(cart, menu),
-        reply_markup=kb_confirm(),
+    # До первого оформления заказа в этом кафе просим пользователя
+    # явно подтвердить ознакомление с политикой и обработку данных.
+    if not await has_order_pd_consent(r, cafe_id, user_id):
+        await state.set_state(OrderStates.waiting_for_confirmation)
+
+        await message.answer(
+            "🔐 <b>Перед оформлением заказа</b>\n\n"
+            "Бот использует ваш Telegram ID, имя или username, состав заказа "
+            "и выбранное время готовности, чтобы передать заказ выбранному кафе "
+            "и обеспечить его приготовление и выдачу.\n\n"
+            "Нажимая «Согласен(на)», вы подтверждаете ознакомление с Политикой "
+            "обработки персональных данных и соглашаетесь на обработку данных "
+            "для оформления и исполнения заказа.",
+            reply_markup=kb_pd_consent(),
+        )
+        return
+
+    await show_order_confirmation_after_consent(
+        message,
+        state,
+        cafe_id=cafe_id,
     )
 
 
@@ -4862,6 +4990,55 @@ async def order_done_callback(callback: CallbackQuery) -> None:
             cafe_id,
             order_id,
         )
+
+
+@router.callback_query(F.data == PD_CONSENT_ORDER)
+async def pd_consent_order_callback(
+    callback: CallbackQuery,
+    state: FSMContext,
+) -> None:
+    if not callback.message:
+        await callback.answer(
+            "Не удалось определить сообщение.",
+            show_alert=True,
+        )
+        return
+
+    r: redis.Redis = callback.bot._redis
+    user_id = callback.from_user.id
+
+    cafe_id = str(
+        await r.get(k_user_cafe(user_id))
+        or DEFAULT_CAFE_ID
+    )
+
+    await save_order_pd_consent(
+        r,
+        cafe_id,
+        user_id,
+    )
+
+    await callback.answer("Согласие сохранено ✅")
+
+    # Убираем кнопки у исходного сообщения, чтобы его не жали повторно.
+    try:
+        await callback.message.edit_reply_markup(
+            reply_markup=None,
+        )
+    except Exception:
+        logger.exception(
+            "Не удалось убрать кнопки согласия: user_id=%s cafe_id=%s",
+            user_id,
+            cafe_id,
+        )
+
+    # Важно: callback.message — это объект Message.
+    # После согласия показываем обычный экран подтверждения с корзиной.
+    await show_order_confirmation_after_consent(
+        callback.message,
+        state,
+        cafe_id=cafe_id,
+    )
 
 
 @router.callback_query(F.data.startswith(SUP_CB_TOPIC))
