@@ -831,7 +831,17 @@ BTN_READY_20 = "⏱ Через 20 мин"
 # ПЕРСОНАЛЬНЫЕ ДАННЫЕ: согласие перед оформлением заказа
 PRIVACY_POLICY_URL = "https://cafebotify.tilda.ws/politica"
 PRIVACY_POLICY_VERSION = "2026-09-25"
+# ============================================================
+# Автоматическое освобождение кафе после окончания подписки
+# ============================================================
 
+# Через сколько времени после истечения подписки освободить слот.
+# 3 суток = 72 часа = 259 200 секунд.
+CAFE_AUTO_WIPE_AFTER_EXPIRY_SEC = 3 * 24 * 60 * 60
+
+# Как часто worker будет проверять просроченные подписки.
+# Один раз в час.
+CAFE_AUTO_WIPE_CHECK_EVERY_SEC = 60 * 60
 PD_CONSENT_CB_PREFIX = "pd_consent:"
 PD_CONSENT_ORDER = "pd_consent:order"
 
@@ -2835,26 +2845,24 @@ async def cmd_wipe_cafe(message: Message, command: CommandObject):
         f"Для подтверждения отправьте:\n<code>/wipe_cafe_confirm {html.quote(cafe_id)} WIPE</code>"
     )
 
-@router.message(Command("wipe_cafe_confirm"))
-async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
-    if not is_superadmin(message.from_user.id):
-        await message.answer("🔒 Доступ запрещён.")
-        return
+async def wipe_cafe_runtime_data(
+    r: redis.Redis,
+    *,
+    cafe_id: str,
+    actor_id: Optional[int] = None,
+    reason: str = "manual",
+) -> dict[str, int]:
+    """
+    Очищает все оперативные Redis-данные одного кафе.
 
-    args = (command.args or "").strip().split()
-    if len(args) != 2:
-        await message.answer("Формат: <code>/wipe_cafe_confirm cafe_001 WIPE</code>")
-        return
+    Сам cafe_id остаётся в config_330_template.json, поэтому после
+    очистки слот можно выдать следующему клиенту.
 
-    cafe_id, confirm_word = args
-    if cafe_id not in CAFES:
-        await message.answer("Неизвестный cafe_id.")
-        return
-    if confirm_word != "WIPE":
-        await message.answer("Неверное подтверждение. Последнее слово должно быть <code>WIPE</code>.")
-        return
+    reason:
+    - manual: ручная очистка суперадмином;
+    - subscription_expired_3d: будущая автоочистка через 3 суток.
+    """
 
-    r: redis.Redis = message.bot._redis
     keys = await collect_cafe_wipe_keys(r, cafe_id)
     linked_users = await collect_linked_users_for_cafe(r, cafe_id)
 
@@ -2863,17 +2871,27 @@ async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
     if keys:
         pipe.delete(*keys)
 
-    # Явно фиксируем "пустое кафе" после wipe,
-    # чтобы никакая логика не трактовала отсутствие ключей двусмысленно.
-    pipe.hset(k_cafe_profile(cafe_id), mapping={
-        "admin_id": "",
-    })
+    # После удаления оставляем только безопасные технические маркеры
+    # свободного слота. Реальные данные предыдущего кафе здесь не хранятся.
+    pipe.hset(
+        k_cafe_profile(cafe_id),
+        mapping={
+            "admin_id": "",
+            "slot_status": "free",
+            "wiped_at": str(int(time.time())),
+            "wipe_reason": reason,
+        },
+    )
 
-    pipe.hset(k_admin_subscription(cafe_id), mapping={
-        "cafebotify_paid": "0",
-        "cafebotify_valid_until": "0",
-        "admin_id": "0",
-    })
+    pipe.hset(
+        k_admin_subscription(cafe_id),
+        mapping={
+            "cafebotify_paid": "0",
+            "cafebotify_valid_until": "0",
+            "admin_id": "0",
+            "slot_status": "free",
+        },
+    )
 
     pipe.delete(k_staff_group(cafe_id))
     pipe.delete(k_cafe_sub_notify(cafe_id))
@@ -2894,29 +2912,43 @@ async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
         pipe.delete(k_support_active(cafe_id, uid))
 
         try:
-            had_legacy = await r.hget(f"user:{uid}", "cafebotify_valid_until")
+            had_legacy = await r.hget(
+                f"user:{uid}",
+                "cafebotify_valid_until",
+            )
+
             if had_legacy is not None:
-                pipe.hdel(f"user:{uid}", "cafebotify_valid_until")
+                pipe.hdel(
+                    f"user:{uid}",
+                    "cafebotify_valid_until",
+                )
                 cleared_legacy_sub += 1
+
         except Exception:
             pass
 
         try:
             attr_key = f"user:{uid}:broadcast_attribution"
             raw_attr = await r.get(attr_key)
+
             if raw_attr:
-                data = json.loads(raw_attr)
-                if str(data.get("cafe_id") or "").strip() == cafe_id:
+                attr_data = json.loads(raw_attr)
+
+                if str(attr_data.get("cafe_id") or "").strip() == cafe_id:
                     pipe.delete(attr_key)
                     cleared_broadcast_attr += 1
+
         except Exception:
             pass
 
     await pipe.execute()
 
     logger.warning(
-        "SUPERADMIN WIPE_CAFE by user_id=%s cafe_id=%s deleted_keys=%s fixed_users=%s cleared_legacy_sub=%s cleared_broadcast_attr=%s",
-        message.from_user.id,
+        "CAFE WIPE completed: actor_id=%s reason=%s cafe_id=%s "
+        "deleted_keys=%s fixed_users=%s "
+        "cleared_legacy_sub=%s cleared_broadcast_attr=%s",
+        actor_id if actor_id is not None else "system",
+        reason,
         cafe_id,
         len(keys),
         fixed_users,
@@ -2924,15 +2956,77 @@ async def cmd_wipe_cafe_confirm(message: Message, command: CommandObject):
         cleared_broadcast_attr,
     )
 
+    return {
+        "deleted_keys": len(keys),
+        "fixed_users": fixed_users,
+        "cleared_legacy_sub": cleared_legacy_sub,
+        "cleared_broadcast_attr": cleared_broadcast_attr,
+    }
+
+
+@router.message(Command("wipe_cafe_confirm"))
+async def cmd_wipe_cafe_confirm(
+    message: Message,
+    command: CommandObject,
+):
+    if not is_superadmin(message.from_user.id):
+        await message.answer("🔒 Доступ запрещён.")
+        return
+
+    args = (command.args or "").strip().split()
+
+    if len(args) != 2:
+        await message.answer(
+            "Формат: <code>/wipe_cafe_confirm cafe_001 WIPE</code>"
+        )
+        return
+
+    cafe_id, confirm_word = args
+
+    if cafe_id not in CAFES:
+        await message.answer("Неизвестный cafe_id.")
+        return
+
+    if confirm_word != "WIPE":
+        await message.answer(
+            "Неверное подтверждение. Последнее слово должно быть "
+            "<code>WIPE</code>."
+        )
+        return
+
+    r: redis.Redis = message.bot._redis
+
+    try:
+        result = await wipe_cafe_runtime_data(
+            r,
+            cafe_id=cafe_id,
+            actor_id=message.from_user.id,
+            reason="manual",
+        )
+
+    except Exception:
+        logger.exception(
+            "SUPERADMIN manual WIPE_CAFE failed: user_id=%s cafe_id=%s",
+            message.from_user.id,
+            cafe_id,
+        )
+
+        await message.answer(
+            "❌ Не удалось очистить кафе. Проверьте runtime-логи."
+        )
+        return
+
     await message.answer(
         "✅ <b>Очистка завершена</b>\n\n"
         f"Кафе: <code>{html.quote(cafe_id)}</code>\n"
-        f"Удалено Redis-ключей: <b>{len(keys)}</b>\n"
-        f"Исправлено пользовательских привязок: <b>{fixed_users}</b>\n"
-        f"Очищено legacy-подписок user hash: <b>{cleared_legacy_sub}</b>\n"
-        f"Очищено broadcast attribution: <b>{cleared_broadcast_attr}</b>\n\n"
-        "Важно: само кафе не удалено из config.json.\n"
-        "Если в конфиге есть базовое меню, оно может появиться снова после /start."
+        f"Удалено Redis-ключей: <b>{result['deleted_keys']}</b>\n"
+        f"Исправлено пользовательских привязок: "
+        f"<b>{result['fixed_users']}</b>\n"
+        f"Очищено legacy-подписок user hash: "
+        f"<b>{result['cleared_legacy_sub']}</b>\n"
+        f"Очищено broadcast attribution: "
+        f"<b>{result['cleared_broadcast_attr']}</b>\n\n"
+        "Кафе не удалено из config.json и снова доступно как свободный слот."
     )
 
 
