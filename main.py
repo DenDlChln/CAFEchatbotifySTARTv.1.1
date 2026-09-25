@@ -160,8 +160,68 @@ def k_customer_profile(cafe_id: str, user_id: int) -> str:
 def k_customer_drinks(cafe_id: str, user_id: int) -> str:
     return f"customer:{cafe_id}:{user_id}:drinks"
 
-def k_cafe_profile(cafe_id: str) -> str:
+(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:profile"
+
+def redis_text(value: Any) -> str:
+    if value is None:
+        return ""
+
+    if isinstance(value, bytes):
+        return value.decode("utf-8", "ignore")
+
+    return str(value)
+
+
+async def apply_cafe_profile(
+    r: redis.Redis,
+    cafe_id: str,
+    cafe: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Возвращает копию базового cafe с данными профиля из Redis.
+    Если профиль не заполнен, возвращается исходный cafe без изменений.
+    """
+    result = dict(cafe)
+
+    try:
+        profile = await r.hgetall(k_cafe_profile(cafe_id))
+    except Exception:
+        logger.exception(
+            "Не удалось загрузить профиль кафе: cafe_id=%s",
+            cafe_id,
+        )
+        return result
+
+    if not profile:
+        return result
+
+    normalized = {
+        redis_text(key): redis_text(value).strip()
+        for key, value in profile.items()
+    }
+
+    if normalized.get("profile_configured") != "1":
+        return result
+
+    title = normalized.get("title", "")
+    address = normalized.get("address", "")
+    work_start = normalized.get("work_start", "")
+    work_end = normalized.get("work_end", "")
+
+    if title:
+        result["title"] = title
+
+    if address:
+        result["address"] = address
+
+    if work_start:
+        result["work_start"] = work_start
+
+    if work_end:
+        result["work_end"] = work_end
+
+    return result
 
 def k_support_ticket(ticket_id: str) -> str:
     return f"support:ticket:{ticket_id}"
@@ -187,6 +247,80 @@ def k_cafe_sub_notify(cafe_id: str) -> str:
 # После других def k_... 
 def k_admin_subscription(cafe_id: str) -> str:
     return f"cafe:{cafe_id}:admin_subscription"
+
+def k_cafe_profile(cafe_id: str) -> str:
+    return f"cafe:{cafe_id}:profile"
+
+def redis_text(value: Any) -> str:
+    if value is None:
+        return ""
+
+    if isinstance(value, bytes):
+        return value.decode("utf-8", "ignore")
+
+    return str(value)
+
+
+async def apply_cafe_profile(
+    r: redis.Redis,
+    cafe_id: str,
+    cafe: Dict[str, Any],
+) -> Dict[str, Any]:
+    result = dict(cafe)
+
+    try:
+        profile = await r.hgetall(k_cafe_profile(cafe_id))
+    except Exception:
+        logger.exception(
+            "Не удалось загрузить профиль кафе: cafe_id=%s",
+            cafe_id,
+        )
+        return result
+
+    if not profile:
+        return result
+
+    normalized = {
+        redis_text(key): redis_text(value).strip()
+        for key, value in profile.items()
+    }
+
+    if normalized.get("profile_configured") != "1":
+        return result
+
+    title = normalized.get("title", "")
+    address = normalized.get("address", "")
+    work_start_raw = normalized.get("work_start", "")
+    work_end_raw = normalized.get("work_end", "")
+
+    if title:
+        result["title"] = title
+
+    if address:
+        result["address"] = address
+
+    try:
+        work_start = int(work_start_raw)
+        work_end = int(work_end_raw)
+
+        if not (0 <= work_start <= 23 and 0 <= work_end <= 23):
+            raise ValueError("Время должно быть в диапазоне 0–23")
+
+        features = dict(result.get("features") or {})
+        features["work_start"] = work_start
+        features["work_end"] = work_end
+        result["features"] = features
+
+    except (TypeError, ValueError):
+        logger.warning(
+            "Некорректный график в профиле кафе: cafe_id=%s, "
+            "work_start=%r, work_end=%r",
+            cafe_id,
+            work_start_raw,
+            work_end_raw,
+        )
+
+    return result
 # ============================================================
 # START -> DEMO: очередь onboarding после /bind_paid_draft
 # ============================================================
@@ -857,6 +991,7 @@ BTN_STATS = "📊 Статистика"
 BTN_MENU_EDIT = "🛠 Меню"
 BTN_STAFF_GROUP = "👥 Группа персонала"
 BTN_LINKS = "🔗 Ссылки"
+BTN_CAFE_PROFILE = "🏪 Профиль кафе"
 BTN_ADMIN_INFO = "ℹ️ Справка админа"
 BTN_BACK = "⬅️ Назад"
 
@@ -1115,6 +1250,7 @@ def kb_admin_main(is_super: bool) -> ReplyKeyboardMarkup:
     kb = [
         [KeyboardButton(text=BTN_STATS), KeyboardButton(text=BTN_MENU_EDIT)],
         [KeyboardButton(text=BTN_STAFF_GROUP), KeyboardButton(text=BTN_LINKS)],
+        [KeyboardButton(text=BTN_CAFE_PROFILE)],
         [KeyboardButton(text=BTN_RENEW_SUB), KeyboardButton(text=BTN_SUB_INFO)],
         [KeyboardButton(text=BTN_PROMO), KeyboardButton(text=BTN_BROADCAST)],
         [KeyboardButton(text=BTN_ADMIN_INFO), KeyboardButton(text=BTN_ADMIN_SUPPORT)],
@@ -1283,6 +1419,12 @@ class MenuEditStates(StatesGroup):
     pick_edit_item = State()
     waiting_for_edit_price = State()
     pick_remove_item = State()
+
+class CafeProfileStates(StatesGroup):
+    waiting_for_title = State()
+    waiting_for_address = State()
+    waiting_for_work_start = State()
+    waiting_for_work_end = State()
 
 class SupportStates(StatesGroup):
     waiting_for_topic_message = State()
@@ -3182,17 +3324,23 @@ FINISH_VARIANTS = [
     "Принято, {name}. Заглядывайте ещё!",
 ]
 
-async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any], menu: Dict[str, int]):
+async def send_admin_panel(
+    message: Message,
+    cafe_id: str,
+    cafe: Dict[str, Any],
+    menu: Dict[str, int],
+):
     r: redis.Redis = message.bot._redis
     uid = message.from_user.id
     is_super = is_superadmin(uid)
+    cafe = await apply_cafe_profile(r, cafe_id, cafe)
 
     if not is_super and not await is_subscription_active(r, uid, cafe_id):
         await ensure_subscription_active(message, r, cafe_id)
         return
-        
-    admin_id = await get_effective_admin_id(message.bot._redis, cafe_id)
-    
+
+    admin_id = await get_effective_admin_id(r, cafe_id)
+
     client_link = await create_start_link(
         message.bot,
         payload=cafe_id,
@@ -3210,25 +3358,63 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         payload=cafe_id,
         encode=False,
     )
-    
-    uid = message.from_user.id
-    is_super = is_superadmin(uid)
+
+    profile_notice = ""
 
     try:
-        r = message.bot._redis
+        profile = await r.hgetall(k_cafe_profile(cafe_id))
+
+        configured_raw = (
+            profile.get("profile_configured")
+            or profile.get(b"profile_configured")
+            or ""
+        )
+
+        if isinstance(configured_raw, bytes):
+            configured_raw = configured_raw.decode("utf-8", "ignore")
+
+        configured = str(configured_raw).strip()
+
+        if not is_super and configured != "1":
+            profile_notice = (
+                "\n⚠️ <b>Профиль кафе ещё не заполнен.</b>\n"
+                "Нажмите «🏪 Профиль кафе», чтобы указать название, "
+                "адрес и режим работы.\n"
+            )
+
+    except Exception:
+        logger.exception(
+            "Не удалось проверить заполнение профиля кафе: cafe_id=%s",
+            cafe_id,
+        )
+
+    try:
         sub_key = k_admin_subscription(cafe_id)
         raw_until = await r.hget(sub_key, "cafebotify_valid_until")
+
+        if isinstance(raw_until, bytes):
+            raw_until = raw_until.decode("utf-8", "ignore")
 
         if is_super:
             subline = "\n<b>🛠 Суперадмин (без ограничений)</b>\n"
         else:
             until_ts = int(raw_until) if raw_until else 0
-            if until_ts > 0 and until_ts > int(time.time()):
-                until_dt = datetime.fromtimestamp(until_ts, tz=MSK_TZ).strftime("%d.%m.%Y")
+
+            if until_ts > int(time.time()):
+                until_dt = datetime.fromtimestamp(
+                    until_ts,
+                    tz=MSK_TZ,
+                ).strftime("%d.%m.%Y")
+
                 subline = f"\n<b>Подписка до:</b> <b>{until_dt}</b>\n"
             else:
                 subline = "\n<b>❌ Подписка просрочена</b>\n"
+
     except Exception:
+        logger.exception(
+            "Не удалось получить статус подписки: cafe_id=%s",
+            cafe_id,
+        )
         subline = "\n<b>❌ Ошибка проверки подписки</b>\n"
 
     await message.answer(
@@ -3237,6 +3423,7 @@ async def send_admin_panel(message: Message, cafe_id: str, cafe: Dict[str, Any],
         f"ID: <code>{html.quote(cafe_id)}</code>\n"
         f"admin_id (effective): <code>{admin_id}</code>\n"
         f"{subline}"
+        f"{profile_notice}"
         f"{work_status(cafe)}{address_line(cafe)}\n\n"
         "🔗 <b>Ссылки</b>\n"
         f"• <a href=\"{html.quote(client_link)}\">👥 Клиентам — открыть меню</a>\n"
@@ -4858,6 +5045,188 @@ async def stats_button(message: Message):
         "<b>По позициям:</b>\n" + "\n".join(lines)
     )
     await message.answer(text)
+
+
+@router.message(F.text == BTN_CAFE_PROFILE)
+async def cafe_profile_entry(message: Message, state: FSMContext):
+    if is_group_chat(message):
+        await message.answer(
+            "🏪 Профиль кафе можно редактировать только в личном чате с ботом."
+        )
+        return
+
+    r: redis.Redis = message.bot._redis
+
+    raw_cafe_id = await r.get(k_user_cafe(message.from_user.id))
+    if isinstance(raw_cafe_id, bytes):
+        raw_cafe_id = raw_cafe_id.decode("utf-8", "ignore")
+
+    cafe_id = str(raw_cafe_id or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+        await message.answer("🔒 Редактирование профиля доступно только администратору.")
+        return
+
+    if not await ensure_subscription_active(message, r, cafe_id):
+        return
+
+    profile = await r.hgetall(k_cafe_profile(cafe_id))
+
+    current_title_raw = (
+        profile.get("title")
+        or profile.get(b"title")
+        or ""
+    )
+
+    if isinstance(current_title_raw, bytes):
+        current_title_raw = current_title_raw.decode("utf-8", "ignore")
+
+    current_title = str(current_title_raw).strip()
+
+    await state.clear()
+    await state.update_data(cafe_id=cafe_id)
+    await state.set_state(CafeProfileStates.waiting_for_title)
+
+    prompt = (
+        "🏪 <b>Профиль кафе</b>\n\n"
+        "Шаг 1 из 4. Введите название кафе.\n\n"
+        "Например: <i>Coffee Point</i>"
+    )
+
+    if current_title:
+        prompt += (
+            f"\n\nТекущее название: <b>{html.quote(current_title)}</b>"
+            "\nОтправьте новое название."
+        )
+
+    await message.answer(prompt)
+
+
+@router.message(CafeProfileStates.waiting_for_title)
+async def cafe_profile_title(message: Message, state: FSMContext):
+    title = (message.text or "").strip()
+
+    if len(title) < 2 or len(title) > 80:
+        await message.answer(
+            "⚠️ Название должно содержать от 2 до 80 символов.\n"
+            "Попробуйте ещё раз."
+        )
+        return
+
+    await state.update_data(title=title)
+    await state.set_state(CafeProfileStates.waiting_for_address)
+
+    await message.answer(
+        "Шаг 2 из 4. Введите адрес кафе.\n\n"
+        "Например: <i>Москва, ул. Тверская, 15</i>"
+    )
+
+
+@router.message(CafeProfileStates.waiting_for_address)
+async def cafe_profile_address(message: Message, state: FSMContext):
+    address = (message.text or "").strip()
+
+    if len(address) < 5 or len(address) > 180:
+        await message.answer(
+            "⚠️ Адрес должен содержать от 5 до 180 символов.\n"
+            "Попробуйте ещё раз."
+        )
+        return
+
+    await state.update_data(address=address)
+    await state.set_state(CafeProfileStates.waiting_for_work_start)
+
+    await message.answer(
+        "Шаг 3 из 4. Во сколько кафе открывается?\n\n"
+        "Введите время в формате <code>09:00</code>."
+    )
+
+
+@router.message(CafeProfileStates.waiting_for_work_start)
+async def cafe_profile_work_start(message: Message, state: FSMContext):
+    work_start = (message.text or "").strip()
+
+    try:
+        datetime.strptime(work_start, "%H:%M")
+    except ValueError:
+        await message.answer(
+            "⚠️ Нужен формат времени <code>ЧЧ:ММ</code>.\n"
+            "Например: <code>09:00</code>."
+        )
+        return
+
+    await state.update_data(work_start=work_start)
+    await state.set_state(CafeProfileStates.waiting_for_work_end)
+
+    await message.answer(
+        "Шаг 4 из 4. Во сколько кафе закрывается?\n\n"
+        "Введите время в формате <code>22:00</code>."
+    )
+
+
+@router.message(CafeProfileStates.waiting_for_work_end)
+async def cafe_profile_work_end(message: Message, state: FSMContext):
+    work_end = (message.text or "").strip()
+
+    try:
+        datetime.strptime(work_end, "%H:%M")
+    except ValueError:
+        await message.answer(
+            "⚠️ Нужен формат времени <code>ЧЧ:ММ</code>.\n"
+            "Например: <code>22:00</code>."
+        )
+        return
+
+    data = await state.get_data()
+
+    cafe_id = str(data.get("cafe_id") or "")
+    title = str(data.get("title") or "").strip()
+    address = str(data.get("address") or "").strip()
+
+    if not cafe_id or not title or not address:
+        await state.clear()
+        await message.answer(
+            "⚠️ Данные формы потеряны. Нажмите «🏪 Профиль кафе» и начните снова."
+        )
+        return
+
+    r: redis.Redis = message.bot._redis
+
+    work_start = str(data["work_start"]).strip()
+    work_end = str(work_end).strip()
+
+    work_start_hour = int(work_start.split(":")[0])
+    work_end_hour = int(work_end.split(":")[0])
+
+    if work_start_hour == work_end_hour:
+        await message.answer(
+            "⚠️ Время открытия и закрытия не должно совпадать.\n"
+            "Введите другое время закрытия."
+        )
+        return
+
+    await r.hset(
+        k_cafe_profile(cafe_id),
+        mapping={
+            "title": title,
+            "address": address,
+            "work_start": str(work_start_hour),
+            "work_end": str(work_end_hour),
+            "profile_configured": "1",
+            "updated_at": str(int(time.time())),
+            "updated_by": str(message.from_user.id),
+        },
+    )
+
+    await state.clear()
+
+    await message.answer(
+        "✅ <b>Профиль кафе сохранён.</b>\n\n"
+        f"🏪 <b>{html.quote(title)}</b>\n"
+        f"📍 {html.quote(address)}\n"
+        f"🕒 {work_start_hour:02d}:00–{work_end_hour:02d}:00\n\n"
+        "Изменения сохранены в Redis."
+    )
 
 
 @router.message(F.text == BTN_MENU_EDIT)
