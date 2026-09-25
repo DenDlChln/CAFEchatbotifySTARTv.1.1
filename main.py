@@ -3427,6 +3427,7 @@ async def send_admin_panel(
         f"{profile_notice}"
         f"{work_status(cafe)}{address_line(cafe)}\n\n"
         "Рабочие ссылки доступны по кнопке «🔗 Ссылки».",
+        reply_markup=kb_admin_main(is_super=is_super),
     )
 
 from aiogram.enums import ChatType
