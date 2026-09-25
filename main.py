@@ -3426,12 +3426,7 @@ async def send_admin_panel(
         f"{subline}"
         f"{profile_notice}"
         f"{work_status(cafe)}{address_line(cafe)}\n\n"
-        "🔗 <b>Ссылки</b>\n"
-        f"• <a href=\"{html.quote(client_link)}\">👥 Клиентам — открыть меню</a>\n"
-        f"• <a href=\"{html.quote(admin_link)}\">🛠 Администратору — открыть админ-панель</a>\n"
-        f"• <a href=\"{html.quote(staff_link)}\">👨‍🍳 Добавить бота в staff-группу</a>\n"
-        f"<code>/bind {html.quote(cafe_id)}</code>\n",
-        reply_markup=kb_admin_main(is_super=is_super),
+        "Рабочие ссылки доступны по кнопке «🔗 Ссылки».",
     )
 
 from aiogram.enums import ChatType
@@ -4857,13 +4852,19 @@ async def back_to_client(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     uid = message.from_user.id
 
-    await r.set(k_view_mode(uid), "client")
-    await state.clear()
+    raw_cafe_id = await r.get(k_user_cafe(uid))
+    if isinstance(raw_cafe_id, bytes):
+        raw_cafe_id = raw_cafe_id.decode("utf-8", "ignore")
 
-    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+    cafe_id = str(raw_cafe_id or DEFAULT_CAFE_ID)
     cafe = cafe_or_default(cafe_id)
+    cafe = await apply_cafe_profile(r, cafe_id, cafe)
+
     menu = await get_menu(r, cafe_id)
     is_admin = await is_cafe_admin(r, uid, cafe_id)
+
+    await r.set(k_view_mode(uid), "client")
+    await state.clear()
 
     if not cafe_open(cafe):
         await message.answer(
@@ -4873,10 +4874,14 @@ async def back_to_client(message: Message, state: FSMContext):
         return
 
     await message.answer(
-        "Ок, переключил в клиентский режим.",
+        "Ок, переключил в клиентский режим.\n\n"
+        f"🏪 <b>{html.quote(cafe_title(cafe))}</b>\n"
+        f"{work_status(cafe)}"
+        f"{address_line(cafe)}\n\n"
+        "Чтобы добавить в корзину: нажмите напиток → выберите количество.\n"
+        "Корзина — «🛒 Корзина».",
         reply_markup=kb_client_main(menu, show_admin_button=is_admin),
     )
-
 
 @router.message(F.text == BTN_VIEW_ADMIN)
 async def back_to_admin(message: Message):
