@@ -4080,14 +4080,6 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
         )
     )
 
-    # ВСТАВИТЬ ЭТО СРАЗУ ПОСЛЕ admin_msg
-    if not username:
-        admin_msg += (
-            "\n\n<i>У клиента нет @username. "
-            "Нажмите «Ответить» на это сообщение — "
-            "бот перешлёт текст клиенту.</i>"
-        )
-
     created_at_ts = int(time.time())
 
     # Для «как можно скорее» считаем целевую готовность через 15 минут.
@@ -5999,41 +5991,68 @@ async def on_shutdown(app: web.Application):
     storage: RedisStorage = app["storage"]
     r: redis.Redis = app["redis"]
 
-    global _smart_task, _sub_task
+    global _smart_task, _sub_task, _order_reminder_task
 
-    try:
-        if _smart_task and not _smart_task.done():
-            _smart_task.cancel()
-    except Exception:
-        pass
+    tasks_to_stop = [
+        ("smart_return_loop", _smart_task),
+        ("sub_renewal_loop", _sub_task),
+        ("unfinished_orders_reminder_worker", _order_reminder_task),
+    ]
 
-    try:
-        if _sub_task and not _sub_task.done():
-            _sub_task.cancel()
-    except Exception:
-        pass
+    for task_name, task in tasks_to_stop:
+        try:
+            if task and not task.done():
+                task.cancel()
+
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+
+                logger.info("Stopped background task: %s", task_name)
+        except Exception:
+            logger.exception(
+                "Failed to stop background task: %s",
+                task_name,
+            )
+
+    _smart_task = None
+    _sub_task = None
+    _order_reminder_task = None
 
     try:
         await bot.delete_webhook()
+        logger.info("Webhook deleted on shutdown")
     except Exception:
-        pass
+        logger.exception("Failed to delete webhook on shutdown")
+
     try:
         await storage.close()
+        logger.info("FSM Redis storage closed")
     except Exception:
-        pass
+        logger.exception("Failed to close FSM Redis storage")
+
     try:
         await r.aclose()
+        logger.info("Redis client closed")
     except Exception:
-        pass
+        logger.exception("Failed to close Redis client")
+
     try:
         await bot.session.close()
+        logger.info("Bot HTTP session closed")
     except Exception:
-        pass
-
+        logger.exception("Failed to close bot HTTP session")
 
 async def main():
     if not BOT_TOKEN:
         raise RuntimeError("BOT_TOKEN not set")
+    if not WEBHOOK_SECRET:
+        raise RuntimeError("WEBHOOK_SECRET not set")
+    if len(WEBHOOK_SECRET) < 32:
+        raise RuntimeError(
+            "WEBHOOK_SECRET must be at least 32 characters long"
+        )
     if not REDIS_URL:
         raise RuntimeError("REDIS_URL not set")
     if not PUBLIC_HOST:
