@@ -3503,6 +3503,8 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
                 )
 
     cafe = cafe_or_default(cafe_id)
+    cafe = await apply_cafe_profile(r, cafe_id, cafe)
+
     menu = await get_menu(r, cafe_id)
 
     name = html.quote(user_name(message))
@@ -5225,7 +5227,7 @@ async def cafe_profile_work_end(message: Message, state: FSMContext):
         f"🏪 <b>{html.quote(title)}</b>\n"
         f"📍 {html.quote(address)}\n"
         f"🕒 {work_start_hour:02d}:00–{work_end_hour:02d}:00\n\n"
-        "Изменения сохранены в Redis."
+        "Изменения сохранены."
     )
 
 
@@ -6382,8 +6384,16 @@ async def anytextmessage(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
     uid = message.from_user.id
 
-    cafe_id = str(await r.get(k_user_cafe(uid)) or DEFAULT_CAFE_ID)
+    raw_cafe_id = await r.get(k_user_cafe(uid))
+
+    if isinstance(raw_cafe_id, bytes):
+        raw_cafe_id = raw_cafe_id.decode("utf-8", "ignore")
+
+    cafe_id = str(raw_cafe_id or DEFAULT_CAFE_ID)
+
     cafe = cafe_or_default(cafe_id)
+    cafe = await apply_cafe_profile(r, cafe_id, cafe)
+
     menu = await get_menu(r, cafe_id)
     text = (message.text or "").strip()
 
