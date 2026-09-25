@@ -762,13 +762,41 @@ async def menu_delete_item(r: redis.Redis, cafe_id: str, drink: str):
 # /start payload
 # =========================================================
 def parse_start_payload(payload: str) -> tuple[Optional[str], str]:
+    """
+    Разбирает deep-link payload для START.
+
+    Поддерживает:
+    - admin_cafe_002 — текущий безопасный формат;
+    - super_cafe_002 — текущий безопасный формат;
+    - admin:cafe_002 — старый формат, для ранее выданных ссылок;
+    - super:cafe_002 — старый формат, для ранее выданных ссылок;
+    - cafe_002 — обычная клиентская ссылка.
+    """
     p = (payload or "").strip()
+
     if not p:
         return None, "client"
+
+    # Новый формат: допустим для Telegram start payload без кодирования.
+    if p.startswith("admin_"):
+        cafe_id = p[len("admin_"):].strip()
+        return (cafe_id or None), "admin"
+
+    if p.startswith("super_"):
+        cafe_id = p[len("super_"):].strip()
+        return (cafe_id or None), "super"
+
+    # Старый формат: оставляем поддержку уже выданных ссылок.
+    # Для создания новых ссылок используем admin_<cafe_id>.
     if p.startswith("admin:"):
-        return p.split("admin:", 1)[1].strip() or None, "admin"
+        cafe_id = p.split("admin:", 1)[1].strip()
+        return (cafe_id or None), "admin"
+
     if p.startswith("super:"):
-        return p.split("super:", 1)[1].strip() or None, "super"
+        cafe_id = p.split("super:", 1)[1].strip()
+        return (cafe_id or None), "super"
+
+    # Обычная клиентская ссылка, например cafe_002.
     return p, "client"
 
 async def resolve_cafe_id(r: redis.Redis, message: Message, cafe_id_from_payload: Optional[str]) -> str:
@@ -3037,7 +3065,21 @@ async def cmd_start(message: Message, command: CommandObject, state: FSMContext)
     id_from_payload, mode = parse_start_payload(payload)
 
     uid = message.from_user.id
-    cafe_id = await resolve_cafe_id(r, message, id_from_payload)
+
+    # Deep link имеет абсолютный приоритет над ранее сохранённым кафе.
+    # Это критично после /bind_paid_draft: клиент мог ранее зайти
+    # в START через ссылку другого кафе как обычный посетитель.
+    if id_from_payload and id_from_payload in CAFES:
+        cafe_id = id_from_payload
+
+        # Сохраняем новый контекст пользователя: после перехода
+        # по admin_cafe_002 дальнейшее меню и кнопки относятся к cafe_002.
+        await r.set(k_user_cafe(uid), cafe_id)
+
+    else:
+        # Обычный /start без валидной deep-link ссылки:
+        # используем прежнюю логику выбора кафе.
+        cafe_id = await resolve_cafe_id(r, message, id_from_payload)
 
     parts = (payload or "").split(":")
     if len(parts) == 3 and parts[0] == "bc":
