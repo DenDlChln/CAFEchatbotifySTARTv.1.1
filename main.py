@@ -3874,6 +3874,7 @@ async def show_hours(message: Message):
 
     msk_time = get_moscow_time().strftime("%H:%M")
     await message.answer(
+        f"🏪 <b>{html.quote(cafe_title(cafe))}</b>\n"
         f"🕐 <b>Сейчас:</b> {msk_time} (МСК)\n"
         f"{work_status(cafe)}{address_line(cafe)}",
         reply_markup=kb_client_main(menu, show_admin_button=is_admin),
