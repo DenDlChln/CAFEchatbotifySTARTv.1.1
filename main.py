@@ -4989,9 +4989,9 @@ async def admin_links_button(message: Message):
 
     await message.answer(
         "🔗 <b>Рабочие ссылки кафе</b>\n\n"
-        f"• <a href=\"{html.quote(client_link, quote=True)}\">👥 Клиентам — открыть меню</a>\n"
-        f"• <a href=\"{html.quote(admin_link, quote=True)}\">🛠 Администратору — открыть панель</a>\n"
-        f"• <a href=\"{html.quote(staff_link, quote=True)}\">👨‍🍳 Добавить бота в staff-группу</a>\n\n"
+        f"• <a href=\"{html.quote(client_link)}\">👥 Клиентам — открыть меню</a>\n"
+        f"• <a href=\"{html.quote(admin_link)}\">🛠 Администратору — открыть панель</a>\n"
+        f"• <a href=\"{html.quote(staff_link)}\">👨‍🍳 Добавить бота в staff-группу</a>\n\n"
         f"Для привязки группы: <code>/bind {html.quote(cafe_id)}</code>",
         reply_markup=kb_admin_main(is_super=is_superadmin(uid)),
         disable_web_page_preview=True,
