@@ -4533,7 +4533,7 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
     await r.setex(k_rate_limit(user_id), rl, str(time.time()))
 
     total = cart_total(cart, menu)
-    order_num = str(int(time.time()))[-6:]
+    order_id = make_active_order_id()
     ready_at_str = (get_moscow_time() + timedelta(minutes=max(0, ready_in_min))).strftime("%H:%M")
     ready_line = "как можно скорее" if ready_in_min <= 0 else f"через {ready_in_min} мин (к {ready_at_str} МСК)"
 
@@ -4587,20 +4587,43 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
         or "Клиент"
     )
 
+    cafe = await apply_cafe_profile(r, cafe_id, cafe)
+    title = cafe_title(cafe)
+
     if username:
         client_link = f"https://t.me/{username}"
         client_label = f"@{html.quote(username)}"
+
+        draft = (
+            f"Здравствуйте! Это кафе «{title}».\n"
+            f"Пишем по заказу #{order_id}:\n"
+            + "\n".join(
+                f"• {drink} × {int(qty)}"
+                for drink, qty in cart.items()
+            )
+            + f"\nИтого: {total} ₽.\n"
+        )
+
+        write_link = f"{client_link}?text={quote(draft, safe='')}"
+        write_line = (
+            f"✍️ <a href=\"{html.quote(write_link)}\">"
+            "Написать клиенту с шаблоном</a>\n\n"
+        )
     else:
-    # Запасной вариант для пользователей без username.
         client_link = f"tg://user?id={user_id}"
         client_label = html.quote(client_name)
+        write_line = (
+            "✍️ У клиента нет @username. Чтобы ответить ему, "
+            "<b>ответьте на эту карточку заказа</b> — "
+            "бот перешлёт сообщение клиенту.\n\n"
+        )
 
     admin_msg = (
-        f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_num}</b> | "
-        f"{html.quote(cafe_title(cafe))}\n\n"
-        f"👤 <a href=\"{client_link}\">{client_label}</a>\n"
+        f"🔔 <b>НОВЫЙ ЗАКАЗ #{order_id}</b> | "
+        f"{html.quote(title)}\n\n"
+        f"👤 <a href=\"{html.quote(client_link)}\">{client_label}</a>\n"
         f"<code>{user_id}</code>\n\n"
-        f"✍️ <a href=\"{client_link}\">Написать клиенту</a>\n\n"
+        f"{write_line}"
         + "\n".join(cart_lines(cart, menu))
         + (
             f"\n\n💰 Итого: <b>{total}₽</b>"
@@ -4617,14 +4640,6 @@ async def finalize_order(message: Message, state: FSMContext, ready_in_min: int)
 
     # Более удобный случайный идентификатор — не только последние цифры времени.
     order_id = make_active_order_id()
-
-    # Переписываем заголовок в уже сформированном сообщении:
-    # клиент и персонал будут видеть единый ID заказа.
-    admin_msg = admin_msg.replace(
-        f"НОВЫЙ ЗАКАЗ #{order_num}",
-        f"НОВЫЙ ЗАКАЗ #{order_id}",
-        1,
-    )
 
     await create_active_order(
         r,
