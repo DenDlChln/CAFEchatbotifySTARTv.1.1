@@ -3859,14 +3859,23 @@ async def show_hours(message: Message):
         return
 
     r: redis.Redis = message.bot._redis
-    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+
+    raw_cafe_id = await r.get(k_user_cafe(message.from_user.id))
+    if isinstance(raw_cafe_id, bytes):
+        raw_cafe_id = raw_cafe_id.decode("utf-8", "ignore")
+
+    cafe_id = str(raw_cafe_id or DEFAULT_CAFE_ID)
+
     cafe = cafe_or_default(cafe_id)
+    cafe = await apply_cafe_profile(r, cafe_id, cafe)
+
     menu = await get_menu(r, cafe_id)
     is_admin = await is_cafe_admin(r, message.from_user.id, cafe_id)
 
     msk_time = get_moscow_time().strftime("%H:%M")
     await message.answer(
-        f"🕐 <b>Сейчас:</b> {msk_time} (МСК)\n{work_status(cafe)}{address_line(cafe)}",
+        f"🕐 <b>Сейчас:</b> {msk_time} (МСК)\n"
+        f"{work_status(cafe)}{address_line(cafe)}",
         reply_markup=kb_client_main(menu, show_admin_button=is_admin),
     )
 
