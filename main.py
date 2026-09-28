@@ -855,42 +855,72 @@ async def bind_support_admin_message(
 # =========================================================
 # Menu per cafe (Redis)
 # =========================================================
+def k_menu_initialized(cafe_id: str) -> str:
+    return f"{k_menu(cafe_id)}:initialized"
+
+
 async def get_menu(r: redis.Redis, cafe_id: str) -> Dict[str, int]:
     data = await r.hgetall(k_menu(cafe_id))
+
     if data:
         out: Dict[str, int] = {}
-        for k, v in data.items():
-            try:
-                out[str(k)] = int(v)
-            except Exception:
-                continue
-        if out:
-            return out
 
-        # ✅ ВСТАВИТЬ ВОТ ЭТУ СТРОКУ (если Redis-меню есть, но оно "битое"/пустое)
-        await r.delete(k_menu(cafe_id))
+        for raw_name, raw_price in data.items():
+            try:
+                name = redis_text(raw_name)
+                out[name] = int(raw_price)
+            except (TypeError, ValueError):
+                continue
+
+        return out
+
+    # Пустое меню мог создать администратор, удалив все позиции.
+    # В этом случае не восстанавливаем позиции из JSON.
+    if await r.exists(k_menu_initialized(cafe_id)):
+        return {}
 
     cafe = cafe_or_default(cafe_id)
     base = cafe.get("menu") or {}
+
     out: Dict[str, int] = {}
     seed: Dict[str, str] = {}
+
     if isinstance(base, dict):
-        for k, v in base.items():
+        for raw_name, raw_price in base.items():
             try:
-                out[str(k)] = int(v)
-                seed[str(k)] = str(int(v))
-            except Exception:
+                name = str(raw_name)
+                price = int(raw_price)
+                out[name] = price
+                seed[name] = str(price)
+            except (TypeError, ValueError):
                 continue
+
     if seed:
         await r.hset(k_menu(cafe_id), mapping=seed)
+        await r.set(k_menu_initialized(cafe_id), "1")
+
     return out
 
-async def menu_set_item(r: redis.Redis, cafe_id: str, drink: str, price: int):
+
+async def menu_set_item(
+    r: redis.Redis,
+    cafe_id: str,
+    drink: str,
+    price: int,
+):
     await r.hset(k_menu(cafe_id), mapping={drink: str(int(price))})
+    await r.set(k_menu_initialized(cafe_id), "1")
 
-async def menu_delete_item(r: redis.Redis, cafe_id: str, drink: str):
+
+async def menu_delete_item(
+    r: redis.Redis,
+    cafe_id: str,
+    drink: str,
+):
+    # Ставим отметку до удаления: если это последняя позиция,
+    # пустое меню не будет восстановлено из JSON.
+    await r.set(k_menu_initialized(cafe_id), "1")
     await r.hdel(k_menu(cafe_id), drink)
-
 
 # =========================================================
 # /start payload
@@ -6102,8 +6132,13 @@ async def support_close_callback(callback: CallbackQuery, state: FSMContext):
 @router.message(StateFilter(MenuEditStates.waiting_for_action))
 async def menu_edit_choose_action(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
-    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+    raw_cafe_id = await r.get(k_user_cafe(message.from_user.id))
 
+    if isinstance(raw_cafe_id, bytes):
+        raw_cafe_id = raw_cafe_id.decode("utf-8", "ignore")
+
+    cafe_id = str(raw_cafe_id or DEFAULT_CAFE_ID)
+    
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
         await state.clear()
         return
@@ -6201,7 +6236,12 @@ async def menu_edit_add_price(message: Message, state: FSMContext):
 @router.message(StateFilter(MenuEditStates.pick_edit_item))
 async def menu_pick_edit_item(message: Message, state: FSMContext):
     r: redis.Redis = message.bot._redis
-    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+    raw_cafe_id = await r.get(k_user_cafe(message.from_user.id))
+
+    if isinstance(raw_cafe_id, bytes):
+        raw_cafe_id = raw_cafe_id.decode("utf-8", "ignore")
+
+    cafe_id = str(raw_cafe_id or DEFAULT_CAFE_ID)
 
     if not await is_cafe_admin(r, message.from_user.id, cafe_id):
         await state.clear()
