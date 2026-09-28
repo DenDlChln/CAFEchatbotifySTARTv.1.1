@@ -4956,19 +4956,47 @@ async def admin_links_button(message: Message):
         return
 
     r: redis.Redis = message.bot._redis
-    cafe_id = str(await r.get(k_user_cafe(message.from_user.id)) or DEFAULT_CAFE_ID)
+    uid = message.from_user.id
 
-    if not await is_cafe_admin(r, message.from_user.id, cafe_id):
+    raw_cafe_id = await r.get(k_user_cafe(uid))
+    if isinstance(raw_cafe_id, bytes):
+        raw_cafe_id = raw_cafe_id.decode("utf-8", "ignore")
+
+    cafe_id = str(raw_cafe_id or DEFAULT_CAFE_ID)
+
+    if not await is_cafe_admin(r, uid, cafe_id):
         await message.answer("🔒 Доступно только администратору.")
         return
 
     if not await ensure_subscription_active(message, r, cafe_id):
         return
 
-    cafe = cafe_or_default(cafe_id)
-    menu = await get_menu(r, cafe_id)
-    await send_admin_panel(message, cafe_id, cafe, menu)
+    client_link = await create_start_link(
+        message.bot,
+        payload=cafe_id,
+        encode=False,
+    )
+    admin_link = await create_start_link(
+        message.bot,
+        payload=f"admin_{cafe_id}",
+        encode=False,
+    )
+    staff_link = await create_startgroup_link(
+        message.bot,
+        payload=cafe_id,
+        encode=False,
+    )
 
+    await message.answer(
+        "🔗 <b>Рабочие ссылки кафе</b>\n\n"
+        f"• <a href=\"{html.quote(client_link, quote=True)}\">👥 Клиентам — открыть меню</a>\n"
+        f"• <a href=\"{html.quote(admin_link, quote=True)}\">🛠 Администратору — открыть панель</a>\n"
+        f"• <a href=\"{html.quote(staff_link, quote=True)}\">👨‍🍳 Добавить бота в staff-группу</a>\n\n"
+        f"Для привязки группы: <code>/bind {html.quote(cafe_id)}</code>",
+        reply_markup=kb_admin_main(is_super=is_superadmin(uid)),
+        disable_web_page_preview=True,
+    )
+    
 
 @router.message(F.text == BTN_ADMIN_INFO)
 async def admin_info_button_message(message: Message):
